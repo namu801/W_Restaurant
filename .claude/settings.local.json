@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"http://localhost:3000/results?relationship=coworker&people=3-4&budget=30-50k&alcohol=with-alcohol&area=gangnam\")",
+      "Bash(curl -s \"http://localhost:3000/results?relationship=coworker&people=7%2B&budget=under-20k&alcohol=no-alcohol&area=gangnam&avoid=too-loud,long-wait,too-expensive\")",
+      "Bash(curl -s \"http://localhost:3000/places/hwaroyeon?relationship=coworker&people=3-4&budget=30-50k&alcohol=with-alcohol&area=gangnam\")",
+      "Bash(curl -s \"http://localhost:3000/results?relationship=coworker&people=3-4&budget=30-50k&alcohol=with-alcohol&area=gangnam\" -o /tmp/results.html)",
+      "Read(//tmp/**)",
+      "Bash(curl -s \"http://localhost:3000/results?relationship=coworker&people=7%2B&budget=under-20k&alcohol=no-alcohol&area=gangnam&avoid=too-loud,long-wait,too-expensive\" -o /tmp/empty.html)",
+      "Bash(curl -s \"http://localhost:3000/places/hwaroyeon?relationship=coworker&people=3-4&budget=30-50k&alcohol=with-alcohol&area=gangnam\" -o /tmp/detail.html)",
+      "Bash(curl -s \"http://localhost:3000/results?relationship=coworker&people=7%2B&budget=under-20k&alcohol=no-alcohol&area=gangnam&avoid=too-loud,long-wait,too-expensive\" -o /tmp/empty2.html)",
+      "Bash(echo \"empty-exit:$?\")",
+      "Bash(curl -s \"http://localhost:3000/results?relationship=coworker&people=3-4&budget=30-50k&alcohol=with-alcohol&area=gangnam\" -o /tmp/normal2.html)",
+      "Bash(echo \"normal-exit:$?\")",
+      "Bash(curl -s \"http://localhost:3000/results?relationship=family&people=7%2B&budget=under-20k&alcohol=no-alcohol&area=sinnonhyeon&avoid=too-expensive,hard-reservation,too-loud\" -o /tmp/empty3.html)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/search -o /tmp/search.html)",
+      "Bash(curl -s http://localhost:3000/bookmarks -o /tmp/bm.html)",
+      "Bash(rm -f /tmp/empty.html /tmp/empty2.html /tmp/empty3.html /tmp/normal2.html /tmp/results.html /tmp/detail.html /tmp/search.html /tmp/bm.html)",
+      "Bash(curl -s http://localhost:3000/bookmarks -o /tmp/bm2.html)",
+      "Bash(rm -f /tmp/bm2.html)",
+      "Bash(curl -s http://localhost:3000/bookmarks -o /tmp/bm3.html)",
+      "Bash(rm -f /tmp/bm3.html)",
+      "Bash(pkill -f \"next dev\")"
+    ]
+  }
+}
