@@ -18,7 +18,7 @@ export function FeedbackWidget({ placeId }: { placeId: string }) {
 
   if (submitted) {
     return (
-      <p className="rounded-xl bg-sage-soft px-4 py-3 text-sm text-sage">
+      <p className="rounded-full bg-sage-soft px-4 py-3 text-center text-sm text-sage">
         소중한 의견 감사해요. 다음 추천에 참고할게요.
       </p>
     );
@@ -32,7 +32,7 @@ export function FeedbackWidget({ placeId }: { placeId: string }) {
           type="button"
           onClick={() => submit("helpful")}
           className={clsx(
-            "flex-1 rounded-full border border-line bg-white px-4 py-2.5 text-sm font-medium text-ink-soft hover:border-sage hover:text-sage",
+            "flex-1 rounded-full border border-line bg-cream-soft px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:border-sage hover:text-sage active:bg-sage-soft",
           )}
         >
           도움이 되었어요
@@ -41,7 +41,7 @@ export function FeedbackWidget({ placeId }: { placeId: string }) {
           type="button"
           onClick={() => submit("not_helpful")}
           className={clsx(
-            "flex-1 rounded-full border border-line bg-white px-4 py-2.5 text-sm font-medium text-ink-soft hover:border-clay hover:text-clay",
+            "flex-1 rounded-full border border-line bg-cream-soft px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:border-clay hover:text-clay active:bg-clay-soft",
           )}
         >
           아쉬워요

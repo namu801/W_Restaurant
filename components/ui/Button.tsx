@@ -8,8 +8,8 @@ const base =
   "inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-ink text-cream hover:bg-ink/90",
-  secondary: "bg-accent-soft text-accent-strong hover:bg-accent-soft/70",
+  primary: "bg-accent text-white hover:bg-accent-strong",
+  secondary: "border border-ink bg-cream-soft text-ink hover:bg-cream-strong",
   ghost: "bg-transparent text-ink-soft hover:bg-cream-soft",
 };
 

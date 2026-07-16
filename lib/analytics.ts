@@ -1,20 +1,31 @@
 import mixpanel from "mixpanel-browser";
 
-/** PRD 13. 이벤트 설계에 정의된 이벤트명 */
+/** PRD 14. 측정 이벤트에 정의된 이벤트명 */
 export type AnalyticsEvent =
   | "landing_viewed"
   | "search_started"
-  | "condition_step_viewed"
-  | "condition_option_selected"
-  | "condition_submitted"
+  | "filter_flow_started"
+  | "filter_step_viewed"
+  | "filter_option_selected"
+  | "filter_step_completed"
+  | "filter_edited"
+  | "filter_submitted"
+  | "result_loading_viewed"
   | "result_viewed"
+  | "empty_result_viewed"
   | "place_card_clicked"
   | "place_detail_viewed"
   | "place_bookmarked"
   | "bookmark_list_viewed"
   | "map_clicked"
+  | "map_viewed"
+  | "map_marker_clicked"
   | "recommendation_feedback_submitted"
-  | "condition_edit_clicked";
+  | "feedback_page_viewed"
+  | "general_feedback_submitted"
+  | "onboarding_viewed"
+  | "onboarding_completed"
+  | "filter_skipped";
 
 let initialized = false;
 

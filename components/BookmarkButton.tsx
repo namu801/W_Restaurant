@@ -43,10 +43,10 @@ export function BookmarkButton({
       onClick={handleClick}
       aria-pressed={saved}
       className={clsx(
-        "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition active:scale-95",
         saved
           ? "border-accent bg-accent-soft text-accent-strong"
-          : "border-line bg-white text-ink-soft hover:border-ink-faint",
+          : "border-line bg-cream-soft text-ink-soft hover:border-ink-faint active:bg-cream-strong",
         !hydrated && "opacity-0",
         className,
       )}

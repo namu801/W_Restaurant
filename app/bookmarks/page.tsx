@@ -8,6 +8,7 @@ import { getPlaceById } from "@/lib/places";
 import { AREA_LABEL, formatPrice } from "@/lib/labels";
 import { track } from "@/lib/analytics";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PlaceThumbnail } from "@/components/PlaceThumbnail";
 import type { Place } from "@/lib/types";
 
 export default function BookmarksPage() {
@@ -33,13 +34,13 @@ export default function BookmarksPage() {
     return (
       <EmptyState
         title="아직 저장한 장소가 없어요."
-        description={"마음에 드는 장소를 저장해두고\n다시 비교해보세요."}
+        description="마음에 드는 곳을 찾아보세요."
         action={
           <Link
             href="/search"
-            className="mt-2 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-cream hover:bg-ink/90"
+            className="mt-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-strong active:bg-accent-strong"
           >
-            모임 장소 찾아보기
+            청모 장소 찾아보기
           </Link>
         }
       />
@@ -47,49 +48,59 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-semibold text-ink">저장한 장소 {places.length}곳</h1>
+    <div className="flex flex-col gap-5">
+      <h1 className="font-serif text-xl font-bold text-ink">저장한 장소 {places.length}곳</h1>
 
       {places.map((place) => (
         <article
           key={place.id}
-          className="rounded-2xl border border-line bg-white p-5 shadow-card"
+          className="overflow-hidden rounded-lg border border-line bg-cream-soft transition-shadow hover:shadow-card"
         >
-          <h3 className="text-base font-semibold text-ink">{place.name}</h3>
-          <p className="mt-1 text-xs text-ink-faint">
-            {place.category} · {AREA_LABEL[place.area]} · 1인{" "}
-            {formatPrice(place.priceMin, place.priceMax)}
-          </p>
-          <p className="mt-2.5 text-sm text-ink-soft">{place.curatedReason}</p>
+          <div className="flex gap-3.5 p-4">
+            <PlaceThumbnail place={place} className="h-24 w-24 rounded-md" />
+            <div className="min-w-0 flex-1">
+              <h3 className="font-serif text-base font-bold leading-snug text-ink">{place.name}</h3>
+              <p className="mt-1 text-xs text-ink-faint">
+                {place.category} · {AREA_LABEL[place.area]}
+              </p>
+              <p className="mt-1 text-[15px] font-bold text-ink">
+                1인 {formatPrice(place.priceMin, place.priceMax)}
+              </p>
+            </div>
+          </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Link
-              href={`/places/${place.id}`}
-              className="inline-flex items-center justify-center rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-cream hover:bg-ink/90"
-            >
-              상세 보기
-            </Link>
-            <a
-              href={place.mapUrlNaver}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() =>
-                track("map_clicked", { place_id: place.id, map_type: "naver" })
-              }
-              className="inline-flex items-center gap-1 rounded-full border border-line px-4 py-2.5 text-sm text-ink-soft hover:border-ink-faint"
-            >
-              <MapPin className="h-3.5 w-3.5" />
-              지도 보기
-              <ExternalLink className="h-3 w-3" />
-            </a>
-            <button
-              type="button"
-              onClick={() => handleRemove(place.id)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent-soft px-3.5 py-2 text-sm font-medium text-accent-strong"
-            >
-              <Bookmark className="h-4 w-4" fill="currentColor" />
-              저장 해제
-            </button>
+          <div className="px-4 pb-4">
+            <p className="text-sm text-ink-soft">{place.curatedReason}</p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Link
+                href={`/places/${place.id}`}
+                className="inline-flex items-center justify-center rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-ink/90 active:bg-ink/80"
+              >
+                상세 보기
+              </Link>
+              <a
+                href={place.mapUrlNaver}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() =>
+                  track("map_clicked", { place_id: place.id, map_type: "naver" })
+                }
+                className="inline-flex items-center gap-1 rounded-full border border-line px-4 py-2.5 text-sm text-ink-soft transition-colors hover:border-line-strong active:bg-cream-strong"
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                지도 보기
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              <button
+                type="button"
+                onClick={() => handleRemove(place.id)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent-soft px-3.5 py-2 text-sm font-medium text-accent-strong transition-colors active:bg-accent/30"
+              >
+                <Bookmark className="h-4 w-4" fill="currentColor" />
+                저장 해제
+              </button>
+            </div>
           </div>
         </article>
       ))}

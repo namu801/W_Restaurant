@@ -2,54 +2,70 @@ export type RelationshipKey =
   | "close-friend"
   | "friend-group"
   | "coworker"
-  | "senior"
+  | "school-senior"
+  | "workplace-senior"
   | "family"
   | "other";
 
-export type PeopleKey = "2" | "3-4" | "5-6" | "7+";
-
-export type BudgetKey = "under-20k" | "20-30k" | "30-50k" | "over-50k";
-
-export type AlcoholKey = "no-alcohol" | "with-alcohol";
-
-export type MoodKey =
-  | "quiet-talk"
-  | "not-too-much"
-  | "hospitable"
-  | "casual-sincere"
-  | "long-stay"
-  | "stable-service";
-
-export type AvoidKey =
-  | "long-wait"
-  | "hard-reservation"
-  | "too-loud"
-  | "too-expensive"
-  | "too-casual"
-  | "too-formal"
-  | "far-from-station"
-  | "bar-like";
+export type PeopleKey = "2" | "3-4" | "5-6" | "7-8" | "9+";
 
 export type AreaKey = "gangnam" | "sinnonhyeon" | "nonhyeon" | "all";
 
-/** 조건 입력 화면(8.2)에서 수집하는 청첩장 모임 조건 */
+/** PRD 8.4: 반열림 구간(하한 포함, 상한 미포함)으로 MECE하게 정의한다 */
+export type BudgetKey = "under-20k" | "20-30k" | "30-50k" | "over-50k" | "any";
+
+export type CuisineKey =
+  | "korean"
+  | "western"
+  | "japanese"
+  | "chinese"
+  | "meat"
+  | "seafood"
+  | "wine-alcohol"
+  | "brunch-cafe"
+  | "any";
+
+export type NoiseKey = "quiet" | "lively-but-talkable" | "lively-important" | "any";
+
+export type MoodFormalityKey = "casual" | "balanced" | "hospitable" | "formal" | "any";
+
+/** PRD 8.6 기타 조건: "꼭 필요한" 조건만 모은 다중선택 칩 (선택 입력, 모두 제외 필터로 동작).
+ *  예약·웨이팅은 원래 별도 질문이었으나 선택지가 복잡해 "예약 가능한 곳" 한 칩으로 단순화해 여기로 합쳤다 */
+export type ExtraConditionKey =
+  | "room-required"
+  | "parking-required"
+  | "wide-seating"
+  | "reservation-possible";
+
+/** 조건 입력 단계에서 수집하는 청첩장 모임 조건 */
 export interface Condition {
   relationship: RelationshipKey;
   people: PeopleKey;
-  budget: BudgetKey;
-  alcohol: AlcoholKey;
-  moods: MoodKey[];
-  avoid: AvoidKey[];
   area: AreaKey;
+  budget: BudgetKey;
+  cuisines: CuisineKey[]; // 최대 3개
+  noise: NoiseKey;
+  moodFormality: MoodFormalityKey;
+  extraConditions: ExtraConditionKey[]; // 선택 입력, 0개 이상
 }
+
+export type NoiseLevel = "quiet" | "moderate" | "lively";
+export type ReservationMethod = "available" | "phone" | "difficult" | "unavailable";
+export type ParkingType = "self" | "valet" | "partner" | "none";
+export type SeatType = "open" | "wide" | "semi-private" | "room";
 
 /** PRD 10.1 places 스키마와 1:1로 대응하는 장소 모델 */
 export interface Place {
   id: string;
   name: string;
   category: string;
+  cuisineTags: Exclude<CuisineKey, "any">[];
   area: Exclude<AreaKey, "all">;
   address: string;
+  /** 지도 탭 마커 표시용 근사 좌표. 실제 매장 위치를 정밀 측량한 값이 아니라 지역대 안에서의
+   *  데모용 추정치입니다 (PRD 10.1 참고) */
+  lat: number;
+  lng: number;
   mapUrlNaver: string;
   mapUrlKakao: string;
   priceMin: number;
@@ -57,38 +73,48 @@ export interface Place {
   capacityMin: number;
   capacityMax: number;
   relationshipTags: RelationshipKey[];
-  moodTags: MoodKey[];
-  avoidTags: AvoidKey[];
-  alcoholFit: number; // 0~10
-  nonAlcoholFit: number; // 0~10
+  formalityTags: Exclude<MoodFormalityKey, "any">[];
   conversationScore: number; // 0~10
   hospitalityScore: number; // 0~10
-  accessScore: number; // 0~10
-  reservationDifficulty: number; // 0~10, 높을수록 예약 어려움
-  waitingRisk: number; // 0~10, 높을수록 웨이팅 위험
   serviceScore: number; // 0~10
+  accessScore: number; // 0~10
+  noiseLevel: NoiseLevel;
+  seatType: SeatType;
+  spaceScore: number; // 0~10
   privateRoomAvailable: boolean;
+  roomMinCapacity?: number;
+  roomMinOrderAmount?: number;
+  roomTimeLimitMinutes?: number;
+  reservationMethod: ReservationMethod;
+  waitingRisk: number; // 0~10
+  parkingAvailable: boolean;
+  parkingType: ParkingType;
   curatedReason: string;
   cautionNote: string;
   lastVerifiedAt: string; // ISO date
 }
 
-/** 룰 기반 매칭 결과 */
+export type ScoreCategory =
+  | "relationship"
+  | "people"
+  | "budget"
+  | "access"
+  | "food"
+  | "conversation"
+  | "mood"
+  | "seat"
+  | "reservation"
+  | "parking";
+
+/** 룰 기반 매칭 결과 (PRD 11) */
 export interface MatchResult {
   place: Place;
-  score: number; // 0~100
-  matchedMoods: MoodKey[];
-  conflictingAvoids: AvoidKey[];
-  fitLabel: "매우 적합" | "적합" | "보통";
-  subScores: {
-    relationship: number;
-    people: number;
-    budget: number;
-    mood: number;
-    alcohol: number;
-    access: number;
-    conversation: number;
-  };
+  score: number; // 0~maxPossible(조건별 가변), 내부 정렬용
+  maxPossible: number;
+  fitRatio: number; // score / maxPossible
+  fitLabel: "매우 잘 맞아요" | "잘 맞아요" | "일부 조건을 확인해보세요";
+  subScores: Record<ScoreCategory, number>; // 카테고리별 0~weight (가중치 반영된 절대 기여도)
+  ratios: Record<ScoreCategory, number>; // 카테고리별 0~1 적합 비율 (가중치와 무관, 카테고리 간 비교용)
 }
 
 export type FeedbackValue = "helpful" | "not_helpful";
