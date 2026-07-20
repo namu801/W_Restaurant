@@ -24,3 +24,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 식당 데이터 조회 스크립트 결과물 (일회성 산출물, 저장소에 남길 필요 없음)
+/scripts/output/

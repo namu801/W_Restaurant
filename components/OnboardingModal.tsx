@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MailOpen } from "lucide-react";
 import { track } from "@/lib/analytics";
 
 const STORAGE_KEY = "cheongcheobjari:onboarding_seen";
@@ -58,12 +59,12 @@ export function OnboardingModal() {
     >
       <div className="w-full max-w-xs rounded-xl bg-cream-soft p-6 text-center shadow-card">
         <span
-          className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft text-4xl"
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft"
           aria-hidden
         >
-          💌
+          <MailOpen className="h-7 w-7 text-accent" strokeWidth={1.8} />
         </span>
-        <h2 id="onboarding-title" className="mt-4 font-serif text-lg font-bold leading-snug text-ink">
+        <h2 id="onboarding-title" className="mt-4 text-lg font-bold leading-snug text-ink">
           청모픽에 오신 걸 환영해요
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
@@ -75,7 +76,7 @@ export function OnboardingModal() {
           ref={startButtonRef}
           type="button"
           onClick={handleStart}
-          className="mt-5 w-full rounded-full bg-accent-strong py-3 text-sm font-bold text-white transition-colors hover:bg-accent active:bg-accent"
+          className="mt-5 w-full rounded-md bg-accent py-3 text-sm font-semibold text-white transition-all hover:bg-accent-strong"
         >
           시작하기
         </button>

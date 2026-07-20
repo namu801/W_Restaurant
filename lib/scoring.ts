@@ -266,7 +266,7 @@ export function findRelaxationSuggestion(
 
   if (condition.area !== "all") {
     candidates.push({
-      label: "지역을 강남권 전체로 넓히면",
+      label: "지역을 용산권 전체로 넓히면",
       next: { ...condition, area: "all" },
     });
   }

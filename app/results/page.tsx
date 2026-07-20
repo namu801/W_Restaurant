@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { TriangleAlert } from "lucide-react";
+import { Sparkles, TriangleAlert } from "lucide-react";
 import {
   searchParamsToCondition,
   conditionToSearchParams,
@@ -12,11 +12,11 @@ import {
   RESULT_TRUNCATE_THRESHOLD,
   RESULT_DISPLAY_LIMIT,
 } from "@/lib/scoring";
-import { AREA_LABEL, BUDGET_LABEL, PEOPLE_LABEL, RELATIONSHIP_LABEL } from "@/lib/labels";
 import { PlaceCard } from "@/components/PlaceCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TrackOnMount } from "@/components/TrackOnMount";
 import { ConditionEditSheet } from "@/components/ConditionEditSheet";
+import { SortDropdown, type SortValue } from "@/components/SortDropdown";
 
 export default async function ResultsPage({
   searchParams,
@@ -31,14 +31,27 @@ export default async function ResultsPage({
   }
 
   const showAll = sp.showAll === "1";
+  const sort: SortValue = sp.sort === "price" ? "price" : "recommended";
   const matches = matchPlaces(condition);
   const topScore = matches[0]?.score ?? 0;
   const query = conditionToSearchParams(condition).toString();
   const allAreaHref = `/results?${conditionToSearchParams({ ...condition, area: "all" }).toString()}`;
-  const showAllHref = `/results?${query}&showAll=1`;
+  const sortQuery = sort === "price" ? "&sort=price" : "";
+  const showAllHref = `/results?${query}&showAll=1${sortQuery}`;
+
+  // "추천순"은 matchPlaces가 이미 매칭 점수순으로 정렬해 돌려준다. "가격 낮은순"만
+  // 화면에 보여줄 목록 순서를 다시 계산한다 — topScore 등 점수 기반 안내 문구는
+  // 원래(추천순) 배열 그대로 써야 하므로 별도 변수로 분리한다
+  const displayMatches =
+    sort === "price"
+      ? [...matches].sort(
+          (a, b) =>
+            a.place.priceMin + a.place.priceMax - (b.place.priceMin + b.place.priceMax),
+        )
+      : matches;
 
   const isTruncated = !showAll && matches.length > RESULT_TRUNCATE_THRESHOLD;
-  const visibleMatches = isTruncated ? matches.slice(0, RESULT_DISPLAY_LIMIT) : matches;
+  const visibleMatches = isTruncated ? displayMatches.slice(0, RESULT_DISPLAY_LIMIT) : displayMatches;
   const isNarrow = matches.length > 0 && matches.length <= NARROW_RESULT_THRESHOLD;
   const relaxation = matches.length === 0 ? findRelaxationSuggestion(condition) : null;
   const relaxationHref = relaxation
@@ -46,7 +59,7 @@ export default async function ResultsPage({
     : null;
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-5">
       <TrackOnMount
         event="result_viewed"
         props={{ result_count: matches.length, top_score: topScore }}
@@ -58,19 +71,20 @@ export default async function ResultsPage({
         />
       )}
 
-      <div className="flex items-start justify-between gap-3 rounded-md border border-line bg-cream-soft p-5">
-        <div className="text-sm text-ink-soft">
-          <p className="font-medium text-ink">
-            {RELATIONSHIP_LABEL[condition.relationship]} · {PEOPLE_LABEL[condition.people]} ·{" "}
-            {BUDGET_LABEL[condition.budget]}
-          </p>
-          <p className="mt-1 text-xs text-ink-faint">{AREA_LABEL[condition.area]} 기준</p>
+      {/* 레퍼런스(마켓컬리 검색 결과)처럼 조건 요약을 박스로 묶지 않고, 좌측 총 개수 +
+          우측 정렬·필터 한 줄로 바꿨다. 상세 조건은 "필터" 시트를 열어야 보이지만,
+          그건 어차피 지금 즉시 알아야 할 정보라기보단 "고치고 싶을 때" 찾는 정보라
+          평소엔 숨겨두는 편이 화면을 덜 무겁게 한다 */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-ink">총 {matches.length}개</p>
+        <div className="flex items-center gap-3">
+          <SortDropdown sort={sort} />
+          <ConditionEditSheet condition={condition} resultCount={matches.length} />
         </div>
-        <ConditionEditSheet condition={condition} resultCount={matches.length} />
       </div>
 
       {isNarrow && (
-        <div className="flex items-start gap-2.5 rounded-sm border border-clay/30 bg-clay-soft px-4 py-3.5 text-sm text-clay">
+        <div className="flex items-start gap-2.5 rounded-md border border-clay/30 bg-clay-soft px-4 py-3.5 text-sm text-clay">
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
           <p>조건에 맞는 장소가 많지 않아요. 아래 후보부터 확인해보세요.</p>
         </div>
@@ -88,23 +102,23 @@ export default async function ResultsPage({
             <div className="mt-2 flex flex-wrap gap-2">
               <Link
                 href={`/search?${query}`}
-                className="rounded-full border border-ink px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-cream-soft active:bg-cream-strong"
+                className="rounded-full border border-line px-4 py-2.5 text-sm font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
               >
                 조건 수정하기
               </Link>
               {relaxationHref ? (
                 <Link
                   href={relaxationHref}
-                  className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-strong active:bg-accent-strong"
+                  className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
                 >
                   조건 살짝 낮춰서 보기
                 </Link>
               ) : (
                 <Link
                   href={allAreaHref}
-                  className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-strong active:bg-accent-strong"
+                  className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
                 >
-                  강남권 전체로 보기
+                  용산권 전체로 보기
                 </Link>
               )}
             </div>
@@ -112,11 +126,22 @@ export default async function ResultsPage({
         />
       ) : (
         <>
-          <p className="text-sm text-ink-faint">
-            {isTruncated
-              ? `입력한 조건에 잘 맞는 장소가 ${matches.length}곳 있어요. 우선 ${RESULT_DISPLAY_LIMIT}곳을 추천해드릴게요.`
-              : `추천 후보 ${matches.length}곳`}
-          </p>
+          {/* 이전 문구("입력한 조건에 잘 맞는 장소가 19곳 있어요. 우선 6곳을...")는 숫자
+              두 개를 나란히 던져서 뭘 말하려는 건지 한 번에 안 읽혔다 — "우리가 골라줬다"는
+              큐레이션 행위 자체를 문장 맨 앞에 세우고, 배지 형태로 감싸서 정보 한 줄이
+              아니라 이 리스트의 성격을 보여주는 요소로 다룬다.
+              옅은 틴트 채움만으로는 강조가 부족해서, 채움은 그대로 두고 그라디언트 테두리를
+              다시 얹었다 — 대신 옆의 "필터" 버튼에서 테두리·채움을 걷어내 이 배지가 화면에서
+              유일하게 "테두리+채움"을 다 쓰는 자리가 되게 했다. radius도 식당 카드와
+              맞춰 rounded-sm으로 낮췄다(더는 pill이 아니다) */}
+          {isTruncated && (
+            <div className="w-full rounded-sm bg-gradient-to-r from-accent to-gold p-[2px]">
+              <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-gold-soft px-3.5 py-2.5 text-sm font-semibold text-accent-strong">
+                <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.5} fill="currentColor" aria-hidden />
+                {matches.length}곳 중 가장 잘 맞는 {RESULT_DISPLAY_LIMIT}곳을 골라드렸어요
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-5">
             {visibleMatches.map((match, index) => (
@@ -132,7 +157,7 @@ export default async function ResultsPage({
           {isTruncated && (
             <Link
               href={showAllHref}
-              className="self-center rounded-full border border-ink px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-cream-soft active:bg-cream-strong"
+              className="self-center rounded-full border border-line px-4 py-2.5 text-sm font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
             >
               전체 {matches.length}곳 보기
             </Link>

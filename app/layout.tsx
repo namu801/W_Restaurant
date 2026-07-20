@@ -4,7 +4,11 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
+import { MainArea } from "@/components/MainArea";
 
+// 쏘카프레임 2.0은 서체 페어링 없이 Pretendard Variable 하나로 못박는 하드 룰이다.
+// 이전엔 홈 히어로에만 별도 세리프(고운바탕)를 얹었지만, 이번 리스킨에서 제거하고
+// 앱 전체를 단일 패밀리로 통일한다.
 const pretendard = localFont({
   src: "../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
   variable: "--font-pretendard",
@@ -34,7 +38,7 @@ export default function RootLayout({
         <div className="relative mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-cream">
           <Providers>
             <Header />
-            <main className="flex-1 overflow-y-auto px-6 pb-32 pt-8">{children}</main>
+            <MainArea>{children}</MainArea>
             <BottomNav />
           </Providers>
         </div>

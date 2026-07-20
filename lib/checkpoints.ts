@@ -1,15 +1,17 @@
 import { formatPrice, PEOPLE_LABEL } from "./labels";
 import type { BudgetKey, Condition, PeopleKey, Place } from "./types";
+import type { ReasonIconKey } from "./icon-keys";
 
 export type CheckpointTone = "positive" | "neutral" | "warning";
 export type CheckpointGroup = "모임 정보" | "식사 조건" | "분위기·공간" | "운영 조건";
 
 export interface Checkpoint {
-  label: string;
-  value: string;
+  /** 위계를 두 줄(라벨+값)에서 한 줄로 줄였다 — "대화 가능성" 같은 항목명 대신
+   *  "대화하기 좋은 분위기"처럼 바로 읽히는 문장 하나로 합쳤다 */
+  text: string;
   tone: CheckpointTone;
   group: CheckpointGroup;
-  icon: string;
+  icon: ReasonIconKey;
 }
 
 /** 그룹 표시 순서. 조건입력 스텝과 같은 어휘·순서를 써서 "내가 고른 조건이 여기 반영됐구나"를 바로 느끼게 한다 */
@@ -47,7 +49,9 @@ function peopleRangeLabel(min: number, max: number): string {
 }
 
 /** 장소 상세의 "청첩장 모임 체크포인트" 항목을 만든다. 캐치테이블·네이버지도처럼
- *  플랫 카드 나열 대신 조건입력과 같은 4개 그룹으로 묶어서 위계를 줄인다 */
+ *  플랫 카드 나열 대신 조건입력과 같은 4개 그룹으로 묶어서 위계를 줄인다.
+ *  아이콘은 조건입력 스텝에서 쓰는 것과 같은 2D 라인 아이콘 계열(lucide)로 통일했다 —
+ *  이모지는 기기마다 입체감 있게 렌더링돼 톤이 따로 논다 */
 export function buildCheckpoints(place: Place, condition: Condition | null): Checkpoint[] {
   const checkpoints: Checkpoint[] = [];
 
@@ -56,9 +60,8 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
     const overlap = peopleRange[0] <= place.capacityMax && place.capacityMin <= peopleRange[1];
     checkpoints.push({
       group: "모임 정보",
-      icon: "👥",
-      label: "인원 적합성",
-      value: overlap
+      icon: "users",
+      text: overlap
         ? `${PEOPLE_LABEL[condition.people]} 모임에 적합한 좌석 규모예요`
         : "인원수 대비 좌석 확인이 필요해요",
       tone: overlap ? "positive" : "warning",
@@ -66,18 +69,16 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
   } else {
     checkpoints.push({
       group: "모임 정보",
-      icon: "👥",
-      label: "인원 적합성",
-      value: `${peopleRangeLabel(place.capacityMin, place.capacityMax)} 규모에 적합해요`,
+      icon: "users",
+      text: `${peopleRangeLabel(place.capacityMin, place.capacityMax)} 규모에 적합해요`,
       tone: "neutral",
     });
   }
 
   checkpoints.push({
     group: "모임 정보",
-    icon: "🚇",
-    label: "역 접근성",
-    value: place.accessScore >= 7 ? "역에서 가까워요" : "역에서 다소 걸어야 해요",
+    icon: "map-pinned",
+    text: place.accessScore >= 7 ? "역에서 가까워 모이기 편해요" : "역에서 다소 걸어야 해요",
     tone: scoreTone(place.accessScore),
   });
 
@@ -86,19 +87,17 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
     const overlap = need[0] <= place.priceMax && place.priceMin <= need[1];
     checkpoints.push({
       group: "식사 조건",
-      icon: "💰",
-      label: "예산 적합성",
-      value: overlap
-        ? `1인 ${formatPrice(place.priceMin, place.priceMax)}, 예산 범위 안에 들어와요`
+      icon: "wallet",
+      text: overlap
+        ? `1인 ${formatPrice(place.priceMin, place.priceMax)}, 예산 범위 안이에요`
         : `1인 ${formatPrice(place.priceMin, place.priceMax)}, 예산보다 다소 높을 수 있어요`,
       tone: overlap ? "positive" : "warning",
     });
   } else {
     checkpoints.push({
       group: "식사 조건",
-      icon: "💰",
-      label: "예산 적합성",
-      value: `1인 ${formatPrice(place.priceMin, place.priceMax)} 수준이에요`,
+      icon: "wallet",
+      text: `1인 ${formatPrice(place.priceMin, place.priceMax)} 수준이에요`,
       tone: "neutral",
     });
   }
@@ -110,9 +109,8 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
       : null;
   checkpoints.push({
     group: "식사 조건",
-    icon: "🍽️",
-    label: "음식 적합성",
-    value:
+    icon: "utensils-crossed",
+    text:
       foodMatched === null
         ? `${place.category} 위주의 메뉴예요`
         : foodMatched
@@ -123,31 +121,29 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
 
   checkpoints.push({
     group: "분위기·공간",
-    icon: "💬",
-    label: "대화 가능성",
-    value:
+    icon: "message-circle",
+    text:
       place.conversationScore >= 7
-        ? "대화하기 좋아요"
+        ? "대화하기 좋은 분위기예요"
         : place.conversationScore >= 4
-          ? "대화하기 무난해요"
+          ? "대화하기 무난한 분위기예요"
           : "대화가 다소 어려울 수 있어요",
     tone: scoreTone(place.conversationScore),
   });
 
   checkpoints.push({
     group: "분위기·공간",
-    icon: "🤝",
-    label: "분위기·대접감",
-    value:
+    icon: "heart-handshake",
+    text:
       place.hospitalityScore >= 7
-        ? "대접하는 느낌을 주기 좋아요"
+        ? "대접하기 좋은 분위기예요"
         : place.hospitalityScore >= 4
           ? "무난한 수준의 대접감이에요"
           : "격식 있는 자리로는 다소 아쉬울 수 있어요",
     tone: scoreTone(place.hospitalityScore),
   });
 
-  const seatValue =
+  const seatText =
     place.seatType === "room"
       ? "독립된 룸이 있어요"
       : place.seatType === "semi-private"
@@ -157,13 +153,12 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
           : "오픈된 좌석 위주예요";
   checkpoints.push({
     group: "분위기·공간",
-    icon: "🪑",
-    label: "좌석·공간",
-    value: seatValue,
+    icon: "armchair",
+    text: seatText,
     tone: place.seatType === "open" ? "neutral" : "positive",
   });
 
-  const reservationValue =
+  const reservationText =
     place.reservationMethod === "available"
       ? "예약 없이도 방문 가능한 편이에요"
       : place.reservationMethod === "phone"
@@ -173,9 +168,8 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
           : "예약을 받지 않는 곳이에요";
   checkpoints.push({
     group: "운영 조건",
-    icon: "📅",
-    label: "예약 편의",
-    value: reservationValue,
+    icon: "calendar-check",
+    text: reservationText,
     tone:
       place.reservationMethod === "available"
         ? "positive"
@@ -186,9 +180,8 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
 
   checkpoints.push({
     group: "운영 조건",
-    icon: "⏳",
-    label: "웨이팅 리스크",
-    value:
+    icon: "clock-3",
+    text:
       place.waitingRisk >= 6
         ? "피크타임엔 웨이팅이 있을 수 있어요"
         : place.waitingRisk >= 3
@@ -199,17 +192,15 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
 
   checkpoints.push({
     group: "운영 조건",
-    icon: "⭐",
-    label: "서비스 안정감",
-    value: place.serviceScore >= 7 ? "서비스가 안정적이에요" : "서비스 편차가 있을 수 있어요",
+    icon: "star",
+    text: place.serviceScore >= 7 ? "서비스가 안정적이에요" : "서비스 편차가 있을 수 있어요",
     tone: scoreTone(place.serviceScore),
   });
 
   checkpoints.push({
     group: "운영 조건",
-    icon: "🅿️",
-    label: "주차",
-    value: place.parkingAvailable
+    icon: "square-parking",
+    text: place.parkingAvailable
       ? place.parkingType === "valet"
         ? "발렛 주차가 가능해요"
         : "주차가 가능해요"

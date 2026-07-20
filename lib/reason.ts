@@ -1,64 +1,85 @@
-import { AREA_LABEL, RELATIONSHIP_LABEL } from "./labels";
+import { PEOPLE_LABEL, RELATIONSHIP_LABEL } from "./labels";
 import type { Condition, MatchResult, ScoreCategory } from "./types";
+import type { ReasonIconKey } from "./icon-keys";
 
-/** 받침 유무에 따라 "이"/"가" 조사를 고른다. 한글이 아닌 문자로 끝나면 안전하게 "가"를 쓴다.
- *  strengthClause 문구 중 절반은 받침 있는 글자로 끝나("좌석", "환경" 등) "가"를 그냥 붙이면
- *  "좌석가 있는"처럼 비문이 된다 */
-function withIga(word: string): string {
-  const code = word.charCodeAt(word.length - 1);
-  if (code < 0xac00 || code > 0xd7a3) return `${word}가`;
-  const hasBatchim = (code - 0xac00) % 28 !== 0;
-  return `${word}${hasBatchim ? "이" : "가"}`;
+export interface ReasonCard {
+  headline: string;
+  description: string;
+  /** 번호 배지 대신 조건입력 위저드와 같은 아이콘을 쓴다. 실제 컴포넌트가 아니라 키만
+   *  담는 이유는 lib/checkpoints.ts 상단 주석 참고 (서버→클라이언트 함수 직렬화 문제) */
+  icon: ReasonIconKey;
 }
 
-function strengthClause(key: ScoreCategory): string {
+/** 카테고리별 "왜 추천하나" 카드 한 장. 헤드라인은 짧게 단정, 설명은 조건을 그대로 반영해
+ *  왜 이 장소가 이 조건에 맞는지 구체적으로 이어붙인다 */
+function reasonCard(key: ScoreCategory, condition: Condition): ReasonCard {
   switch (key) {
     case "relationship":
-      return "관계에 맞는 분위기";
+      return {
+        headline: "관계에 잘 맞는 분위기예요",
+        description: `${RELATIONSHIP_LABEL[condition.relationship]} 자리에 어울리는 공간이에요.`,
+        icon: "users",
+      };
     case "people":
-      return "인원수에 알맞은 좌석";
+      return {
+        headline: "인원수에 넉넉한 좌석이에요",
+        description: `${PEOPLE_LABEL[condition.people]} 모임에 알맞은 좌석 규모예요.`,
+        icon: "users",
+      };
     case "budget":
-      return "예산에 부담스럽지 않은 가격대";
+      return {
+        headline: "예산 안에서 즐길 수 있어요",
+        description: "부담스럽지 않은 가격대예요.",
+        icon: "wallet",
+      };
     case "access":
-      return "역 접근성";
+      return {
+        headline: "역에서 가까워 모이기 편해요",
+        description: "약속 장소로 접근성이 좋아요.",
+        icon: "map-pinned",
+      };
     case "food":
-      return "선호하는 음식 종류";
+      return {
+        headline: "찾으시던 음식과 잘 맞아요",
+        description: "선호하는 음식 종류와 어울려요.",
+        icon: "utensils-crossed",
+      };
     case "conversation":
-      return "대화하기 좋은 환경";
+      return {
+        headline: "대화하기 좋은 분위기예요",
+        description: "차분히 이야기 나누기 좋은 공간이에요.",
+        icon: "message-circle",
+      };
     case "mood":
-      return "원하는 분위기와 대접감";
+      return {
+        headline: "원하는 분위기와 잘 맞아요",
+        description: "바라시는 격식·대접감에 맞는 곳이에요.",
+        icon: "heart-handshake",
+      };
     case "seat":
-      return "여유 있는 좌석";
+      return {
+        headline: "여유 있는 좌석이 있어요",
+        description: "공간이 넉넉해 편하게 앉을 수 있어요.",
+        icon: "armchair",
+      };
     case "reservation":
-      return "예약·웨이팅 편의";
+      return {
+        headline: "예약·웨이팅 부담이 적어요",
+        description: "미리 준비하기 수월한 곳이에요.",
+        icon: "calendar-check",
+      };
     case "parking":
-      return "주차 편의";
+      return {
+        headline: "이동이 편리해요",
+        description: "주차 걱정을 덜 수 있어요.",
+        icon: "square-parking",
+      };
   }
 }
 
-function strengthNoun(key: ScoreCategory): string {
-  switch (key) {
-    case "relationship":
-      return "관계 적합도";
-    case "people":
-      return "인원 적합도";
-    case "budget":
-      return "예산 적합도";
-    case "access":
-      return "역 접근성";
-    case "food":
-      return "음식 적합도";
-    case "conversation":
-      return "대화 가능성";
-    case "mood":
-      return "분위기·대접감";
-    case "seat":
-      return "좌석·공간 적합도";
-    case "reservation":
-      return "예약·웨이팅 편의";
-    case "parking":
-      return "주차 편의";
-  }
+function topStrengths(match: MatchResult, n = 2): ScoreCategory[] {
+  const keys = Object.keys(match.ratios) as ScoreCategory[];
+  return keys.sort((a, b) => match.ratios[b] - match.ratios[a]).slice(0, n);
 }
 
 /** 결과 카드(8.8)의 "핵심 강점 태그"용 짧은 라벨 */
@@ -87,11 +108,6 @@ export function cardTagLabel(key: ScoreCategory): string {
   }
 }
 
-function topStrengths(match: MatchResult, n = 2): ScoreCategory[] {
-  const keys = Object.keys(match.ratios) as ScoreCategory[];
-  return keys.sort((a, b) => match.ratios[b] - match.ratios[a]).slice(0, n);
-}
-
 /** 결과 카드(8.8)용: 알고리즘이 판단한 핵심 강점 태그 2~3개 (적합도 비율 상위 카테고리) */
 export function topStrengthTags(match: MatchResult, n = 3): string[] {
   const keys = Object.keys(match.ratios) as ScoreCategory[];
@@ -100,28 +116,19 @@ export function topStrengthTags(match: MatchResult, n = 3): string[] {
   return picked.map(cardTagLabel);
 }
 
-/** 결과 목록용 한 줄 추천 이유. 캐치테이블의 짧은 소개 문구를 참고했지만, 실제로는 AI가
- *  아니라 룰 기반 채점 결과라 "AI"라고 붙이지 않는다 — 있는 그대로만 말한다 */
-export function generateListReason(condition: Condition, match: MatchResult): string {
-  const [s1] = topStrengths(match, 1);
-  return `${RELATIONSHIP_LABEL[condition.relationship]} 모임에 ${withIga(strengthClause(s1))} 있는 곳이에요.`;
-}
-
-/** 장소 상세(8.9)용 템플릿 기반 추천 이유 (PRD 11.10 Option B) */
-export function generateDetailReason(condition: Condition, match: MatchResult): string {
+/** 장소 상세(8.9)용 "왜 추천하나요" 카드 3장. 조건에서 가장 잘 맞는 2개 기준 +
+ *  이 식당만의 실제 큐레이션 문구(curatedReason)를 마지막 카드로 붙여서, 조건이 같아도
+ *  식당마다 다른 3번째 카드가 나오게 한다 */
+export function generateDetailReason(condition: Condition, match: MatchResult): ReasonCard[] {
   const [s1, s2] = topStrengths(match);
-  const relationshipLabel = RELATIONSHIP_LABEL[condition.relationship];
-  const areaLabel = AREA_LABEL[condition.area];
   return [
-    `${relationshipLabel}에게 청첩장을 전달하는 자리라면 ${strengthClause(
-      s1,
-    )}가 있는 장소가 적합해요.`,
-    `이 장소는 ${strengthNoun(s1)}, ${strengthNoun(s2)} 기준에서 잘 맞아 ${areaLabel} 후보로 추천해요.`,
-    `다만 ${match.place.cautionNote} 확인해보는 것이 좋아요.`,
-  ].join(" ");
+    reasonCard(s1, condition),
+    reasonCard(s2, condition),
+    { headline: "이 식당만의 매력이에요", description: match.place.curatedReason, icon: "sparkles" },
+  ];
 }
 
 /** 조건 컨텍스트 없이(예: 북마크함) 장소를 볼 때 쓰는 기본 추천 이유 */
-export function genericReason(curatedReason: string): string {
-  return curatedReason;
+export function genericReason(curatedReason: string): ReasonCard[] {
+  return [{ headline: "이 식당의 특징이에요", description: curatedReason, icon: "sparkles" }];
 }

@@ -96,7 +96,6 @@ export const STAGES: Stage[] = [
         kind: "single",
         key: "area",
         title: "어느 지역에서 만나고 싶나요?",
-        // 지역 옵션은 OptionBadge가 역 이름 대신 환승 노선 배지를 직접 그린다
         options: toOptions(AREA_OPTIONS, AREA_LABEL),
       },
     ],
@@ -115,8 +114,8 @@ export const STAGES: Stage[] = [
         kind: "multi",
         key: "cuisines",
         title: "어떤 음식을 선호하나요?",
-        helper: "최대 3개까지 고를 수 있어요.",
-        max: 3,
+        helper: "최대 4개까지 고를 수 있어요.",
+        max: 4,
         required: true,
         exclusiveValue: "any",
         options: toOptions(CUISINE_OPTIONS, CUISINE_LABEL, CUISINE_ICON),

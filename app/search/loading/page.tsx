@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { Utensils } from "lucide-react";
 import { searchParamsToCondition, conditionToSearchParams } from "@/lib/condition-query";
 import { BUDGET_LABEL, CUISINE_LABEL, RELATIONSHIP_LABEL } from "@/lib/labels";
 import { track } from "@/lib/analytics";
@@ -65,14 +66,16 @@ function LoadingScreen() {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-4 text-center">
-      {/* 로딩 스피너 대신, 앱 전반에 쓰는 이모지 일러스트 톤에 맞춘 음식 아이콘을 살짝 튀기며 보여준다 */}
+      {/* 원티드는 spring·bounce류 모션을 쓰지 않는다 — 스피너도 0.7s linear 회전 하나뿐이다.
+          여기서는 아이콘을 고정해두고, 아래 문구가 순서대로 바뀌는 것만으로 진행을 알린다.
+          이모지는 기기·브라우저마다 렌더링이 달라 앱 전반에서 lucide 아이콘으로 통일했다 */}
       <span
-        className="flex h-16 w-16 animate-bounce items-center justify-center rounded-full bg-accent-soft text-4xl"
+        className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft"
         aria-hidden
       >
-        🍽️
+        <Utensils className="h-7 w-7 text-accent" strokeWidth={1.8} />
       </span>
-      <p key={messageIndex} className="animate-fade-in-up font-serif text-lg font-bold leading-snug text-ink">
+      <p key={messageIndex} className="animate-fade-in-up text-lg font-bold leading-snug text-ink">
         {messages[messageIndex]}
       </p>
     </div>

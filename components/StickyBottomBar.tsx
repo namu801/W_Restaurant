@@ -7,7 +7,9 @@ import type { ReactNode } from "react";
  */
 export function StickyBottomBar({ children }: { children: ReactNode }) {
   return (
-    <div className="absolute inset-x-0 bottom-0 z-20 border-t border-line bg-cream-soft/95 backdrop-blur">
+    // 원티드는 glassy 효과(blur backdrop)를 명시적으로 금지한다 — 완전 불투명한 표면 +
+    // 헤어라인 보더로만 아래 콘텐츠와 분리한다
+    <div className="absolute inset-x-0 bottom-0 z-20 border-t border-line bg-cream-soft">
       <div
         className="mx-auto max-w-xl px-6 pt-4"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}

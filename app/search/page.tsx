@@ -132,59 +132,64 @@ function SearchWizard() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* 상단 정보 영역이 너무 넓어 보였던 걸, 실제 조작 대상(뒤로가기+진행률)을 한 줄로
-          묶고, 부가 정보(단계 라벨+건너뛰기)는 그 아래 더 작은 글씨의 보조 줄로 낮춰서 정리했다.
-          뒤로가기와 진행률 바가 같은 위계에 있어도 자연스럽다. 두 줄을 gap-2로 붙여
-          "하나의 헤더 블록"처럼 묶고, 다음 콘텐츠와는 바깥 gap-6로 거리를 둔다 */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
+    <>
+      {/* 위저드는 화면마다 상단 영역의 "역할"이 달라서 공용 Header(로고)를 아예 끄고
+          (Header.tsx 참고) 이 화면 전용 상단바를 프레임 기준 absolute로 직접 그린다 —
+          BottomNav와 같은 방식이라 <main>이 스크롤돼도 항상 프레임 맨 위에 고정된다.
+          레퍼런스(단어 학습 앱) 배치를 그대로 가져왔다 — 좌: 뒤로가기, 가운데: 현재 단계,
+          우: 텍스트 버튼. 뒤로가기는 장소 상세 페이지의 뒤로가기와 높이·위치·스타일을
+          그대로 맞췄다. 우측 버튼은 레퍼런스의 "읽어주기"(적극 액션)와 달리 "건너뛰기"라
+          강조색을 쓰면 이탈을 부추기는 신호가 된다 — 잉크 톤으로만, 가운데보다 뚜렷하게
+          작게 둔다. 가운데 라벨이 좌우 버튼 폭 차이와 무관하게 항상 정중앙에 오도록
+          flex justify-between 대신 3열 grid(좌우 1fr + 가운데 auto)로 짠다. */}
+      <div className="absolute inset-x-0 top-0 z-20 bg-cream px-6 pb-4 pt-6">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <button
             type="button"
             onClick={handlePrev}
             aria-label={screenIndex === 0 ? "홈으로 나가기" : "이전 질문"}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-ink-soft transition-colors hover:border-line-strong active:bg-cream-strong"
+            className="-ml-2 flex h-9 w-9 shrink-0 items-center justify-center justify-self-start rounded-full text-ink transition-colors hover:bg-cream-strong active:bg-cream-strong"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" strokeWidth={2} />
           </button>
-          {/* 4단계로 뭉뚱그리면 "겨우 4단계인데 왜 이렇게 많이 물어보지" 싶은 착시가 생긴다.
-              실제 화면 수(9개) 그대로 세그먼트를 나눠서 진행 정도를 정직하게 보여준다. */}
-          <div
-            className="flex flex-1 gap-1"
-            role="progressbar"
-            aria-valuemin={1}
-            aria-valuemax={SCREENS.length}
-            aria-valuenow={screenIndex + 1}
-            aria-label={`전체 ${SCREENS.length}개 질문 중 ${screenIndex + 1}번째: ${screen.stageName}`}
-          >
-            {SCREENS.map((_, i) => (
-              <div
-                key={i}
-                className={clsx(
-                  "h-1.5 flex-1 rounded-full transition-colors",
-                  i <= screenIndex ? "bg-accent" : "bg-sage-soft",
-                )}
-              />
-            ))}
-          </div>
-        </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-medium text-ink-faint">
-            {screen.stageName} · {screenIndex + 1}/{SCREENS.length}
+          {/* 스테이지명은 아래 질문 제목(h1)이 이미 맡고 있어 여기서는 순수 진행률(n/N)만
+              보여준다 — 건너뛰기보다는 크지만, 진짜 주인공인 질문 제목(text-xl)보다는
+              작고 옅은 톤으로 눌러서 위계가 제목에서 밀리지 않게 한다 */}
+          <p className="justify-self-center text-lg font-medium text-ink-soft">
+            {screenIndex + 1}/{SCREENS.length}
           </p>
+
           <button
             type="button"
             onClick={handleSkip}
-            className="text-xs font-medium text-ink-faint underline-offset-2 hover:text-ink-soft hover:underline"
+            className="justify-self-end text-sm font-medium text-ink-faint hover:text-ink-soft"
           >
             건너뛰기
           </button>
         </div>
+
+        {/* 레퍼런스처럼 세그먼트로 쪼개지 않은 하나의 연속된 바로 바꾸고, 단계가 바뀔 때마다
+            채워진 너비가 부드럽게 늘어나는 인터랙션을 준다. 이 상단바 자체의 좌우 패딩(px-6)을
+            -mx-6로 상쇄해서 화면 끝까지 번지게 한다(레퍼런스도 풀블리드). */}
+        <div
+          className="mt-4 -mx-6 h-1.5 bg-line"
+          role="progressbar"
+          aria-valuemin={1}
+          aria-valuemax={SCREENS.length}
+          aria-valuenow={screenIndex + 1}
+          aria-label={`전체 ${SCREENS.length}개 질문 중 ${screenIndex + 1}번째: ${screen.stageName}`}
+        >
+          <div
+            className="h-full rounded-r-full bg-accent transition-all duration-300 ease-out"
+            style={{ width: `${((screenIndex + 1) / SCREENS.length) * 100}%` }}
+          />
+        </div>
       </div>
 
+      <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-serif text-xl font-bold leading-snug text-ink text-balance">
+        <h1 className="text-xl font-bold leading-snug tracking-tight text-ink text-balance">
           {question.title}
         </h1>
         {question.helper && <p className="mt-2 text-sm text-ink-soft">{question.helper}</p>}
@@ -221,7 +226,7 @@ function SearchWizard() {
                   // 스텝마다 뱃지 유무·라벨 길이가 달라 높이가 들쭉날쭉했다. min-h-14로 기본 높이는
                   // 모든 스텝에서 맞추되, 말줄임(...)은 절대 쓰지 않는다 — 라벨이 길면 카드가
                   // 그만큼 자연스럽게 늘어나 두 줄까지 허용한다
-                  "flex min-h-14 items-center gap-2.5 rounded-md border p-3 text-left transition active:scale-[0.98]",
+                  "flex min-h-14 items-center gap-2.5 rounded-md border p-3 text-left transition",
                   selected
                     ? "border-accent bg-accent-soft"
                     : "border-line bg-cream-soft hover:border-line-strong active:bg-cream-strong",
@@ -247,13 +252,14 @@ function SearchWizard() {
           type="button"
           onClick={handleNext}
           disabled={!canProceed()}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-accent-strong active:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isLastScreen ? "추천 결과 보기" : "다음"}
           <ArrowRight className="h-4 w-4" />
         </button>
       </StickyBottomBar>
-    </div>
+      </div>
+    </>
   );
 }
 

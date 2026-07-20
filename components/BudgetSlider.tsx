@@ -10,7 +10,9 @@ import type { BudgetKey } from "@/lib/types";
 // 트랙 맨 왼쪽 끝(채워진 색이 하나도 없어 "선택 안 됨"처럼 보이는 지점)에 붙지 않게 하기 위해서다.
 const MIN = 0;
 const MAX = 110_000;
-const STEP = 1_000;
+// 1000원 단위는 너무 잘게 쪼개져 있어 "4만 1천원", "4만 9천원"처럼 의미 없는 값들이
+// 계속 걸렸다. 5000원 단위로 넓혀서 실제로 사람이 예산을 말할 때 쓰는 단위와 맞춘다
+const STEP = 5_000;
 const LOWER_BOUND = 20_000; // 이하면 "2만원 이하"
 const UPPER_BOUND = 100_000; // 이상이면 "10만원 이상"
 const DEFAULT_VALUE = 40_000;
@@ -37,10 +39,12 @@ function bucketRepresentativeValue(key: BudgetKey): number {
   }
 }
 
+/** 그냥 "4만 9천원"이라고만 써두면 "정확히 이 가격에 맞는 곳만 찾는 건가?" 헷갈릴 수 있다.
+ *  실제로는 "이 금액 이하"를 뜻하므로 항상 그 의미가 드러나게 "~ 이하"를 붙인다 */
 function valueToLabel(v: number): string {
   if (v <= LOWER_BOUND) return "2만원 이하";
   if (v >= UPPER_BOUND) return "10만원 이상";
-  return formatWon(v);
+  return `${formatWon(v)} 이하`;
 }
 
 /**
@@ -76,10 +80,13 @@ export function BudgetSlider({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-md border border-line bg-cream-soft py-6 text-center">
-        <p className="font-serif text-2xl font-bold text-ink">{isAny ? "상관없어요" : valueToLabel(raw)}</p>
-      </div>
+    <div className="flex flex-col gap-4">
+      {/* 레퍼런스(구독 서비스 필터)처럼 박스로 감싸지 않고, 가격을 포인트 컬러로 크고
+          굵게 바로 보여준다 — 시트 안 다른 강조 요소(선택된 칩 텍스트 등)와 같은
+          accent 컬러를 써서 위계가 따로 놀지 않게 한다 */}
+      <p className="text-2xl font-bold text-accent">
+        {isAny ? "예산 상관없이 볼게요" : valueToLabel(raw)}
+      </p>
 
       <div className={clsx("flex flex-col gap-2.5 transition-opacity", isAny && "pointer-events-none opacity-40")}>
         {/* 네이티브 range 인풋을 그대로 쓰면 드래그·키보드·터치가 모두 기본으로 접근성 있게 동작한다.
@@ -92,7 +99,7 @@ export function BudgetSlider({
           value={raw}
           disabled={isAny}
           onChange={(e) => handleSlide(Number(e.target.value))}
-          className="h-2 w-full cursor-pointer accent-accent-strong"
+          className="h-2 w-full cursor-pointer accent-accent"
           aria-label="1인당 예산"
         />
         <div className="flex justify-between text-xs text-ink-faint">

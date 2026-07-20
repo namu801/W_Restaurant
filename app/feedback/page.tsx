@@ -21,7 +21,7 @@ export default function FeedbackPage() {
   if (submitted) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
-        <p className="font-serif text-lg font-bold text-ink">의견 잘 받았어요.</p>
+        <p className="text-lg font-bold text-ink">의견 잘 받았어요.</p>
         <p className="text-sm text-ink-soft">더 나은 청모픽을 만드는 데 참고할게요.</p>
       </div>
     );
@@ -32,7 +32,7 @@ export default function FeedbackPage() {
       <TrackOnMount event="feedback_page_viewed" />
 
       <div>
-        <h1 className="font-serif text-xl font-bold leading-snug text-ink text-balance">
+        <h1 className="text-xl font-bold leading-snug tracking-tight text-ink text-balance">
           청모픽에 대한 의견을 작성해주세요
         </h1>
         <p className="mt-2 text-sm text-ink-soft">불편했던 점, 있었으면 하는 기능 뭐든 편하게 남겨주세요.</p>
@@ -50,7 +50,7 @@ export default function FeedbackPage() {
         type="button"
         onClick={handleSubmit}
         disabled={!message.trim()}
-        className="w-full rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-accent-strong active:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+        className="w-full rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
       >
         의견 보내기
       </button>

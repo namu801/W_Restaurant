@@ -3,10 +3,12 @@ import type {
   BudgetKey,
   CuisineKey,
   ExtraConditionKey,
+  MatchResult,
   MoodFormalityKey,
   NoiseKey,
   PeopleKey,
   RelationshipKey,
+  SeatType,
 } from "./types";
 
 export const RELATIONSHIP_LABEL: Record<RelationshipKey, string> = {
@@ -28,10 +30,10 @@ export const PEOPLE_LABEL: Record<PeopleKey, string> = {
 };
 
 export const AREA_LABEL: Record<AreaKey, string> = {
-  gangnam: "강남역",
-  sinnonhyeon: "신논현역",
-  nonhyeon: "논현역",
-  all: "강남권 전체",
+  all: "용산권 전체",
+  yongsan: "용산역",
+  samgakji: "삼각지역",
+  sinyongsan: "신용산역",
 };
 
 /** PRD 8.4: 반열림 구간(하한 포함, 상한 미포함)으로 겹치지 않게 정의 */
@@ -40,7 +42,7 @@ export const BUDGET_LABEL: Record<BudgetKey, string> = {
   "20-30k": "2만~3만 원",
   "30-50k": "3만~5만 원",
   "over-50k": "5만 원 이상",
-  any: "예산은 상관없어요",
+  any: "예산 상관없는 곳",
 };
 
 /** 네이버지도·카카오맵·배달앱이 공통으로 쓰는 업종 대분류 기준으로 라벨을 정리했다 */
@@ -56,28 +58,38 @@ export const CUISINE_LABEL: Record<CuisineKey, string> = {
   any: "상관 없음",
 };
 
+// 어미를 "-한 곳"으로 통일했다. 전엔 앞쪽 옵션은 "-곳"으로 끝나고 "상관없음" 옵션만
+// "-해요"로 끝나서 같은 질문 안에서도 말투가 섞여 있었다
 export const NOISE_LABEL: Record<NoiseKey, string> = {
   quiet: "대화가 잘 들리는 조용한 곳",
   "lively-but-talkable": "활기 있지만 대화는 가능한 곳",
-  "lively-important": "분위기와 활기가 더 중요해요",
-  any: "소음은 크게 중요하지 않아요",
+  "lively-important": "분위기와 활기가 더 중요한 곳",
+  any: "소음은 상관없는 곳",
 };
 
 export const MOOD_FORMALITY_LABEL: Record<MoodFormalityKey, string> = {
   casual: "편안하고 캐주얼한 자리",
   balanced: "너무 가볍지도 무겁지도 않은 자리",
-  hospitable: "적당히 대접하는 느낌",
+  hospitable: "적당히 대접하는 자리",
   formal: "격식 있고 차분한 자리",
-  any: "분위기는 크게 중요하지 않아요",
+  any: "분위기는 상관없는 자리",
+};
+
+/** lib/checkpoints.ts의 문장형 설명과 달리, 지도 카드 등 좁은 칩 자리에 쓰는 짧은 형태 */
+export const SEAT_TYPE_LABEL: Record<SeatType, string> = {
+  room: "룸 좌석",
+  "semi-private": "반분리 좌석",
+  wide: "넓은 좌석",
+  open: "오픈 좌석",
 };
 
 /** PRD 8.6 기타 조건: 에어비앤비 스타일 다중선택 칩, 선택된 항목은 모두 제외 필터로 동작.
  *  예약·웨이팅은 원래 별도 질문(예약 필수/유연/줄서기 허용 등)이었으나 선택지가 복잡해
  *  "예약 가능한 곳" 한 칩으로 단순화해 여기로 합쳤다 */
 export const EXTRA_CONDITION_LABEL: Record<ExtraConditionKey, string> = {
-  "room-required": "룸이 꼭 필요해요",
-  "parking-required": "주차가 꼭 필요해요",
-  "wide-seating": "넉넉한 좌석 간격",
+  "room-required": "룸이 있는 식당",
+  "parking-required": "주차 가능한 식당",
+  "wide-seating": "좌석 간격이 넉넉한 식당",
   "reservation-possible": "예약 가능한 식당",
 };
 
@@ -109,3 +121,31 @@ export function formatWon(n: number): string {
 export function formatPrice(min: number, max: number): string {
   return `${formatWon(min)}~${formatWon(max)}`;
 }
+
+/** 식당 후보 카드처럼 한 줄로 훑어보는 자리에서는 브레이크타임·라스트오더까지 다 보여주면
+ *  너무 길어진다. 상세 페이지엔 원문 그대로 두고, 카드에서만 이 함수로 줄여 쓴다.
+ *  괄호 안에 브레이크타임/라스트오더가 낀 구간과, 괄호 밖에 단독으로 붙는 절 둘 다 지운다 —
+ *  "(연중무휴)"처럼 그 두 단어가 없는 괄호는 그대로 남긴다. lib/places.ts의 20개 실제
+ *  영업시간 문자열로 전부 검증했다 */
+export function simplifyBusinessHours(hours: string): string {
+  return hours
+    .replace(/\([^)]*(?:브레이크타임|라스트오더)[^)]*\)/g, "")
+    .replace(/\s*(?:브레이크타임|라스트오더)\s*[0-9:~-]+(?:\s*[0-9:~-]+)?/g, "")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*$/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+/** 카드(PlaceCard)와 상세 페이지 둘 다 같은 fitLabel을 같은 Tag 색으로 보여줘야 해서
+ *  공유 lib로 뺐다 — 예전엔 각 파일에 따로 정의돼 있어 둘이 어긋날 여지가 있었다.
+ *  components/ui/Tag의 TagVariant를 그대로 import하지 않고 값만 맞춰 적었다 — lib가
+ *  component를 거꾸로 의존하지 않게 하기 위해서다 */
+export const FIT_TAG_VARIANT: Record<
+  MatchResult["fitLabel"],
+  "neutral" | "accent" | "warning" | "positive"
+> = {
+  "매우 잘 맞아요": "positive",
+  "잘 맞아요": "accent",
+  "일부 조건을 확인해보세요": "neutral",
+};

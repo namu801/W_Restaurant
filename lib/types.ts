@@ -9,7 +9,7 @@ export type RelationshipKey =
 
 export type PeopleKey = "2" | "3-4" | "5-6" | "7-8" | "9+";
 
-export type AreaKey = "gangnam" | "sinnonhyeon" | "nonhyeon" | "all";
+export type AreaKey = "yongsan" | "sinyongsan" | "samgakji" | "all";
 
 /** PRD 8.4: 반열림 구간(하한 포함, 상한 미포함)으로 MECE하게 정의한다 */
 export type BudgetKey = "under-20k" | "20-30k" | "30-50k" | "over-50k" | "any";
@@ -43,7 +43,7 @@ export interface Condition {
   people: PeopleKey;
   area: AreaKey;
   budget: BudgetKey;
-  cuisines: CuisineKey[]; // 최대 3개
+  cuisines: CuisineKey[]; // 최대 4개
   noise: NoiseKey;
   moodFormality: MoodFormalityKey;
   extraConditions: ExtraConditionKey[]; // 선택 입력, 0개 이상
@@ -62,6 +62,9 @@ export interface Place {
   cuisineTags: Exclude<CuisineKey, "any">[];
   area: Exclude<AreaKey, "all">;
   address: string;
+  businessHours: string;
+  /** public/ 기준 상대경로. 1번 인덱스가 대표 사진. 사진이 없으면 빈 배열(플레이스홀더 아이콘으로 대체) */
+  photos: string[];
   /** 지도 탭 마커 표시용 근사 좌표. 실제 매장 위치를 정밀 측량한 값이 아니라 지역대 안에서의
    *  데모용 추정치입니다 (PRD 10.1 참고) */
   lat: number;
