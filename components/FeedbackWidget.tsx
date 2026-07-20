@@ -6,11 +6,16 @@ import { track } from "@/lib/analytics";
 import type { FeedbackValue } from "@/lib/types";
 
 const DETAIL_OPTIONS: Record<FeedbackValue, string[]> = {
-  helpful: ["걱정했던 점을 미리 알 수 있어서", "내 조건에 딱 맞는 곳이라서", "사진과 정보가 자세해서"],
-  // "일반 지도 서비스와 차이점을 못 느껴서"는 이 서비스가 단순 지도 검색이 아니라
-  // 조건 기반 큐레이션이라는 걸 강조하는 제품 차원의 피드백이라, 데이터 정확성
-  // 이슈("정보가 실제와 달라서")보다 지금 단계에서 더 알고 싶은 이유다
-  not_helpful: ["내 조건과 안 맞아서", "일반 지도 서비스와 차이점을 못 느껴서", "추천 이유가 와닿지 않아서"],
+  helpful: [
+    "조건에 잘 맞는 후보를 추려줘서",
+    "추천 이유와 아쉬운 점이 구체적이어서",
+    "비교·예약에 필요한 정보를 한눈에 볼 수 있어서",
+  ],
+  not_helpful: [
+    "추천 장소가 내 조건과 잘 맞지 않아서",
+    "추천 이유가 충분히 납득되지 않아서",
+    "비교·예약에 필요한 정보가 부족해서",
+  ],
 };
 
 export function FeedbackWidget({ placeId }: { placeId: string }) {
@@ -46,7 +51,7 @@ export function FeedbackWidget({ placeId }: { placeId: string }) {
     return (
       <div className="rounded-lg border border-line bg-cream-soft p-5">
         <p className="text-center text-[15px] font-bold text-ink">
-          {isHelpful ? "어떤 점이 도움이 되었나요?" : "어떤 점이 아쉬웠나요?"}
+          {isHelpful ? "가장 도움이 된 점은 무엇인가요?" : "가장 아쉬웠던 점은 무엇인가요?"}
         </p>
         <div className="mt-4 flex flex-col gap-2">
           {DETAIL_OPTIONS[value].map((detail) => (
