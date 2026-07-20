@@ -114,6 +114,7 @@ export default async function PlaceDetailPage({
               mapUrlNaver={place.mapUrlNaver}
               mapUrlKakao={place.mapUrlKakao}
               score={match?.score}
+              page="detail"
             />
           </div>
         </div>

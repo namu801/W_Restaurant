@@ -42,7 +42,7 @@ export function PlaceCard({
     <article className="relative overflow-hidden rounded-sm border border-line bg-cream-soft transition-transform duration-[120ms] ease-out hover:-translate-y-0.5">
       <Link
         href={detailHref}
-        onClick={() => track("place_card_clicked", { place_id: place.id, rank, score })}
+        onClick={() => track("place_card_clicked", { place_id: place.id, rank, score, page: "results" })}
         className="block p-4"
       >
         <div className="flex items-start justify-between gap-2 pr-10">

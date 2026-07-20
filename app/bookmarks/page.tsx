@@ -84,7 +84,7 @@ export default function BookmarksPage() {
                 target="_blank"
                 rel="noreferrer"
                 onClick={() =>
-                  track("map_clicked", { place_id: place.id, map_type: "naver" })
+                  track("map_clicked", { place_id: place.id, map_type: "naver", page: "bookmarks" })
                 }
                 className="inline-flex items-center gap-1 rounded-full border border-line px-4 py-2.5 text-sm text-ink-soft transition-all hover:bg-cream-strong active:bg-cream-strong"
               >

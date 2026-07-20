@@ -9,12 +9,17 @@ export function MapLinks({
   mapUrlKakao,
   rank,
   score,
+  page,
 }: {
   placeId: string;
   mapUrlNaver: string;
   mapUrlKakao: string;
   rank?: number;
   score?: number;
+  /** 같은 이름의 map_clicked가 북마크 목록(app/bookmarks)에서도 따로 발생해서, 어느 화면에서
+   *  누른 클릭인지 이 속성 없인 믹스패널에서 구분할 수 없었다 — "상세 조회 → 지도 클릭" 같은
+   *  퍼널을 만들 때 이 값으로 걸러야 정확하다 */
+  page: "detail" | "bookmarks";
 }) {
   return (
     <div className="flex gap-2.5">
@@ -25,7 +30,7 @@ export function MapLinks({
         target="_blank"
         rel="noreferrer"
         onClick={() =>
-          track("map_clicked", { place_id: placeId, rank, score, map_type: "naver" })
+          track("map_clicked", { place_id: placeId, rank, score, map_type: "naver", page })
         }
         className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-cream-soft py-3.5 text-[13px] font-bold text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
       >
@@ -39,7 +44,7 @@ export function MapLinks({
         target="_blank"
         rel="noreferrer"
         onClick={() =>
-          track("map_clicked", { place_id: placeId, rank, score, map_type: "kakao" })
+          track("map_clicked", { place_id: placeId, rank, score, map_type: "kakao", page })
         }
         className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-cream-soft py-3.5 text-[13px] font-bold text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
       >
