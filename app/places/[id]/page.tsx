@@ -75,25 +75,6 @@ export default async function PlaceDetailPage({
           {place.category} · {AREA_LABEL[place.area]}
         </p>
 
-        {/* 체크포인트·추천 이유 카드가 아무리 많아도 "그래서 왜 여기를 고르면 되는지"
-            최종 판단은 따로 안 내려져 있었다 — 상세 페이지에서 가장 먼저 보이는 자리에
-            청모픽이 대신 결론을 내린다: 왜 1순위인지(headline) → 누구와 몇 명이 어떤 점
-            덕분에 모이기 편한지(lead) → 솔직한 아쉬움(caveat, 있을 때만).
-            아래 "왜 추천해요" 카드가 이 결론과 같은 근거를 또 반복하지 않도록,
-            generateVerdict가 쓴 카테고리 2개는 generateDetailReason에서 제외한다 */}
-        {verdict && (
-          <div className="mt-4 rounded-md border border-accent/25 bg-accent-soft/60 p-5">
-            <p className="text-base font-bold leading-snug text-ink">{verdict.headline}</p>
-            <p className="mt-2.5 text-sm leading-relaxed text-ink">{verdict.lead}</p>
-            {verdict.caveat && (
-              <div className="mt-3 border-t border-accent/20 pt-3">
-                <p className="text-xs font-bold text-ink-soft">솔직히 말하면</p>
-                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{verdict.caveat}</p>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* 메타 줄(카테고리·지역)과 아래 위치·영업시간·가격 블록 사이는 같은 "정보 묶음"
             안에서 살짝만 끊어주는 자리라, 대분류를 가르는 다른 구분 밴드(h-2)와 달리
             이 선만 유일하게 얇은 헤어라인(2px)으로 둔다 — bg-cream은 페이지 배경과
@@ -127,6 +108,7 @@ export default async function PlaceDetailPage({
       <div className="-mx-6 h-2 bg-line-strong" />
 
       <PlaceDetailTabs
+        verdict={verdict}
         reasonCards={reasonCards}
         fitGuidance={fitGuidance}
         bookingFacts={bookingFacts}

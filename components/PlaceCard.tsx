@@ -1,5 +1,6 @@
 "use client";
 
+import { clsx } from "clsx";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { ClockIcon, WalletIcon } from "@heroicons/react/24/solid";
@@ -34,6 +35,7 @@ export function PlaceCard({
   condition,
   rank,
   curationRank,
+  topBand,
 }: {
   match: MatchResult;
   condition: Condition;
@@ -44,6 +46,11 @@ export function PlaceCard({
    *  배지는 이 값을 쓴다 — rank를 그대로 쓰면 가격순 정렬 중에 가장 싼 곳이 "1순위"로
    *  보이는 오류가 생긴다 */
   curationRank: number;
+  /** 결과 목록의 "1순위"/"다른 선택" 헤드라인을 카드 바깥에 별도 박스로 얹었더니, 카드가
+   *  그 박스의 padding만큼 좁아져 다른 카드들과 폭이 달라 보였다 — 카드 자체의 테두리
+   *  안쪽, 맨 위에 붙는 띠로 렌더링해서 카드 크기는 그대로 두고 테두리만 자연스럽게
+   *  이어지게 한다 */
+  topBand?: { text: string; tone: "accent" | "neutral" };
 }) {
   const { place, score, fitLabel } = match;
   const strengthTags = topStrengthTags(match, condition, 2);
@@ -51,7 +58,31 @@ export function PlaceCard({
   const photoCount = Math.max(place.photos.length, 1);
 
   return (
-    <article className="relative overflow-hidden rounded-sm border border-line bg-cream-soft transition-transform duration-[120ms] ease-out hover:-translate-y-0.5">
+    <article
+      className={clsx(
+        "relative overflow-hidden rounded-sm border transition-transform duration-[120ms] ease-out hover:-translate-y-0.5",
+        topBand?.tone === "accent" ? "border-accent/30" : "border-line",
+        "bg-cream-soft",
+      )}
+    >
+      {topBand && (
+        <p
+          className={clsx(
+            "flex items-center gap-1.5 border-b px-4 py-2.5 text-sm font-bold",
+            topBand.tone === "accent"
+              ? "border-accent/20 bg-accent-soft text-accent-strong"
+              : "border-line bg-cream-strong text-ink-soft",
+          )}
+        >
+          <Sparkles
+            className={clsx("h-3.5 w-3.5 shrink-0", topBand.tone === "neutral" && "text-ink-faint")}
+            strokeWidth={2}
+            fill={topBand.tone === "accent" ? "currentColor" : "none"}
+            aria-hidden
+          />
+          {topBand.text}
+        </p>
+      )}
       <Link
         href={detailHref}
         onClick={() => track("place_card_clicked", { place_id: place.id, rank, score, page: "results" })}

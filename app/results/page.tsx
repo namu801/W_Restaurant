@@ -193,24 +193,17 @@ export default async function ResultsPage({
 
           {showCuratedLayout && hero ? (
             <div className="flex flex-col gap-6">
-              {/* 1순위: 헤드라인과 카드가 그냥 위아래로 떨어진 두 요소처럼 보이지 않도록,
-                  같은 프레임(accent 테두리+옅은 틴트) 안에 같이 담는다. 아이콘도 큐레이션
-                  배지·추천 이유에 쓰는 것과 같은 Sparkles를 붙여서 "청모픽이 짚어준 한
-                  줄"이라는 걸 같은 문법으로 알아볼 수 있게 한다 */}
-              <div className="rounded-lg border-2 border-accent/30 bg-accent-soft/20 p-3">
-                {heroVerdict && (
-                  <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-accent-strong">
-                    <Sparkles className="h-3.5 w-3.5 shrink-0" strokeWidth={2} fill="currentColor" aria-hidden />
-                    {heroVerdict.headline}
-                  </p>
-                )}
-                <PlaceCard
-                  match={hero}
-                  condition={condition}
-                  rank={1}
-                  curationRank={curationRank.get(hero.place.id)!}
-                />
-              </div>
+              {/* 1순위: 헤드라인을 카드 바깥 별도 박스에 얹었더니 카드가 그 박스의 padding
+                  만큼 좁아져 다른 카드들과 폭이 달라 보였다 — PlaceCard 자체의 topBand로
+                  옮겨서 카드 테두리 안쪽 맨 위에 붙는 띠로 그린다. 카드 크기는 그대로,
+                  테두리 색만 이어진다 */}
+              <PlaceCard
+                match={hero}
+                condition={condition}
+                rank={1}
+                curationRank={curationRank.get(hero.place.id)!}
+                topBand={heroVerdict ? { text: heroVerdict.headline, tone: "accent" } : undefined}
+              />
 
               {alternatives.length > 0 && (
                 <div>
@@ -219,16 +212,13 @@ export default async function ResultsPage({
                     {alternatives.map(({ axis, match }) => {
                       const meta = generateAlternativeMeta(axis, match);
                       return (
-                        <div key={axis} className="rounded-lg border border-line bg-cream p-3">
-                          <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-ink-soft">
-                            <Sparkles className="h-3.5 w-3.5 shrink-0 text-ink-faint" strokeWidth={2} aria-hidden />
-                            {meta.title}
-                          </p>
+                        <div key={axis}>
                           <PlaceCard
                             match={match}
                             condition={condition}
                             rank={visibleMatches.indexOf(match) + 1}
                             curationRank={curationRank.get(match.place.id)!}
+                            topBand={{ text: meta.title, tone: "neutral" }}
                           />
                           {/* 좋은 점만 말하지 않는다 — 1순위 대비 뭘 포기하게 되는지도 같이 알려준다 */}
                           <p className="mt-2 px-1 text-xs text-ink-faint">{meta.caveat}</p>
