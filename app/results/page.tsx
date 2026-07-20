@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { TrackOnMount } from "@/components/TrackOnMount";
 import { ConditionEditSheet } from "@/components/ConditionEditSheet";
 import { SortDropdown, type SortValue } from "@/components/SortDropdown";
+import { buildCurationSummary } from "@/lib/reason";
 
 export default async function ResultsPage({
   searchParams,
@@ -52,6 +53,10 @@ export default async function ResultsPage({
 
   const isTruncated = !showAll && matches.length > RESULT_TRUNCATE_THRESHOLD;
   const visibleMatches = isTruncated ? displayMatches.slice(0, RESULT_DISPLAY_LIMIT) : displayMatches;
+  // "청모픽 N순위" 배지는 항상 매칭 점수 기준(matches 원래 순서)이어야 한다 — 정렬을
+  // "가격 낮은순"으로 바꿔서 카드 노출 순서(index)가 달라져도, 배지에 찍히는 순위는
+  // 그대로 추천 점수 기준을 유지해야 가장 싼 곳이 "1순위"로 잘못 보이지 않는다
+  const curationRank = new Map(matches.map((m, i) => [m.place.id, i + 1]));
   const isNarrow = matches.length > 0 && matches.length <= NARROW_RESULT_THRESHOLD;
   const relaxation = matches.length === 0 ? findRelaxationSuggestion(condition) : null;
   const relaxationHref = relaxation
@@ -131,11 +136,10 @@ export default async function ResultsPage({
         />
       ) : (
         <>
-          {/* 이전엔 결과가 8곳을 넘어 일부만 잘라 보여줄 때(isTruncated)만 이 배지가 떴다 —
-              그럼 결과가 적을 땐 "우리가 골라줬다"는 큐레이션 인상이 아예 안 보였다. 큐레이션은
-              몇 곳을 추렸는지와 무관하게 이 리스트의 성격이라, 결과가 있는 한 항상 띄우고
-              문구만 두 갈래로 나눈다 — 일부만 골라 보여줄 때는 "N곳 중 M곳", 결과가 적어
-              전부 다 보여줄 때는 "N곳 중 N곳"처럼 같은 숫자가 겹쳐 보이지 않도록 다른 문장을 쓴다.
+          {/* "N곳 중 M곳을 골라드렸어요"는 필터링 결과를 요약할 뿐, 큐레이터가 이 조건을
+              이해하고 무엇을 먼저 봤는지는 안 드러났다 — [누구와 만나는지] + [우선한 조건]
+              구조의 문장으로 바꿔서, 같은 개수라도 조건이 다르면 다른 문장이 나오게 한다
+              (lib/reason.ts buildCurationSummary 참고).
               옅은 틴트 채움만으로는 강조가 부족해서, 채움은 그대로 두고 그라디언트 테두리를
               다시 얹었다 — 대신 옆의 "필터" 버튼에서 테두리·채움을 걷어내 이 배지가 화면에서
               유일하게 "테두리+채움"을 다 쓰는 자리가 되게 했다. radius도 식당 카드와
@@ -143,9 +147,7 @@ export default async function ResultsPage({
           <div className="w-full rounded-sm bg-gradient-to-r from-accent to-gold p-[2px]">
             <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-gold-soft px-3.5 py-2.5 text-sm font-semibold text-accent-strong">
               <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.5} fill="currentColor" aria-hidden />
-              {isTruncated
-                ? `${matches.length}곳 중 가장 잘 맞는 ${RESULT_DISPLAY_LIMIT}곳을 골라드렸어요`
-                : `조건에 맞는 ${matches.length}곳을 골라드렸어요`}
+              {buildCurationSummary(condition)}
             </div>
           </div>
 
@@ -156,6 +158,7 @@ export default async function ResultsPage({
                 match={match}
                 condition={condition}
                 rank={index + 1}
+                curationRank={curationRank.get(match.place.id)!}
               />
             ))}
           </div>

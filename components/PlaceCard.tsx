@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { ClockIcon, WalletIcon } from "@heroicons/react/24/solid";
-import { AREA_LABEL, FIT_TAG_VARIANT, formatFitScore, formatPrice, todayBusinessHours } from "@/lib/labels";
+import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice, todayBusinessHours } from "@/lib/labels";
 import { conditionToSearchParams } from "@/lib/condition-query";
-import { topStrengthTags } from "@/lib/reason";
+import { generateCardSentence, topStrengthTags } from "@/lib/reason";
 import type { Condition, MatchResult } from "@/lib/types";
 import { Tag } from "@/components/ui/Tag";
 import { BookmarkButton } from "@/components/BookmarkButton";
@@ -24,17 +24,29 @@ import { track } from "@/lib/analytics";
  * 저장 버튼과 실제로 겹칠 수 있는 헤더 줄(식당명+적합도 태그)에만 pr-10을 주고,
  * 그 아래 내용은 전부 좌우 동일한 p-4 여백을 그대로 쓴다.
  */
+/** 몇 위까지만 "청모픽 N순위" 배지를 붙일지. 결과가 많아도 6장까지만 카드로 보여주는데
+ *  (RESULT_DISPLAY_LIMIT), 그중 5위까지만 순위를 매기고 마지막 한 장은 순위 없이
+ *  둔다 — "여기까지가 확실한 추천"이라는 신호를 순위 배지 자체로 준다 */
+const MAX_RANK_BADGE = 5;
+
 export function PlaceCard({
   match,
   condition,
   rank,
+  curationRank,
 }: {
   match: MatchResult;
   condition: Condition;
+  /** 지금 화면에 보이는 순서 기준 순번(정렬 방식이 바뀌면 같이 바뀐다) — 북마크·클릭
+   *  분석 이벤트에 쓰는 값이라 그대로 둔다 */
   rank: number;
+  /** 정렬 방식(추천순/가격순)과 무관하게 항상 매칭 점수 기준인 고정 순위. "청모픽 N순위"
+   *  배지는 이 값을 쓴다 — rank를 그대로 쓰면 가격순 정렬 중에 가장 싼 곳이 "1순위"로
+   *  보이는 오류가 생긴다 */
+  curationRank: number;
 }) {
-  const { place, score, fitLabel, fitRatio } = match;
-  const strengthTags = topStrengthTags(match, 2);
+  const { place, score, fitLabel } = match;
+  const strengthTags = topStrengthTags(match, condition, 2);
   const detailHref = `/places/${place.id}?${conditionToSearchParams(condition).toString()}`;
   const photoCount = Math.max(place.photos.length, 1);
 
@@ -49,7 +61,9 @@ export function PlaceCard({
           <h3 className="min-w-0 text-lg font-bold leading-snug tracking-tight text-ink">
             {place.name}
           </h3>
-          <Tag variant={FIT_TAG_VARIANT[fitLabel]}>{formatFitScore(fitRatio)}</Tag>
+          {curationRank <= MAX_RANK_BADGE && (
+            <Tag variant={FIT_TAG_VARIANT[fitLabel]}>청모픽 {curationRank}순위</Tag>
+          )}
         </div>
         <p className="mt-1 text-xs font-medium text-ink-soft">
           {AREA_LABEL[place.area]} · {place.category}
@@ -72,9 +86,13 @@ export function PlaceCard({
           ))}
         </div>
 
+        {/* 예전엔 장소마다 고정된 curatedReason 한 줄을 그대로 보여줘서, 조건이 달라도
+            6장이 전부 비슷한 톤으로 나열됐다 — 지금 이 조건에서 실제로 가장 강한 점(들)을
+            열고, 뚜렷한 약점이 있으면(생성 로직의 CAVEAT_FRAGMENT 기준) 정직하게
+            트레이드오프까지 말해줘서 카드마다 다른, "이 장소만의" 문장이 나오게 한다 */}
         <p className="mt-3 flex items-start gap-1.5 rounded-sm bg-accent-soft px-3 py-2 text-xs font-medium leading-relaxed text-ink">
           <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-accent" strokeWidth={2} fill="currentColor" aria-hidden />
-          {place.curatedReason}
+          {generateCardSentence(condition, match)}
         </p>
 
         {/* 가격·영업시간을 한 줄로 묶는다. 영업시간을 요일별로 다 나열하면(예: "월~금
