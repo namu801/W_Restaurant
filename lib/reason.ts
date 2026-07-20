@@ -16,7 +16,8 @@ export interface ReasonCard {
   headline: string;
   description: string;
   /** 번호 배지 대신 조건입력 위저드와 같은 아이콘을 쓴다. 실제 컴포넌트가 아니라 키만
-   *  담는 이유는 lib/checkpoints.ts 상단 주석 참고 (서버→클라이언트 함수 직렬화 문제) */
+   *  담는 이유는 components/checkpoint-icon-map.tsx 참고 (서버→클라이언트 함수
+   *  직렬화 문제 — 서버 컴포넌트인 장소 상세 페이지에서 컴포넌트를 그대로 못 넘긴다) */
   icon: ReasonIconKey;
   /** "이 식당만의 매력이에요" 같은 정형화된 제목은 모든 식당에서 똑같이 반복돼서, 정작
    *  식당마다 다른 실제 매력(curatedReason)이 작고 옅은 보조 텍스트로 묻혔다. 이 카드는
@@ -41,6 +42,10 @@ function withObjectParticle(text: string): string {
 
 function withConjunctionParticle(text: string): string {
   return `${text}${hasFinalConsonant(text) ? "과" : "와"}`;
+}
+
+function withSubjectParticle(text: string): string {
+  return `${text}${hasFinalConsonant(text) ? "이" : "가"}`;
 }
 
 const CATEGORY_ICON: Record<ScoreCategory, ReasonIconKey> = {
@@ -83,13 +88,16 @@ const STORY_CARD: Record<
     headline: "찾던 음식과 잘 맞아요",
     description: `${place.category}라 취향에 맞게 즐길 수 있어요.`,
   }),
-  conversation: () => ({
-    headline: "대화하기 편해요",
-    description: "공간이 차분하고 대화에 집중하기 좋아요.",
+  // people은 이 카드에서만 함께 다룬다 — 별도 "인원에 맞는 좌석" 카드를 또 만들면 상단 결론
+  // "누구와 몇 명" 문장, 이 카드, 아래 "이런 모임에 추천해요" 목록에서 인원이 세 번
+  // 반복됐다. 인원은 "몇 명이 어떻게 대화하기 좋은지"를 설명할 때만 자연스럽게 녹인다
+  conversation: (condition) => ({
+    headline: "식사보다 대화에 집중하기 좋아요",
+    description: `${PEOPLE_LABEL[condition.people]}이 차분하게 이야기 나누기 좋은 규모예요.`,
   }),
-  mood: () => ({
+  mood: (condition) => ({
     headline: "자리를 신경 썼다는 인상을 줘요",
-    description: "너무 격식 있지는 않지만, 청첩장을 건네는 자리로는 충분히 정돈된 분위기예요.",
+    description: `정돈된 공간과 안정적인 서비스 덕분에 ${RELATIONSHIP_LABEL[condition.relationship]}와의 자리에도 부담이 적어요.`,
   }),
   seat: () => ({
     headline: "좌석이 여유로워요",
@@ -173,10 +181,19 @@ export function topStrengthTags(match: MatchResult, condition: Condition, n = 3)
 }
 
 /** 장소 상세 "이 모임에 잘 맞는 이유" 카드 3장. 예전엔 "관계에 잘 맞는 분위기예요"처럼
- *  항목별 매칭 결과를 나열해서 체크리스트처럼 보였다 — 조건에서 가장 잘 맞는 카테고리
- *  3개를 골라 각각 실제 판단처럼 읽히는 짧은 이유로 보여준다(STORY_CARD) */
+ *  항목별 매칭 결과를 나열해서 체크리스트처럼 보였고, 상단 "한 줄 결론"이 이미 다룬
+ *  근거(가장 강한 카테고리 2개)를 여기서 또 반복하는 문제도 있었다 — 상단 결론이 쓴
+ *  카테고리(rankedOthers의 상위 2개)는 제외하고, 그다음으로 잘 맞는 카테고리 3개만
+ *  골라서 서로 다른 판단 3가지가 되게 한다. relationship/people은 카드로 안 만들고
+ *  conversation 카드 안에서 "몇 명이 대화하기 좋은지"로만 자연스럽게 녹인다 */
 export function generateDetailReason(condition: Condition, match: MatchResult): ReasonCard[] {
-  return topStrengths(match, 3).map((key) => {
+  const rankedOthers = (Object.keys(match.ratios) as ScoreCategory[])
+    .filter((k) => k !== "relationship" && k !== "people")
+    .sort((a, b) => match.ratios[b] - match.ratios[a]);
+  const verdictThemes = new Set(rankedOthers.slice(0, 2));
+  const cardKeys = rankedOthers.filter((k) => !verdictThemes.has(k)).slice(0, 3);
+
+  return cardKeys.map((key) => {
     const { headline, description } = STORY_CARD[key](condition, match.place);
     return { headline, description, icon: CATEGORY_ICON[key] };
   });
@@ -296,42 +313,54 @@ export function generateCardSentence(condition: Condition, match: MatchResult): 
   return `${opening}.`;
 }
 
-const HEADLINE_NOUN: Record<ScoreCategory, string> = {
-  relationship: "관계 궁합",
-  people: "인원 적합도",
-  budget: "가격",
-  access: "접근성",
-  food: "음식",
-  conversation: "대화",
-  mood: "분위기",
-  seat: "좌석",
-  reservation: "예약",
-  parking: "주차",
+/** "OO와 XX의 균형이 가장 좋아요"는 추상적이라 "그래서 나한테 왜 좋은데?"가 안 와닿았다
+ *  — 실제 상황("차로 오는 사람이 있다면", "차분히 대화하고 싶다면")에 말을 건네는 헤드라인
+ *  으로 바꿔서, 이 장소가 어떤 사람에게 특히 유리한지 바로 느껴지게 한다 */
+const PERSONA_HEADLINE: Record<ScoreCategory, string> = {
+  relationship: "이 관계에 특히 잘 맞는 곳이에요",
+  people: "이 인원에 딱 맞는 곳이에요",
+  budget: "예산 부담을 줄이고 싶다면 좋은 선택이에요",
+  access: "역에서 가까운 곳을 찾는다면 좋은 선택이에요",
+  food: "찾으시던 음식이 있다면 잘 맞아요",
+  conversation: "차분히 대화하고 싶다면 좋은 선택이에요",
+  mood: "제대로 대접하고 싶은 자리라면 잘 맞아요",
+  seat: "여유롭게 앉고 싶다면 좋은 선택이에요",
+  reservation: "예약 부담 없이 가고 싶다면 좋은 선택이에요",
+  parking: "차로 오는 사람이 있다면 가장 편한 선택이에요",
 };
 
-/** 청첩장 모임이라는 맥락 자체를 얼마나 편하게 치를 수 있는지 — 대화가 잘 되는 곳(조용한
- *  편)이면 "차분하게", 캐주얼한 곳이면 "편하게"로 톤을 다르게 표현한다 */
-function experiencePhrase(place: Place): string {
-  if (place.conversationScore >= 7) return "차분하게 청첩장을 건네기 좋은 곳이에요";
-  if (place.formalityTags.includes("casual")) return "편하게 청첩장을 전하기 좋은 곳이에요";
-  return "청첩장 모임을 갖기 좋은 곳이에요";
-}
+/** 결론 리드 문장에서 강점 두 개를 하나로 이어붙일 때 쓰는 연결형("-고") 조각.
+ *  POSITIVE_FRAGMENT(종결형 "-아요/-어요")와 어간이 같은 짝이라, 이 둘을 따로
+ *  손으로 관리한다 — 종결형에서 연결형을 기계적으로 만들면(불규칙 활용 때문에)
+ *  틀린 문장이 나올 위험이 있어서다 */
+const CONNECTIVE_FRAGMENT: Record<ScoreCategory, (condition: Condition, place: Place) => string> = {
+  relationship: (condition) => `${RELATIONSHIP_LABEL[condition.relationship]} 자리에 잘 어울리고`,
+  people: (condition) => `${PEOPLE_LABEL[condition.people]}이 편하게 앉을 수 있고`,
+  budget: () => "예산 부담이 적고",
+  access: (_condition, place) => `${AREA_LABEL[place.area]}과 가깝고`,
+  food: () => "찾으시던 음식과 잘 맞고",
+  conversation: () => "차분히 대화하기 좋고",
+  mood: () => "분위기도 잘 맞고",
+  seat: () => "좌석 간격도 여유롭고",
+  reservation: () => "예약 부담도 적고",
+  parking: () => "주차도 가능하고",
+};
 
 export interface Verdict {
-  /** "대화와 접근성의 균형이 가장 좋아요" 같은 짧은 결론 헤드라인 */
+  /** "차로 오는 사람이 있다면 가장 편한 선택이에요" 같은 상황 대입형 결론 헤드라인 */
   headline: string;
-  /** 누구와, 어떤 경험에 좋은지 */
+  /** 누구와 몇 명이 어떤 점 덕분에 모이기 편한지, 강점 1~2개를 한 문장으로 묶는다 */
   lead: string;
-  /** 구체적인 근거(가장 강한 점) 한 문장 */
-  detail: string;
   /** 뚜렷한 약점(ratio 0.5 미만)이 있을 때만 채워진다 — 없는데 억지로 트집 잡지 않는다 */
   caveat: string | null;
 }
 
 /** 상세 페이지 최상단 "청모픽 한 줄 결론". 체크포인트·추천 이유 카드가 아무리 많아도
  *  "그래서 왜 여기를 고르면 되는지" 최종 판단은 따로 안 내려져 있었다 — 이 페이지에서
- *  가장 먼저 보이는 자리에 청모픽이 대신 결론을 내려준다(누구와/어떤 경험/왜 1순위인지/
- *  뭘 조심해야 하는지 네 가지를 headline+lead+detail+caveat 네 조각으로 나눠 담는다) */
+ *  가장 먼저 보이는 자리에 청모픽이 대신 결론을 내려준다. headline은 가장 강한 카테고리
+ *  하나를 "이럴 때 좋다"는 상황으로, lead는 강점 1~2개를 누구와·몇 명 맥락과 묶어 한
+ *  문장으로, caveat은 뚜렷한 약점이 있을 때만 담는다 — 이 두 카테고리(best/second)는
+ *  아래 "이 모임에 잘 맞는 이유" 카드에서 다시 안 다룬다(generateDetailReason 참고) */
 export function generateVerdict(condition: Condition, match: MatchResult): Verdict {
   const { place, ratios } = match;
   const rankedOthers = (Object.keys(ratios) as ScoreCategory[])
@@ -340,16 +369,16 @@ export function generateVerdict(condition: Condition, match: MatchResult): Verdi
   const [best, second] = rankedOthers;
   const weakest = rankedOthers[rankedOthers.length - 1];
 
-  const headline = second
-    ? `${withConjunctionParticle(HEADLINE_NOUN[best])} ${HEADLINE_NOUN[second]}의 균형이 가장 좋아요`
-    : `${HEADLINE_NOUN[best]}이 가장 좋아요`;
+  const headline = PERSONA_HEADLINE[best];
 
-  const audience = `${AUDIENCE_NOUN[condition.relationship]} ${withConjunctionParticle(PEOPLE_LABEL[condition.people])}`;
-  const lead = `${audience} ${experiencePhrase(place)}.`;
-  const detail = `${POSITIVE_FRAGMENT[best](condition, place)}.`;
+  const strengthClause = second
+    ? `${CONNECTIVE_FRAGMENT[best](condition, place)} ${CONNECTIVE_FRAGMENT[second](condition, place)}`
+    : CONNECTIVE_FRAGMENT[best](condition, place);
+  const lead = `${strengthClause}, ${withSubjectParticle(PEOPLE_LABEL[condition.people])} 모이기 편해요.`;
+
   const caveat = ratios[weakest] < 0.5 ? `${CAVEAT_FRAGMENT[weakest]}.` : null;
 
-  return { headline, lead, detail, caveat };
+  return { headline, lead, caveat };
 }
 
 const BUDGET_UPPER: Record<Exclude<Condition["budget"], "any">, number> = {
@@ -359,37 +388,94 @@ const BUDGET_UPPER: Record<Exclude<Condition["budget"], "any">, number> = {
   "over-50k": Infinity,
 };
 
-/** 예약 직전까지 도와주는 실행 조언. 요일별 대기 통계처럼 실제로 확보 못 한 데이터는
- *  지어내지 않고, 이미 있는 필드(reservationMethod/waitingRisk/parkingAvailable 등)에서
- *  합리적으로 끌어낼 수 있는 조언만 만든다 */
-export function generateReservationTip(place: Place): string {
-  const parts: string[] = [];
-  if (place.privateRoomAvailable) {
-    parts.push(
-      place.reservationMethod === "phone" || place.reservationMethod === "difficult"
-        ? "룸을 원한다면 전화로 미리 확인하는 편이 안전해요."
-        : "룸을 원한다면 예약 시 함께 요청해보세요.",
-    );
-  }
-  if (place.waitingRisk >= 6) parts.push("피크타임엔 대기가 있을 수 있어요.");
-  if (parts.length === 0) parts.push("예약 없이도 비교적 편하게 방문할 수 있는 곳이에요.");
-  return parts.join(" ");
-}
+const PEOPLE_UPPER: Record<Condition["people"], number> = {
+  "2": 2,
+  "3-4": 4,
+  "5-6": 6,
+  "7-8": 8,
+  "9+": 99,
+};
 
-export function generateOrderTip(place: Place, condition: Condition | null): string {
+/** 예약 직전에 확인할 사실 몇 개. 전엔 "청모픽 예약 팁/주문 팁/모임 팁" 세 블록으로
+ *  나눠서 같은 이야기(룸·예산·대기)가 여기저기 흩어져 길어 보였다 — 실제로 확인이
+ *  필요한 사실만 최대 3개로 추려서 짧게 보여준다. 요일별 대기 통계처럼 실제로 확보
+ *  못 한 데이터는 지어내지 않고, 있는 필드(reservationMethod/waitingRisk/priceMax/
+ *  formalityTags 등)에서 합리적으로 끌어낼 수 있는 사실만 담는다.
+ *  place.cautionNote(장소별로 직접 조사해 적어둔 실제 주의사항)를 최우선으로 넣고,
+ *  남는 자리만 자동 생성한 사실로 채운다 */
+export function generateBookingFacts(place: Place, condition: Condition | null): string[] {
+  const facts: string[] = [place.cautionNote];
+
+  if (place.privateRoomAvailable && place.roomMinCapacity) {
+    facts.push(`룸은 ${place.roomMinCapacity}인 이상부터 가능해요.`);
+  }
+  if (place.reservationMethod === "phone" || place.reservationMethod === "difficult") {
+    facts.push("전화로 미리 예약해두는 게 안전해요.");
+  }
   if (condition && condition.budget !== "any" && place.priceMax > BUDGET_UPPER[condition.budget]) {
-    return `메뉴 구성에 따라 1인 ${formatWon(place.priceMax)}을 넘을 수 있어요. 예산을 맞추려면 메뉴를 먼저 확인해보세요.`;
+    facts.push("룸·코스 이용 시 1인 예산을 넘을 수 있어요.");
   }
-  return place.seatType === "room"
-    ? "코스 위주로 구성된 곳이라, 인원수에 맞는 코스를 미리 정하고 가면 편해요."
-    : "메뉴를 나눠서 편하게 즐기기 좋은 구성이에요.";
+  if (place.waitingRisk >= 6) facts.push("피크타임엔 대기가 있을 수 있어요.");
+  if (place.formalityTags.includes("formal") || place.formalityTags.includes("hospitable")) {
+    facts.push("주말 점심이 저녁보다 비교적 편안하게 대화하기 좋아요.");
+  }
+  if (facts.length === 0) facts.push("예약 없이도 비교적 편하게 방문할 수 있는 곳이에요.");
+
+  return facts.slice(0, 3);
 }
 
-export function generateMeetupTip(place: Place): string {
-  if (place.formalityTags.includes("formal") || place.formalityTags.includes("hospitable")) {
-    return "너무 격식 차린 느낌이 부담스럽다면 저녁보다 주말 점심이 조금 더 편안해요.";
+/** 버튼 근처에 둘 한 줄. "예약할 때 이렇게 말해보세요"처럼 그대로 따라 할 수 있는
+ *  실행 문구라 조언보다 더 직접적으로 도움이 된다 */
+export function generateReservationAsk(condition: Condition | null): string {
+  const peoplePart = condition ? PEOPLE_LABEL[condition.people] : "일행";
+  return `예약할 때 "${peoplePart}이 조용히 이야기할 자리"라고 요청해보세요.`;
+}
+
+export interface FitGuidance {
+  recommendFor: string[];
+  avoidFor: string[];
+}
+
+/** "내 모임에 맞을까요"를 체크·대시 아이콘이 붙은 항목 나열 대신, "이런 모임엔 추천/
+ *  이런 경우엔 다른 곳이 나을 수 있어요"로 바꾼다 — "몇 개 조건이 맞다"가 아니라
+ *  "어떤 상황에서 선택해야 하는지"를 알려주는 편이 진짜 큐레이션에 가깝다. 좋은 점만
+ *  말하지 않고, 이 장소가 안 맞을 만한 상황도 정직하게 같이 담는다 */
+export function generateFitGuidance(condition: Condition, match: MatchResult): FitGuidance {
+  const { place } = match;
+  const recommendFor: string[] = [
+    `${PEOPLE_LABEL[condition.people]}의 ${RELATIONSHIP_LABEL[condition.relationship]} 모임`,
+  ];
+  const avoidFor: string[] = [];
+
+  if (place.parkingAvailable && place.accessScore >= 6) {
+    recommendFor.push("차와 대중교통 이용자가 섞인 모임");
   }
-  return "퇴근 후 저녁에 가볍게 모이기에도 좋은 곳이에요.";
+  if (place.formalityTags.includes("hospitable") || place.formalityTags.includes("formal")) {
+    recommendFor.push("너무 캐주얼하지 않은 분위기가 필요한 자리");
+  } else if (place.formalityTags.includes("casual")) {
+    recommendFor.push("편안하고 캐주얼한 분위기를 원하는 자리");
+  }
+  if (place.conversationScore >= 7) {
+    recommendFor.push("차분히 이야기 나누기 좋은 자리를 찾는 모임");
+  }
+
+  if (condition.budget !== "any") {
+    const upper = BUDGET_UPPER[condition.budget];
+    if (upper !== Infinity && place.priceMax > upper) {
+      avoidFor.push(`1인 ${formatWon(upper)} 이하로 꼭 맞춰야 할 때`);
+    }
+  }
+  if (place.seatType === "room" && place.roomMinCapacity && place.roomMinCapacity > PEOPLE_UPPER[condition.people]) {
+    avoidFor.push(`${PEOPLE_LABEL[condition.people]}도 독립된 룸을 꼭 사용해야 할 때`);
+  }
+  if (place.cuisineTags.length <= 1) {
+    avoidFor.push("다양한 음식을 나눠 먹는 편한 술자리를 원할 때");
+  }
+  if (place.noiseLevel === "lively") {
+    avoidFor.push("아주 조용한 분위기가 꼭 필요할 때");
+  }
+
+  return { recommendFor: recommendFor.slice(0, 3), avoidFor: avoidFor.slice(0, 3) };
 }
 
 export type AlternativeAxis = "mood" | "budget" | "room";

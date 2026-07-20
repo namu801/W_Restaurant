@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { clsx } from "clsx";
-import { TriangleAlert } from "lucide-react";
-import { CheckpointList } from "@/components/CheckpointList";
+import { Check, TriangleAlert } from "lucide-react";
 import { ICON_COLOR, ICON_MAP } from "@/components/checkpoint-icon-map";
-import type { Checkpoint } from "@/lib/checkpoints";
-import type { ReasonCard } from "@/lib/reason";
+import type { FitGuidance, ReasonCard } from "@/lib/reason";
 
 // "추천 이유/체크포인트/주의사항"은 사무적으로 항목을 나열하는 이름이라, 사용자가 최종
 // 판단을 내리는 데 청모픽이 어떻게 도움을 주는지가 안 드러났다 — 탭 이름 자체를 사용자
@@ -20,109 +18,33 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 /**
- * 탭바를 순수 CSS position:sticky로만 뒀더니 실제 iOS 사파리에서 스크롤 중 고정되지 않고
- * 문서 흐름 그대로 떠내려가는 문제가 있었다(이 프로젝트가 BottomNav 등에서 이미 한 번
- * 겪었던 것과 같은 계열의 신뢰성 문제). 그래서 직접 두 벌을 그린다: 문서 흐름 안에 항상
- * 존재하는 "제자리" 탭바(공간을 차지)와, 그 자리가 뷰포트 위로 스크롤되어 나가는 순간부터
- * 화면에 고정으로 겹쳐 그리는 "떠 있는" 탭바. 어느 쪽이 보일지는 센티넬 엘리먼트를
- * IntersectionObserver로 지켜보다가 화면 밖으로 나가면 전환한다.
+ * 예전엔 탭을 누르면 그 섹션으로 스크롤 이동만 하고, 세 섹션 내용이 한 페이지에 계속
+ * 이어 붙어 있었다(고정 탭바 + IntersectionObserver로 현재 위치만 하이라이트).
+ * 그런데 탭이 있는데 모든 콘텐츠를 계속 이어 보여주면 탭의 의미가 약해진다 — 실제로
+ * 누른 탭의 내용만 보이게, 진짜 탭 전환으로 바꾼다. 스크롤 위치 추적이 필요 없어져서
+ * sticky 탭바·IntersectionObserver 로직을 걷어내고 훨씬 단순해졌다.
  */
 export function PlaceDetailTabs({
-  checkpoints,
   reasonCards,
-  cautionNote,
-  reservationTip,
-  orderTip,
-  meetupTip,
+  fitGuidance,
+  bookingFacts,
+  reservationAsk,
 }: {
-  checkpoints: Checkpoint[];
   reasonCards: ReasonCard[];
-  cautionNote: string;
-  reservationTip: string;
-  orderTip: string;
-  meetupTip: string;
+  fitGuidance: FitGuidance;
+  bookingFacts: string[];
+  reservationAsk: string;
 }) {
-  // "확인이 필요해요" 톤 항목들을 예약 전 체크리스트로 재사용한다 — 탭2(내 모임에
-  // 맞을까요)에서 이미 전체 맥락 속에서 한 번 보여준 항목이지만, 여기서는 "예약 직전에
-  // 꼭 다시 볼 것"만 추려서 실행 중심으로 다시 보여준다
-  const confirmItems = [...checkpoints.filter((c) => c.tone === "warning").map((c) => c.text), cautionNote];
   const [active, setActive] = useState<TabId>("reason");
-  const [isStuck, setIsStuck] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const sectionRefs = useRef<Record<TabId, HTMLElement | null>>({
-    checkpoints: null,
-    reason: null,
-    caution: null,
-  });
-  const suppressObserverRef = useRef(false);
-  const suppressTimeoutRef = useRef<number | null>(null);
 
-  // 헤더는 화면 위쪽에 항상 떠 있는 별도 영역이라, 탭바가 "고정"될 때 그 바로 밑에 붙게
-  // 하려면 헤더의 실제 렌더링 높이가 필요하다. 임의 px 값을 박아두면 폰트 크기나 로고
-  // 크기가 바뀔 때마다 어긋나므로, 실제 DOM에서 측정한다
-  useEffect(() => {
-    const header = document.querySelector("header");
-    if (header) setHeaderHeight(header.getBoundingClientRect().height);
-  }, []);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(([entry]) => setIsStuck(!entry.isIntersecting), {
-      rootMargin: `-${headerHeight}px 0px 0px 0px`,
-      threshold: 0,
-    });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [headerHeight]);
-
-  useEffect(() => {
-    const sections = Object.values(sectionRefs.current).filter((el): el is HTMLElement => el !== null);
-    if (sections.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (suppressObserverRef.current) return;
-        const visible = entries.filter((entry) => entry.isIntersecting);
-        if (visible.length === 0) return;
-        const topMost = visible.reduce((a, b) =>
-          a.boundingClientRect.top < b.boundingClientRect.top ? a : b,
-        );
-        const id = topMost.target.getAttribute("data-tab-id") as TabId | null;
-        if (id) setActive(id);
-      },
-      { rootMargin: `-${headerHeight + 52}px 0px -55% 0px`, threshold: 0 },
-    );
-
-    sections.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [headerHeight]);
-
-  useEffect(() => {
-    return () => {
-      if (suppressTimeoutRef.current) window.clearTimeout(suppressTimeoutRef.current);
-    };
-  }, []);
-
-  function handleTabClick(id: TabId) {
-    suppressObserverRef.current = true;
-    setActive(id);
-    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
-    if (suppressTimeoutRef.current) window.clearTimeout(suppressTimeoutRef.current);
-    suppressTimeoutRef.current = window.setTimeout(() => {
-      suppressObserverRef.current = false;
-    }, 700);
-  }
-
-  function renderTabBar() {
-    return (
-      <div className="flex border-b border-line bg-cream">
+  return (
+    <div className="flex flex-col">
+      <div className="flex border-b border-line">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            onClick={() => handleTabClick(tab.id)}
+            onClick={() => setActive(tab.id)}
             className={clsx(
               // 원티드 tabs 스펙: active는 fg-strong(잉크) 텍스트 + 2px fg-strong 언더라인이다 —
               // "화면당 단일 강조색" 원칙대로 탭 강조엔 브랜드 블루를 쓰지 않는다
@@ -136,35 +58,9 @@ export function PlaceDetailTabs({
           </button>
         ))}
       </div>
-    );
-  }
 
-  return (
-    <div className="flex flex-col">
-      <div ref={sentinelRef} className="h-px" />
-
-      {/* 제자리 탭바: 문서 흐름 안에서 항상 자기 공간을 차지한다. 고정 탭바가 뜨는 동안엔
-          시각적으로만 숨겨서, 레이아웃이 출렁이지 않게 한다 */}
-      <div className={clsx("-mx-6 px-6", isStuck && "invisible")}>{renderTabBar()}</div>
-
-      {/* 고정 탭바: 센티넬이 화면 위로 사라지면(= 원래 자리가 스크롤로 가려지면) 나타나서
-          헤더 바로 아래에 겹쳐 그려진다. 프레임 폭(430px) 밖 데스크톱 배경까지 번지지 않도록
-          안쪽 컨텐츠만 max-w로 가운데 정렬한다 */}
-      {isStuck && (
-        <div className="fixed inset-x-0 z-20" style={{ top: headerHeight }}>
-          <div className="mx-auto max-w-[430px]">{renderTabBar()}</div>
-        </div>
-      )}
-
-      <section
-        ref={(el) => {
-          sectionRefs.current.reason = el;
-        }}
-        data-tab-id="reason"
-        className="scroll-mt-14 pt-8"
-      >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">이 모임에 잘 맞는 이유</p>
-        <div className="flex flex-col gap-3">
+      {active === "reason" && (
+        <div className="flex flex-col gap-3 pt-6">
           {reasonCards.map((card, i) => {
             const CardIcon = ICON_MAP[card.icon];
             return (
@@ -192,65 +88,57 @@ export function PlaceDetailTabs({
             );
           })}
         </div>
-      </section>
+      )}
 
-      {/* 레퍼런스(GS더프레시 매장상세)의 "우리매장 서비스"↔"픽업/배달 안내" 사이 구분
-          밴드와 같은 자리 — 대분류가 바뀐다는 걸 헤어라인 하나보다 뚜렷하게 보여준다.
-          처음엔 bg-cream(#F5F5F7)을 썼는데 페이지 배경(body)과 완전히 같은 색이라
-          실제로는 안 보이는 밴드였다 — line-strong(#DDDEE0)으로 바꿔 실제로 보이게 했다.
-          아래 섹션은 pt-8로 밴드와 여백을 뒀지만 위 섹션(추천 이유)엔 대응하는 하단
-          여백이 없어 밴드가 카드 내용에 0px로 딱 붙어 있었다 — mt-8을 더해 대칭을 맞춘다 */}
-      <div className="-mx-6 mt-8 h-2 bg-line-strong" />
-
-      <section
-        ref={(el) => {
-          sectionRefs.current.checkpoints = el;
-        }}
-        data-tab-id="checkpoints"
-        className="scroll-mt-14 pt-8"
-      >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">내 모임에 맞을까요</p>
-        <CheckpointList checkpoints={checkpoints} />
-      </section>
-
-      <div className="-mx-6 mt-8 h-2 bg-line-strong" />
-
-      {/* 추천 이유(블루)와 뚜렷이 구분되도록 원티드 팔레트의 warning(주황) 톤을 쓴다.
-          식당을 추천하는 데서 끝나지 않고 "어떻게 예약하면 좋은지"까지 알려줘야 큐레이션이
-          완성된다 — 확인이 필요한 항목(체크포인트의 warning 톤 + 주의사항)을 실행 중심
-          체크리스트로 먼저 보여주고, 예약·주문·모임 각각의 실행 조언을 이어붙인다 */}
-      <section
-        ref={(el) => {
-          sectionRefs.current.caution = el;
-        }}
-        data-tab-id="caution"
-        className="scroll-mt-14 pt-8 pb-2"
-      >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">예약 전에 확인해요</p>
-        <ul className="flex flex-col gap-2.5">
-          {confirmItems.map((item, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
-              <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-clay" strokeWidth={2.2} />
-              {item}
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-5 flex flex-col gap-4 rounded-md border border-clay/30 bg-clay-soft p-5">
+      {active === "checkpoints" && (
+        <div className="flex flex-col gap-5 pt-6">
+          {/* "잘 맞아요/무난해요/확인이 필요해요"처럼 항목을 다시 잘게 쪼개는 대신, "어떤
+              상황에서 선택해야 하는지"를 바로 말해준다 — 좋은 점만 말하지 않고 이 장소가
+              안 맞을 만한 상황(avoidFor)까지 정직하게 같이 보여줘야 진짜 조언이 된다 */}
           <div>
-            <p className="text-xs font-bold text-ink">청모픽 예약 팁</p>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink">{reservationTip}</p>
+            <p className="mb-2 text-sm font-bold text-sage">이런 모임에 추천해요</p>
+            <ul className="flex flex-col gap-2">
+              {fitGuidance.recommendFor.map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sage" strokeWidth={2.2} />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div>
-            <p className="text-xs font-bold text-ink">주문 팁</p>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink">{orderTip}</p>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-ink">모임 팁</p>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink">{meetupTip}</p>
+          {fitGuidance.avoidFor.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-bold text-clay">이런 경우에는 다른 곳이 나을 수 있어요</p>
+              <ul className="flex flex-col gap-2">
+                {fitGuidance.avoidFor.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
+                    <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-clay" strokeWidth={2.2} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {active === "caution" && (
+        <div className="pt-6 pb-2">
+          {/* 예전엔 이 탭 안에 주의사항+예약 팁+주문 팁+모임 팁이 다 들어 있어 길고
+              반복적으로 보였다 — 확인이 필요한 사실 최대 3개 + 실행 문구 한 줄이면 충분하다 */}
+          <ul className="flex flex-col gap-2.5">
+            {bookingFacts.map((fact, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
+                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-clay" strokeWidth={2.2} />
+                {fact}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 rounded-md border border-clay/30 bg-clay-soft p-4">
+            <p className="text-sm leading-relaxed text-ink">{reservationAsk}</p>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }

@@ -73,7 +73,7 @@ export const MOOD_FORMALITY_LABEL: Record<MoodFormalityKey, string> = {
   any: "분위기는 크게 상관없어요",
 };
 
-/** lib/checkpoints.ts의 문장형 설명과 달리, 지도 카드 등 좁은 칩 자리에 쓰는 짧은 형태 */
+/** 지도 카드 등 좁은 칩 자리에 쓰는 짧은 형태 */
 export const SEAT_TYPE_LABEL: Record<SeatType, string> = {
   room: "룸 좌석",
   "semi-private": "반분리 좌석",
