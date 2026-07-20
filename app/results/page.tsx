@@ -17,7 +17,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { TrackOnMount } from "@/components/TrackOnMount";
 import { ConditionEditSheet } from "@/components/ConditionEditSheet";
 import { SortDropdown, type SortValue } from "@/components/SortDropdown";
-import { buildCurationSummary } from "@/lib/reason";
+import { buildCurationSummary, generateAlternativeMeta, generateVerdict, type AlternativeAxis } from "@/lib/reason";
+import type { MatchResult } from "@/lib/types";
+
+function pickBy(pool: MatchResult[], scoreFn: (m: MatchResult) => number): MatchResult | undefined {
+  if (pool.length === 0) return undefined;
+  return [...pool].sort((a, b) => scoreFn(b) - scoreFn(a))[0];
+}
 
 export default async function ResultsPage({
   searchParams,
@@ -57,6 +63,40 @@ export default async function ResultsPage({
   // "가격 낮은순"으로 바꿔서 카드 노출 순서(index)가 달라져도, 배지에 찍히는 순위는
   // 그대로 추천 점수 기준을 유지해야 가장 싼 곳이 "1순위"로 잘못 보이지 않는다
   const curationRank = new Map(matches.map((m, i) => [m.place.id, i + 1]));
+
+  // 6곳이 점수순으로 줄만 서 있으면, 결국 사용자가 직접 하나하나 다시 비교해야 한다 —
+  // 1순위 옆에 "분위기를 더 챙긴 선택/예산이 편한 선택/룸을 우선한 선택"처럼 다른 가치
+  // 기준의 대안을 나란히 제안해야 진짜 큐레이션이 된다. 다만 "가격 낮은순"으로 정렬을
+  // 바꾼 상태에서는 "1순위" 개념 자체가 정렬 기준과 어긋나 혼란을 주므로, 추천순일 때만
+  // 이 구조를 쓰고 가격순에선 기존 평면 목록으로 보여준다
+  const showCuratedLayout = sort === "recommended";
+  const hero = showCuratedLayout ? visibleMatches[0] : undefined;
+  const restForAlternatives = showCuratedLayout ? visibleMatches.slice(1) : [];
+
+  const moodPick = pickBy(restForAlternatives, (m) => m.ratios.mood + m.ratios.conversation);
+  const usedIds = new Set<string>([hero?.place.id, moodPick?.place.id].filter((v): v is string => Boolean(v)));
+  const budgetPick = pickBy(
+    restForAlternatives.filter((m) => !usedIds.has(m.place.id)),
+    (m) => -(m.place.priceMin + m.place.priceMax),
+  );
+  if (budgetPick) usedIds.add(budgetPick.place.id);
+  const roomPick = pickBy(
+    restForAlternatives.filter((m) => !usedIds.has(m.place.id) && m.place.privateRoomAvailable),
+    (m) => m.fitRatio,
+  );
+  if (roomPick) usedIds.add(roomPick.place.id);
+
+  const alternatives: { axis: AlternativeAxis; match: MatchResult }[] = (
+    [
+      moodPick && { axis: "mood" as const, match: moodPick },
+      budgetPick && { axis: "budget" as const, match: budgetPick },
+      roomPick && { axis: "room" as const, match: roomPick },
+    ] as const
+  ).filter((v): v is { axis: AlternativeAxis; match: MatchResult } => Boolean(v));
+
+  const remaining = restForAlternatives.filter((m) => !usedIds.has(m.place.id));
+  const heroVerdict = hero ? generateVerdict(condition, hero) : null;
+
   const isNarrow = matches.length > 0 && matches.length <= NARROW_RESULT_THRESHOLD;
   const relaxation = matches.length === 0 ? findRelaxationSuggestion(condition) : null;
   const relaxationHref = relaxation
@@ -151,17 +191,73 @@ export default async function ResultsPage({
             </div>
           </div>
 
-          <div className="flex flex-col gap-5">
-            {visibleMatches.map((match, index) => (
-              <PlaceCard
-                key={match.place.id}
-                match={match}
-                condition={condition}
-                rank={index + 1}
-                curationRank={curationRank.get(match.place.id)!}
-              />
-            ))}
-          </div>
+          {showCuratedLayout && hero ? (
+            <div className="flex flex-col gap-6">
+              {/* 1순위: 나머지와 같은 PlaceCard를 쓰되, 위에 "왜 1순위인지" 짧은 결론을
+                  얹어서 그냥 첫 번째 카드가 아니라 하이라이트로 읽히게 한다 */}
+              <div>
+                {heroVerdict && (
+                  <p className="mb-2 text-sm font-bold text-accent-strong">{heroVerdict.headline}</p>
+                )}
+                <PlaceCard
+                  match={hero}
+                  condition={condition}
+                  rank={1}
+                  curationRank={curationRank.get(hero.place.id)!}
+                />
+              </div>
+
+              {alternatives.length > 0 && (
+                <div>
+                  <p className="mb-3 text-base font-bold tracking-tight text-ink">다른 선택</p>
+                  <div className="flex flex-col gap-4">
+                    {alternatives.map(({ axis, match }) => {
+                      const meta = generateAlternativeMeta(axis, match);
+                      return (
+                        <div key={axis}>
+                          <p className="mb-2 text-sm font-bold text-ink-soft">{meta.title}</p>
+                          <PlaceCard
+                            match={match}
+                            condition={condition}
+                            rank={visibleMatches.indexOf(match) + 1}
+                            curationRank={curationRank.get(match.place.id)!}
+                          />
+                          {/* 좋은 점만 말하지 않는다 — 1순위 대비 뭘 포기하게 되는지도 같이 알려준다 */}
+                          <p className="mt-2 px-1 text-xs text-ink-faint">{meta.caveat}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {remaining.length > 0 && (
+                <div className="flex flex-col gap-5">
+                  {remaining.map((match) => (
+                    <PlaceCard
+                      key={match.place.id}
+                      match={match}
+                      condition={condition}
+                      rank={visibleMatches.indexOf(match) + 1}
+                      curationRank={curationRank.get(match.place.id)!}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {visibleMatches.map((match, index) => (
+                <PlaceCard
+                  key={match.place.id}
+                  match={match}
+                  condition={condition}
+                  rank={index + 1}
+                  curationRank={curationRank.get(match.place.id)!}
+                />
+              ))}
+            </div>
+          )}
 
           {isTruncated && (
             <Link

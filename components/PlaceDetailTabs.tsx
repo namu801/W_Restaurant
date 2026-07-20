@@ -8,10 +8,13 @@ import { ICON_COLOR, ICON_MAP } from "@/components/checkpoint-icon-map";
 import type { Checkpoint } from "@/lib/checkpoints";
 import type { ReasonCard } from "@/lib/reason";
 
+// "추천 이유/체크포인트/주의사항"은 사무적으로 항목을 나열하는 이름이라, 사용자가 최종
+// 판단을 내리는 데 청모픽이 어떻게 도움을 주는지가 안 드러났다 — 탭 이름 자체를 사용자
+// 의사결정 기준("왜/맞을까/예약 전에")으로 바꾼다
 const TABS = [
-  { id: "reason", label: "추천 이유" },
-  { id: "checkpoints", label: "체크포인트" },
-  { id: "caution", label: "주의사항" },
+  { id: "reason", label: "왜 추천해요" },
+  { id: "checkpoints", label: "내 모임에 맞을까요" },
+  { id: "caution", label: "예약 전에 확인해요" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -28,11 +31,21 @@ export function PlaceDetailTabs({
   checkpoints,
   reasonCards,
   cautionNote,
+  reservationTip,
+  orderTip,
+  meetupTip,
 }: {
   checkpoints: Checkpoint[];
   reasonCards: ReasonCard[];
   cautionNote: string;
+  reservationTip: string;
+  orderTip: string;
+  meetupTip: string;
 }) {
+  // "확인이 필요해요" 톤 항목들을 예약 전 체크리스트로 재사용한다 — 탭2(내 모임에
+  // 맞을까요)에서 이미 전체 맥락 속에서 한 번 보여준 항목이지만, 여기서는 "예약 직전에
+  // 꼭 다시 볼 것"만 추려서 실행 중심으로 다시 보여준다
+  const confirmItems = [...checkpoints.filter((c) => c.tone === "warning").map((c) => c.text), cautionNote];
   const [active, setActive] = useState<TabId>("reason");
   const [isStuck, setIsStuck] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -150,7 +163,7 @@ export function PlaceDetailTabs({
         data-tab-id="reason"
         className="scroll-mt-14 pt-8"
       >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">이 모임에 추천하는 이유</p>
+        <p className="mb-4 text-lg font-bold tracking-tight text-ink">이 모임에 잘 맞는 이유</p>
         <div className="flex flex-col gap-3">
           {reasonCards.map((card, i) => {
             const CardIcon = ICON_MAP[card.icon];
@@ -196,13 +209,16 @@ export function PlaceDetailTabs({
         data-tab-id="checkpoints"
         className="scroll-mt-14 pt-8"
       >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">청첩장 모임 체크포인트</p>
+        <p className="mb-4 text-lg font-bold tracking-tight text-ink">내 모임에 맞을까요</p>
         <CheckpointList checkpoints={checkpoints} />
       </section>
 
       <div className="-mx-6 mt-8 h-2 bg-line-strong" />
 
-      {/* 추천 이유(블루)와 뚜렷이 구분되도록 원티드 팔레트의 warning(주황) 톤을 쓴다 */}
+      {/* 추천 이유(블루)와 뚜렷이 구분되도록 원티드 팔레트의 warning(주황) 톤을 쓴다.
+          식당을 추천하는 데서 끝나지 않고 "어떻게 예약하면 좋은지"까지 알려줘야 큐레이션이
+          완성된다 — 확인이 필요한 항목(체크포인트의 warning 톤 + 주의사항)을 실행 중심
+          체크리스트로 먼저 보여주고, 예약·주문·모임 각각의 실행 조언을 이어붙인다 */}
       <section
         ref={(el) => {
           sectionRefs.current.caution = el;
@@ -210,15 +226,29 @@ export function PlaceDetailTabs({
         data-tab-id="caution"
         className="scroll-mt-14 pt-8 pb-2"
       >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">주의할 점</p>
-        <div className="rounded-md border border-clay/30 bg-clay-soft p-5">
-          {/* 라벨 색은 대비가 확실한 잉크로 두고, clay는 아이콘에만 남긴다(clay-soft 배경
-              위에서 clay 자체도 4.68:1로 AA는 통과하지만, 잉크 쪽이 더 안전하고 위계도 분명하다) */}
-          <p className="flex items-center gap-1.5 text-xs font-bold text-ink">
-            <TriangleAlert className="h-3.5 w-3.5 text-clay" strokeWidth={2.2} />
-            방문 전 확인해주세요
-          </p>
-          <p className="mt-2.5 text-sm text-ink">{cautionNote}</p>
+        <p className="mb-4 text-lg font-bold tracking-tight text-ink">예약 전에 확인해요</p>
+        <ul className="flex flex-col gap-2.5">
+          {confirmItems.map((item, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
+              <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-clay" strokeWidth={2.2} />
+              {item}
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-5 flex flex-col gap-4 rounded-md border border-clay/30 bg-clay-soft p-5">
+          <div>
+            <p className="text-xs font-bold text-ink">청모픽 예약 팁</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink">{reservationTip}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-ink">주문 팁</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink">{orderTip}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-ink">모임 팁</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink">{meetupTip}</p>
+          </div>
         </div>
       </section>
     </div>

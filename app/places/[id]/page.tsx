@@ -1,10 +1,17 @@
 import { notFound } from "next/navigation";
 import { getPlaceById } from "@/lib/places";
 import { searchParamsToCondition } from "@/lib/condition-query";
-import { scorePlace } from "@/lib/scoring";
-import { generateDetailReason, genericReason } from "@/lib/reason";
+import { matchPlaces, scorePlace } from "@/lib/scoring";
+import {
+  generateDetailReason,
+  generateMeetupTip,
+  generateOrderTip,
+  generateReservationTip,
+  generateVerdict,
+  genericReason,
+} from "@/lib/reason";
 import { buildCheckpoints } from "@/lib/checkpoints";
-import { AREA_LABEL, FIT_TAG_VARIANT, formatFitScore, formatPrice } from "@/lib/labels";
+import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice } from "@/lib/labels";
 import { MapLinks } from "@/components/MapLinks";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
@@ -33,6 +40,14 @@ export default async function PlaceDetailPage({
     ? generateDetailReason(condition!, match)
     : genericReason(place.curatedReason);
   const checkpoints = buildCheckpoints(place, condition);
+  // 결과 목록의 "청모픽 N순위" 배지와 같은 기준(매칭 점수 순)으로 상세 페이지에서도
+  // 몇 순위인지 다시 계산한다 — URL에 순위를 실어 나르지 않고, 같은 조건으로
+  // matchPlaces를 다시 돌려 이 장소의 위치를 찾는 쪽이 라우팅 변경 없이 더 간단하다
+  const rank = condition ? matchPlaces(condition).findIndex((m) => m.place.id === place.id) + 1 : null;
+  const verdict = condition && match ? generateVerdict(condition, match) : null;
+  const reservationTip = generateReservationTip(place);
+  const orderTip = generateOrderTip(place, condition);
+  const meetupTip = generateMeetupTip(place);
 
   return (
     <div className="flex flex-col gap-6">
@@ -46,13 +61,33 @@ export default async function PlaceDetailPage({
       <div>
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-2xl font-bold tracking-tight text-ink text-balance">{place.name}</h1>
-          {match && <Tag variant={FIT_TAG_VARIANT[match.fitLabel]}>{formatFitScore(match.fitRatio)}</Tag>}
+          {match && rank && rank <= 5 && (
+            <Tag variant={FIT_TAG_VARIANT[match.fitLabel]}>청모픽 {rank}순위</Tag>
+          )}
         </div>
         {/* text-ink-faint(#A4A5A7)는 페이지 배경(#F5F5F7)과 명도差가 작아 거의 안 읽혔다
             — PlaceCard의 동일한 지역·카테고리 메타 줄과 같은 톤(ink-soft)으로 맞춘다 */}
         <p className="mt-1 text-sm text-ink-soft">
           {place.category} · {AREA_LABEL[place.area]}
         </p>
+
+        {/* 체크포인트·추천 이유 카드가 아무리 많아도 "그래서 왜 여기를 고르면 되는지"
+            최종 판단은 따로 안 내려져 있었다 — 상세 페이지에서 가장 먼저 보이는 자리에
+            청모픽이 대신 결론을 내린다: 왜 1순위인지(headline) → 누구와 어떤 경험에
+            좋은지(lead) → 구체적 근거(detail) → 솔직한 아쉬움(caveat, 있을 때만) */}
+        {verdict && (
+          <div className="mt-4 rounded-md border border-accent/25 bg-accent-soft/60 p-5">
+            <p className="text-base font-bold leading-snug text-ink">{verdict.headline}</p>
+            <p className="mt-2.5 text-sm leading-relaxed text-ink">{verdict.lead}</p>
+            <p className="mt-1 text-sm leading-relaxed text-ink">{verdict.detail}</p>
+            {verdict.caveat && (
+              <div className="mt-3 border-t border-accent/20 pt-3">
+                <p className="text-xs font-bold text-ink-soft">솔직히 말하면</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{verdict.caveat}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 메타 줄(카테고리·지역)과 아래 위치·영업시간·가격 블록 사이는 같은 "정보 묶음"
             안에서 살짝만 끊어주는 자리라, 대분류를 가르는 다른 구분 밴드(h-2)와 달리
@@ -86,7 +121,14 @@ export default async function PlaceDetailPage({
           구분 밴드를 여기도 넣어서 "상단 정보 vs 탭 콘텐츠"를 뚜렷하게 가른다 */}
       <div className="-mx-6 h-2 bg-line-strong" />
 
-      <PlaceDetailTabs checkpoints={checkpoints} reasonCards={reasonCards} cautionNote={place.cautionNote} />
+      <PlaceDetailTabs
+        checkpoints={checkpoints}
+        reasonCards={reasonCards}
+        cautionNote={place.cautionNote}
+        reservationTip={reservationTip}
+        orderTip={orderTip}
+        meetupTip={meetupTip}
+      />
 
       {/* 탭 콘텐츠와는 성격이 다른 블록(정보 출처 안내, 피드백 위젯)이라 구분선으로 한 번 끊어준다 */}
       <hr className="border-line" />
