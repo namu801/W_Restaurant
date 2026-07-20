@@ -42,9 +42,14 @@ function SearchWizard() {
   const isLastScreen = screenIndex === SCREENS.length - 1;
 
   useEffect(() => {
+    // step_number는 screen.stageIndex(모임정보/식사조건/분위기·공간/운영조건 4개)가 아니라
+    // screenIndex(관계·인원·지역·예산·음식·소음·분위기·추가조건, 실제 8개 질문 화면) 기준이어야
+    // 한다 — stageIndex를 쓰면 같은 스테이지 안 여러 질문이 같은 번호로 찍혀서, 화면에 보이는
+    // "n/8" 진행률과도 어긋나고 믹스패널에서 8단계 중 정확히 어디서 이탈하는지 구분이 안 됐다
     track("filter_step_viewed", {
-      step_number: screen.stageIndex + 1,
-      step_name: screen.stageName,
+      step_number: screenIndex + 1,
+      step_name: question.key,
+      stage_name: screen.stageName,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenIndex]);
@@ -74,7 +79,8 @@ function SearchWizard() {
     if (!canProceed()) return;
 
     track("filter_step_completed", {
-      step_number: screen.stageIndex + 1,
+      step_number: screenIndex + 1,
+      step_name: question.key,
       completion_time: Date.now(),
     });
 
@@ -127,7 +133,7 @@ function SearchWizard() {
       extraConditions: (draft.extraConditions ?? []) as Condition["extraConditions"],
     };
 
-    track("filter_skipped", { step_number: screen.stageIndex + 1 });
+    track("filter_skipped", { step_number: screenIndex + 1, step_name: question.key });
     router.push(`/search/loading?${conditionToSearchParams(condition).toString()}`);
   }
 
