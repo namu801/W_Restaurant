@@ -36,8 +36,8 @@ export default function LandingPage() {
         <Image
           src="/hero-banner.png"
           alt="청첩장이 담긴 봉투 일러스트"
-          width={287}
-          height={246}
+          width={708}
+          height={517}
           className="mx-auto my-4 h-40 w-auto"
           priority
         />

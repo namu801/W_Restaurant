@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { ClockIcon, WalletIcon } from "@heroicons/react/24/solid";
-import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice, simplifyBusinessHours } from "@/lib/labels";
+import { AREA_LABEL, FIT_TAG_VARIANT, formatFitScore, formatPrice, simplifyBusinessHours } from "@/lib/labels";
 import { conditionToSearchParams } from "@/lib/condition-query";
 import { topStrengthTags } from "@/lib/reason";
 import type { Condition, MatchResult } from "@/lib/types";
@@ -33,7 +33,7 @@ export function PlaceCard({
   condition: Condition;
   rank: number;
 }) {
-  const { place, score, fitLabel } = match;
+  const { place, score, fitLabel, fitRatio } = match;
   const strengthTags = topStrengthTags(match, 2);
   const detailHref = `/places/${place.id}?${conditionToSearchParams(condition).toString()}`;
   const photoCount = Math.max(place.photos.length, 1);
@@ -49,7 +49,7 @@ export function PlaceCard({
           <h3 className="min-w-0 text-lg font-bold leading-snug tracking-tight text-ink">
             {place.name}
           </h3>
-          <Tag variant={FIT_TAG_VARIANT[fitLabel]}>{fitLabel}</Tag>
+          <Tag variant={FIT_TAG_VARIANT[fitLabel]}>{formatFitScore(fitRatio)}</Tag>
         </div>
         <p className="mt-1 text-xs font-medium text-ink-soft">
           {AREA_LABEL[place.area]} · {place.category}

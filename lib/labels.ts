@@ -58,13 +58,13 @@ export const CUISINE_LABEL: Record<CuisineKey, string> = {
   any: "상관 없음",
 };
 
-// 어미를 "-한 곳"으로 통일했다. 전엔 앞쪽 옵션은 "-곳"으로 끝나고 "상관없음" 옵션만
-// "-해요"로 끝나서 같은 질문 안에서도 말투가 섞여 있었다
+// "상관없음" 옵션만 짧게 잘라서 칩 폭을 줄인다 — 나머지 세 옵션은 어미를 "-한 곳"으로
+// 통일해 같은 질문 안에서 말투가 섞이지 않게 한다
 export const NOISE_LABEL: Record<NoiseKey, string> = {
   quiet: "대화가 잘 들리는 조용한 곳",
   "lively-but-talkable": "활기 있지만 대화는 가능한 곳",
   "lively-important": "분위기와 활기가 더 중요한 곳",
-  any: "소음은 상관없는 곳",
+  any: "상관없음",
 };
 
 export const MOOD_FORMALITY_LABEL: Record<MoodFormalityKey, string> = {
@@ -149,3 +149,11 @@ export const FIT_TAG_VARIANT: Record<
   "잘 맞아요": "accent",
   "일부 조건을 확인해보세요": "neutral",
 };
+
+/** "매우 잘 맞아요"/"일부 조건을 확인해보세요" 같은 긴 문구는 칩 하나가 카드 폭을 꽤
+ *  차지했다 — 장소마다 실제로 다른 fitRatio(0~1)를 그대로 "N점"으로 보여주면 훨씬
+ *  짧으면서도 장소별 차이가 숫자로 바로 드러나 더 직관적이다. fitLabel/FIT_TAG_VARIANT는
+ *  칩 색(긍정/보통/주의)을 정하는 용도로 그대로 두고, 칩 안의 텍스트만 이 값으로 바꾼다 */
+export function formatFitScore(fitRatio: number): string {
+  return `${Math.round(fitRatio * 100)}점`;
+}

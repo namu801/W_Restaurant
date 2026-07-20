@@ -4,7 +4,7 @@ import { searchParamsToCondition } from "@/lib/condition-query";
 import { scorePlace } from "@/lib/scoring";
 import { generateDetailReason, genericReason } from "@/lib/reason";
 import { buildCheckpoints } from "@/lib/checkpoints";
-import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice } from "@/lib/labels";
+import { AREA_LABEL, FIT_TAG_VARIANT, formatFitScore, formatPrice } from "@/lib/labels";
 import { MapLinks } from "@/components/MapLinks";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
@@ -46,7 +46,7 @@ export default async function PlaceDetailPage({
       <div>
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-2xl font-bold tracking-tight text-ink text-balance">{place.name}</h1>
-          {match && <Tag variant={FIT_TAG_VARIANT[match.fitLabel]}>{match.fitLabel}</Tag>}
+          {match && <Tag variant={FIT_TAG_VARIANT[match.fitLabel]}>{formatFitScore(match.fitRatio)}</Tag>}
         </div>
         {/* text-ink-faint(#A4A5A7)는 페이지 배경(#F5F5F7)과 명도差가 작아 거의 안 읽혔다
             — PlaceCard의 동일한 지역·카테고리 메타 줄과 같은 톤(ink-soft)으로 맞춘다 */}

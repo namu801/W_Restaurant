@@ -126,22 +126,23 @@ export default async function ResultsPage({
         />
       ) : (
         <>
-          {/* 이전 문구("입력한 조건에 잘 맞는 장소가 19곳 있어요. 우선 6곳을...")는 숫자
-              두 개를 나란히 던져서 뭘 말하려는 건지 한 번에 안 읽혔다 — "우리가 골라줬다"는
-              큐레이션 행위 자체를 문장 맨 앞에 세우고, 배지 형태로 감싸서 정보 한 줄이
-              아니라 이 리스트의 성격을 보여주는 요소로 다룬다.
+          {/* 이전엔 결과가 8곳을 넘어 일부만 잘라 보여줄 때(isTruncated)만 이 배지가 떴다 —
+              그럼 결과가 적을 땐 "우리가 골라줬다"는 큐레이션 인상이 아예 안 보였다. 큐레이션은
+              몇 곳을 추렸는지와 무관하게 이 리스트의 성격이라, 결과가 있는 한 항상 띄우고
+              문구만 두 갈래로 나눈다 — 일부만 골라 보여줄 때는 "N곳 중 M곳", 결과가 적어
+              전부 다 보여줄 때는 "N곳 중 N곳"처럼 같은 숫자가 겹쳐 보이지 않도록 다른 문장을 쓴다.
               옅은 틴트 채움만으로는 강조가 부족해서, 채움은 그대로 두고 그라디언트 테두리를
               다시 얹었다 — 대신 옆의 "필터" 버튼에서 테두리·채움을 걷어내 이 배지가 화면에서
               유일하게 "테두리+채움"을 다 쓰는 자리가 되게 했다. radius도 식당 카드와
               맞춰 rounded-sm으로 낮췄다(더는 pill이 아니다) */}
-          {isTruncated && (
-            <div className="w-full rounded-sm bg-gradient-to-r from-accent to-gold p-[2px]">
-              <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-gold-soft px-3.5 py-2.5 text-sm font-semibold text-accent-strong">
-                <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.5} fill="currentColor" aria-hidden />
-                {matches.length}곳 중 가장 잘 맞는 {RESULT_DISPLAY_LIMIT}곳을 골라드렸어요
-              </div>
+          <div className="w-full rounded-sm bg-gradient-to-r from-accent to-gold p-[2px]">
+            <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-gold-soft px-3.5 py-2.5 text-sm font-semibold text-accent-strong">
+              <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.5} fill="currentColor" aria-hidden />
+              {isTruncated
+                ? `${matches.length}곳 중 가장 잘 맞는 ${RESULT_DISPLAY_LIMIT}곳을 골라드렸어요`
+                : `조건에 맞는 ${matches.length}곳을 골라드렸어요`}
             </div>
-          )}
+          </div>
 
           <div className="flex flex-col gap-5">
             {visibleMatches.map((match, index) => (

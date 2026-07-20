@@ -195,8 +195,16 @@ function SearchWizard() {
 
       <div className="flex flex-col gap-6">
       <div>
+        {/* 음식·추가조건처럼 여러 개 고를 수 있는 질문은 "최대 4개까지" 안내만으론 지금 몇 개
+            골랐는지 매번 세어봐야 했다 — 제목 옆에 (n/max)를 실시간으로 붙여서 선택할 때마다
+            바로바로 갱신되게 한다 */}
         <h1 className="text-xl font-bold leading-snug tracking-tight text-ink text-balance">
           {question.title}
+          {question.kind === "multi" && (
+            <span className="ml-1.5 text-ink-soft">
+              ({((draft[question.key] as string[]) ?? []).length}/{question.max})
+            </span>
+          )}
         </h1>
         {question.helper && <p className="mt-2 text-sm text-ink-soft">{question.helper}</p>}
       </div>
