@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Target } from "lucide-react";
 import { ClockIcon, WalletIcon } from "@heroicons/react/24/solid";
 import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice, todayBusinessHours } from "@/lib/labels";
 import { conditionToSearchParams } from "@/lib/condition-query";
@@ -65,19 +65,22 @@ export function PlaceCard({
         "bg-cream-soft",
       )}
     >
-      {/* 결과 목록 최상단 큐레이션 배지도 같은 Sparkles 아이콘 + 파란 박스를 쓰다 보니,
-          바로 아래 1순위 카드의 topBand까지 아이콘을 넣으면 똑같은 배지가 두 번 겹쳐
-          보였다 — Sparkles(청모픽의 한마디)는 페이지에서 한 번만 쓰는 걸로 좁히고,
-          카드 자체의 띠는 아이콘 없이 텍스트만으로 차분하게 구분한다 */}
+      {/* 결과 목록 최상단 큐레이션 배지가 Sparkles+파란 박스라, 카드 띠에도 같은 아이콘을
+          쓰면 같은 배지가 두 번 겹친 것처럼 보였다 — 아이콘은 유지하되 Target으로 바꿔서
+          "이 조건에 정확히 맞춘 선택"이라는 의미는 살리면서 위 배지와는 실루엣이 다르게 했다 */}
       {topBand && (
         <p
           className={clsx(
-            "border-b px-4 py-2.5 text-sm font-bold",
+            "flex items-center gap-1.5 border-b px-4 py-2.5 text-sm font-bold",
             topBand.tone === "accent"
               ? "border-accent/20 bg-accent-soft text-accent-strong"
               : "border-line bg-cream-strong text-ink-soft",
           )}
         >
+          <Target
+            className={clsx("h-3.5 w-3.5 shrink-0", topBand.tone === "neutral" && "text-ink-faint")}
+            strokeWidth={2}
+          />
           {topBand.text}
         </p>
       )}
