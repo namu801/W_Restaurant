@@ -26,12 +26,12 @@ export default function LandingPage() {
         <h1 className="text-[26px] font-bold leading-[1.35] tracking-tight text-ink text-balance">
           청첩장 모임 장소,
           <br />
-          <span className="text-accent">고민 없이</span> 골라드려요
+          <span className="text-accent">조건에 맞춰</span> 골라드려요
         </h1>
         <p className="mt-3 max-w-[30ch] text-[15px] leading-relaxed text-ink-soft">
-          용산역·신용산역·삼각지 인근에서
+          용산역·신용산역·삼각지에서
           <br />
-          관계와 분위기에 맞는 곳을 찾아드려요.
+          관계, 인원, 예산에 맞는 곳을 찾아보세요.
         </p>
 
         <Image
@@ -48,7 +48,7 @@ export default function LandingPage() {
           source="landing"
           className="flex w-full items-center justify-center gap-1.5 rounded-md bg-accent px-5 py-3.5 text-base font-semibold text-white transition-all hover:bg-accent-strong"
         >
-          청모 장소 추천받기
+          내 조건으로 추천받기
           <ArrowRight className="h-4 w-4" />
         </SearchCta>
       </section>
@@ -60,8 +60,8 @@ export default function LandingPage() {
         순위 번호는 박스로 구분하고, 1위만 포인트 컬러로 강조해 눈에 먼저 들어오게 한다.
       */}
       <section>
-        <h2 className="text-lg font-bold tracking-tight text-ink">믿고 가는 청모 장소</h2>
-        <p className="mt-1 text-xs text-ink-faint">분위기와 서비스가 좋은 곳으로 골랐어요</p>
+        <h2 className="text-lg font-bold tracking-tight text-ink">먼저 둘러볼 만한 곳</h2>
+        <p className="mt-1 text-xs text-ink-faint">청모에 필요한 조건을 기준으로 살펴봤어요.</p>
 
         <div className="mt-4 flex flex-col gap-3">
           {topPlaces.map((place, index) => (

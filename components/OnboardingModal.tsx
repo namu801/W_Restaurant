@@ -65,12 +65,14 @@ export function OnboardingModal() {
           <MailOpen className="h-7 w-7 text-accent" strokeWidth={1.8} />
         </span>
         <h2 id="onboarding-title" className="mt-4 text-lg font-bold leading-snug text-ink">
-          청모픽에 오신 걸 환영해요
+          청모 장소, 같이 골라봐요
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          관계와 분위기에 맞는 청첩장 모임 장소를 찾아드려요.
+          좋은 사람들과 만나는 자리니까
           <br />
-          조건만 골라주시면 어울리는 곳을 추천해드릴게요.
+          아무 곳이나 고르기는 어렵잖아요.
+          <br />
+          몇 가지 조건만 알려주시면 어울리는 곳부터 찾아볼게요.
         </p>
         <button
           ref={startButtonRef}

@@ -12,13 +12,13 @@ import type {
 } from "./types";
 
 export const RELATIONSHIP_LABEL: Record<RelationshipKey, string> = {
-  "close-friend": "친한 친구",
-  "friend-group": "친구 모임",
+  "close-friend": "가까운 친구",
+  "friend-group": "친구·지인 모임",
   coworker: "직장 동료",
   "school-senior": "학교 선후배",
   "workplace-senior": "직장 선배·상사",
   family: "가족·친척",
-  other: "기타",
+  other: "그 밖의 관계",
 };
 
 export const PEOPLE_LABEL: Record<PeopleKey, string> = {
@@ -30,7 +30,7 @@ export const PEOPLE_LABEL: Record<PeopleKey, string> = {
 };
 
 export const AREA_LABEL: Record<AreaKey, string> = {
-  all: "용산권 전체",
+  all: "용산권 어디든",
   yongsan: "용산역",
   samgakji: "삼각지역",
   sinyongsan: "신용산역",
@@ -53,26 +53,24 @@ export const CUISINE_LABEL: Record<CuisineKey, string> = {
   chinese: "중식",
   meat: "고기·구이",
   seafood: "해산물",
-  "wine-alcohol": "와인·주류 메뉴",
+  "wine-alcohol": "와인·주류",
   "brunch-cafe": "브런치·카페",
-  any: "상관 없음",
+  any: "메뉴는 상관없어요",
 };
 
-// "상관없음" 옵션만 짧게 잘라서 칩 폭을 줄인다 — 나머지 세 옵션은 어미를 "-한 곳"으로
-// 통일해 같은 질문 안에서 말투가 섞이지 않게 한다
 export const NOISE_LABEL: Record<NoiseKey, string> = {
-  quiet: "대화가 잘 들리는 조용한 곳",
-  "lively-but-talkable": "활기 있지만 대화는 가능한 곳",
-  "lively-important": "분위기와 활기가 더 중요한 곳",
-  any: "상관없음",
+  quiet: "조용히 이야기하고 싶어요",
+  "lively-but-talkable": "조금 활기 있어도 괜찮아요",
+  "lively-important": "활기찬 분위기가 더 좋아요",
+  any: "소음은 크게 상관없어요",
 };
 
 export const MOOD_FORMALITY_LABEL: Record<MoodFormalityKey, string> = {
-  casual: "편안하고 캐주얼한 자리",
-  balanced: "너무 가볍지도 무겁지도 않은 자리",
-  hospitable: "적당히 대접하는 자리",
-  formal: "격식 있고 차분한 자리",
-  any: "분위기는 상관없는 자리",
+  casual: "편하고 캐주얼하게",
+  balanced: "깔끔하고 무난하게",
+  hospitable: "조금 더 정성스럽게",
+  formal: "차분하고 격식 있게",
+  any: "분위기는 크게 상관없어요",
 };
 
 /** lib/checkpoints.ts의 문장형 설명과 달리, 지도 카드 등 좁은 칩 자리에 쓰는 짧은 형태 */

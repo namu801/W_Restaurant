@@ -85,7 +85,7 @@ export function BudgetSlider({
           굵게 바로 보여준다 — 시트 안 다른 강조 요소(선택된 칩 텍스트 등)와 같은
           accent 컬러를 써서 위계가 따로 놀지 않게 한다 */}
       <p className="text-2xl font-bold text-accent">
-        {isAny ? "예산 상관없이 볼게요" : valueToLabel(raw)}
+        {isAny ? "예산은 크게 상관없어요" : valueToLabel(raw)}
       </p>
 
       <div className={clsx("flex flex-col gap-2.5 transition-opacity", isAny && "pointer-events-none opacity-40")}>

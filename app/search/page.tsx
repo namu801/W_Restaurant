@@ -268,7 +268,7 @@ function SearchWizard() {
           disabled={!canProceed()}
           className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isLastScreen ? "추천 결과 보기" : "다음"}
+          {isLastScreen ? "내 조건에 맞는 곳 보기" : "다음"}
           <ArrowRight className="h-4 w-4" />
         </button>
       </StickyBottomBar>
