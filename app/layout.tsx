@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -35,6 +36,10 @@ export default function RootLayout({
         꽉 차게, 넓은 화면에선 가운데 고정폭(430px)에 좌우로만 스튜디오 배경이 보인다.
       */}
       <body className="min-h-dvh bg-studio font-sans text-ink antialiased">
+        {/* Contentsquare 세션 리플레이. defer 속성 그대로 raw <script> 태그로 넣는 대신
+            next/script의 afterInteractive 전략을 쓴다 — 페이지가 인터랙티브해진 뒤에
+            로드돼서 초기 렌더링을 막지 않으면서도 defer와 동일한 효과를 낸다 */}
+        <Script src="https://t.contentsquare.net/uxa/58e34a59df7cd.js" strategy="afterInteractive" />
         <div className="relative mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-cream">
           <Providers>
             <Header />
