@@ -5,12 +5,10 @@ import { matchPlaces, scorePlace } from "@/lib/scoring";
 import {
   generateBookingFacts,
   generateDetailReason,
-  generateFitGuidance,
   generateReservationAsk,
-  generateVerdict,
   genericReason,
-  type FitGuidance,
 } from "@/lib/reason";
+import { buildCheckpoints } from "@/lib/checkpoints";
 import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice } from "@/lib/labels";
 import { MapLinks } from "@/components/MapLinks";
 import { BookmarkButton } from "@/components/BookmarkButton";
@@ -39,17 +37,11 @@ export default async function PlaceDetailPage({
   const reasonCards = match
     ? generateDetailReason(condition!, match)
     : genericReason(place.curatedReason);
-  // 조건 없이(예: 북마크에서) 들어온 경우엔 "이런 모임에 추천해요"를 조건 기반으로 만들
-  // 수 없다 — 이 페이지에서 실제로 나오는 드문 경로라 별도 함수 없이 최소 형태로 대체한다
-  const fitGuidance: FitGuidance =
-    condition && match
-      ? generateFitGuidance(condition, match)
-      : { recommendFor: [`${place.category} 메뉴를 찾는 모임`], avoidFor: [] };
+  const checkpoints = buildCheckpoints(place, condition);
   // 결과 목록의 "청모픽 N순위" 배지와 같은 기준(매칭 점수 순)으로 상세 페이지에서도
   // 몇 순위인지 다시 계산한다 — URL에 순위를 실어 나르지 않고, 같은 조건으로
   // matchPlaces를 다시 돌려 이 장소의 위치를 찾는 쪽이 라우팅 변경 없이 더 간단하다
   const rank = condition ? matchPlaces(condition).findIndex((m) => m.place.id === place.id) + 1 : null;
-  const verdict = condition && match ? generateVerdict(condition, match) : null;
   const bookingFacts = generateBookingFacts(place, condition);
   const reservationAsk = generateReservationAsk(condition);
 
@@ -108,9 +100,8 @@ export default async function PlaceDetailPage({
       <div className="-mx-6 h-2 bg-line-strong" />
 
       <PlaceDetailTabs
-        verdict={verdict}
+        checkpoints={checkpoints}
         reasonCards={reasonCards}
-        fitGuidance={fitGuidance}
         bookingFacts={bookingFacts}
         reservationAsk={reservationAsk}
       />

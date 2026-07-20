@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
-import { Check, TriangleAlert } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
+import { CheckpointList } from "@/components/CheckpointList";
 import { ICON_COLOR, ICON_MAP } from "@/components/checkpoint-icon-map";
-import type { FitGuidance, ReasonCard, Verdict } from "@/lib/reason";
+import type { Checkpoint } from "@/lib/checkpoints";
+import type { ReasonCard } from "@/lib/reason";
 
 const TABS = [
-  { id: "reason", label: "왜 추천해요" },
-  { id: "checkpoints", label: "내 모임에 맞을까요" },
-  { id: "caution", label: "예약 전에 확인해요" },
+  { id: "reason", label: "추천 이유" },
+  { id: "checkpoints", label: "체크포인트" },
+  { id: "caution", label: "주의사항" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -21,22 +23,19 @@ type TabId = (typeof TABS)[number]["id"];
  * 존재하는 "제자리" 탭바(공간을 차지)와, 그 자리가 뷰포트 위로 스크롤되어 나가는 순간부터
  * 화면에 고정으로 겹쳐 그리는 "떠 있는" 탭바. 어느 쪽이 보일지는 센티넬 엘리먼트를
  * IntersectionObserver로 지켜보다가 화면 밖으로 나가면 전환한다.
- *
- * 탭을 눌러야만 내용이 보이는 방식(진짜 탭 전환)을 한 번 시도했었는데, 이 페이지는
- * 스크롤하며 모든 내용을 훑어보고 탭은 "지금 어디쯤 보고 있는지"를 알려주는 안내판
- * 역할이어야 한다는 피드백을 받고 되돌렸다 — 세 섹션 다 항상 문서에 존재하고, 탭 클릭은
- * 그 섹션으로 스크롤 이동만 시킨다.
  */
 export function PlaceDetailTabs({
-  verdict,
+  checkpoints,
   reasonCards,
-  fitGuidance,
   bookingFacts,
   reservationAsk,
 }: {
-  verdict: Verdict | null;
+  checkpoints: Checkpoint[];
   reasonCards: ReasonCard[];
-  fitGuidance: FitGuidance;
+  /** 주의사항은 예전엔 place.cautionNote 한 줄만 보여줬는데, 실제 확인이 필요한 사실
+   *  (룸 최소 인원, 예약 방식, 예산 초과 가능성, 대기 등)을 최대 3개까지 같이 모아서
+   *  보여주는 쪽이 더 도움이 된다는 판단으로 유지한다 — 나머지 탭(추천 이유·체크포인트)은
+   *  카테고리별 판단으로 되돌렸지만, 이 탭은 그대로 둔다 */
   bookingFacts: string[];
   reservationAsk: string;
 }) {
@@ -150,9 +149,6 @@ export function PlaceDetailTabs({
         </div>
       )}
 
-      {/* "왜 추천해요": 예전엔 이름 아래 항상 보이는 별도 블록이었던 "청모픽 한 줄 결론"을
-          여기로 옮겼다 — 탭 안에 있어도 스크롤하면 바로 보이는 첫 내용이라 크게 달라지지
-          않는다 */}
       <section
         ref={(el) => {
           sectionRefs.current.reason = el;
@@ -160,32 +156,7 @@ export function PlaceDetailTabs({
         data-tab-id="reason"
         className="scroll-mt-14 pt-8"
       >
-        {verdict && (
-          <div className="rounded-md border border-accent/25 bg-accent-soft/60 p-5">
-            <p className="text-base font-bold leading-snug text-ink">{verdict.headline}</p>
-            <p className="mt-2.5 text-sm leading-relaxed text-ink">{verdict.lead}</p>
-            {verdict.caveat && (
-              <div className="mt-3 border-t border-accent/20 pt-3">
-                <p className="text-xs font-bold text-ink-soft">솔직히 말하면</p>
-                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{verdict.caveat}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-
-      <div className="-mx-6 mt-8 h-2 bg-line-strong" />
-
-      {/* "내 모임에 맞을까요": 원래 있던 "추천 이유" 3장 스토리 카드와, 체크리스트를 대체한
-          "이런 모임에 추천해요/다른 곳이 나을 수 있어요"를 한 탭으로 합쳤다 — 둘 다 결국
-          "이 장소가 내 모임에 맞는지"를 판단하는 근거라 따로 탭을 나눌 이유가 없었다 */}
-      <section
-        ref={(el) => {
-          sectionRefs.current.checkpoints = el;
-        }}
-        data-tab-id="checkpoints"
-        className="scroll-mt-14 pt-8"
-      >
+        <p className="mb-4 text-lg font-bold tracking-tight text-ink">이 모임에 추천하는 이유</p>
         <div className="flex flex-col gap-3">
           {reasonCards.map((card, i) => {
             const CardIcon = ICON_MAP[card.icon];
@@ -194,6 +165,9 @@ export function PlaceDetailTabs({
                 key={i}
                 className="flex items-start gap-3 rounded-md border border-accent/25 bg-accent-soft/60 p-4"
               >
+                {/* 체크포인트와 같은 원형 배지+아이콘을 그대로 써서, 이 서비스 안에서
+                    아이콘 스타일이 하나로 통일되게 한다 — 배경은 cream-strong(미색)이 아니라
+                    흰색으로, 카드 자체의 옅은 accent 틴트 위에서 더 또렷하게 도드라지게 한다 */}
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
                   <CardIcon className={clsx("h-4 w-4", ICON_COLOR[card.icon])} strokeWidth={1.8} />
                 </span>
@@ -211,38 +185,30 @@ export function PlaceDetailTabs({
             );
           })}
         </div>
+      </section>
 
-        <div className="mt-5 flex flex-col gap-5">
-          <div>
-            <p className="mb-2 text-sm font-bold text-sage">이런 모임에 추천해요</p>
-            <ul className="flex flex-col gap-2">
-              {fitGuidance.recommendFor.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sage" strokeWidth={2.2} />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          {fitGuidance.avoidFor.length > 0 && (
-            <div>
-              <p className="mb-2 text-sm font-bold text-clay">이런 경우에는 다른 곳이 나을 수 있어요</p>
-              <ul className="flex flex-col gap-2">
-                {fitGuidance.avoidFor.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
-                    <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-clay" strokeWidth={2.2} />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+      {/* 레퍼런스(GS더프레시 매장상세)의 "우리매장 서비스"↔"픽업/배달 안내" 사이 구분
+          밴드와 같은 자리 — 대분류가 바뀐다는 걸 헤어라인 하나보다 뚜렷하게 보여준다.
+          bg-cream은 페이지 배경(body)과 완전히 같은 색이라 실제로는 안 보이는 밴드였다 —
+          line-strong(#DDDEE0)으로 바꿔 실제로 보이게 했다 */}
+      <div className="-mx-6 mt-8 h-2 bg-line-strong" />
+
+      <section
+        ref={(el) => {
+          sectionRefs.current.checkpoints = el;
+        }}
+        data-tab-id="checkpoints"
+        className="scroll-mt-14 pt-8"
+      >
+        <p className="mb-4 text-lg font-bold tracking-tight text-ink">청첩장 모임 체크포인트</p>
+        <CheckpointList checkpoints={checkpoints} />
       </section>
 
       <div className="-mx-6 mt-8 h-2 bg-line-strong" />
 
-      {/* "예약 전에 확인해요": 확인이 필요한 사실 최대 3개 + 실행 문구 한 줄로 압축했다 */}
+      {/* 추천 이유(블루)와 뚜렷이 구분되도록 원티드 팔레트의 warning(주황) 톤을 쓴다.
+          예전엔 place.cautionNote 한 줄만 보여줬는데, 실제 예약 전에 확인할 사실을
+          최대 3개까지 모아서 보여주는 지금 방식이 더 도움이 돼서 그대로 유지한다 */}
       <section
         ref={(el) => {
           sectionRefs.current.caution = el;
@@ -250,6 +216,7 @@ export function PlaceDetailTabs({
         data-tab-id="caution"
         className="scroll-mt-14 pt-8 pb-2"
       >
+        <p className="mb-4 text-lg font-bold tracking-tight text-ink">주의할 점</p>
         <ul className="flex flex-col gap-2.5">
           {bookingFacts.map((fact, i) => (
             <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
