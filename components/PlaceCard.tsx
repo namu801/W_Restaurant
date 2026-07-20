@@ -65,21 +65,19 @@ export function PlaceCard({
         "bg-cream-soft",
       )}
     >
+      {/* 결과 목록 최상단 큐레이션 배지도 같은 Sparkles 아이콘 + 파란 박스를 쓰다 보니,
+          바로 아래 1순위 카드의 topBand까지 아이콘을 넣으면 똑같은 배지가 두 번 겹쳐
+          보였다 — Sparkles(청모픽의 한마디)는 페이지에서 한 번만 쓰는 걸로 좁히고,
+          카드 자체의 띠는 아이콘 없이 텍스트만으로 차분하게 구분한다 */}
       {topBand && (
         <p
           className={clsx(
-            "flex items-center gap-1.5 border-b px-4 py-2.5 text-sm font-bold",
+            "border-b px-4 py-2.5 text-sm font-bold",
             topBand.tone === "accent"
               ? "border-accent/20 bg-accent-soft text-accent-strong"
               : "border-line bg-cream-strong text-ink-soft",
           )}
         >
-          <Sparkles
-            className={clsx("h-3.5 w-3.5 shrink-0", topBand.tone === "neutral" && "text-ink-faint")}
-            strokeWidth={2}
-            fill={topBand.tone === "accent" ? "currentColor" : "none"}
-            aria-hidden
-          />
           {topBand.text}
         </p>
       )}
@@ -161,7 +159,13 @@ export function PlaceCard({
         rank={rank}
         score={score}
         page="results"
-        className="absolute right-4 top-4 !h-8 !w-8 !justify-center !gap-0 !rounded-full !border !border-line !bg-white !p-0 !text-ink-soft"
+        className={clsx(
+          // top-4는 article 맨 위 기준 고정값이라, topBand가 추가되면서 그 위에 얹힌
+          // 채로 남아 식당명 줄이 아니라 topBand 위에 떠 보였다 — topBand가 있을 땐
+          // 그 높이(약 41px)만큼 더 내려서 항상 식당명 줄과 같은 높이에 오게 한다
+          "absolute right-4 !h-8 !w-8 !justify-center !gap-0 !rounded-full !border !border-line !bg-white !p-0 !text-ink-soft",
+          topBand ? "top-[57px]" : "top-4",
+        )}
       />
     </article>
   );
