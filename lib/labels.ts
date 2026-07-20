@@ -137,6 +137,69 @@ export function simplifyBusinessHours(hours: string): string {
     .trim();
 }
 
+const DAY_SEQUENCE = ["월", "화", "수", "목", "금", "토", "일"] as const;
+// DAY_SEQUENCE의 각 글자가 실제로 어떤 요일(JS Date.getDay() 기준, 0=일요일)인지 매핑한다.
+// "월화수목금토일" 순서는 한국식 요일 표기 순서라 일요일이 맨 끝인데, getDay()는 일요일이 0이라
+// 두 순서가 다르다 — 이 배열이 둘을 이어준다.
+const DAY_SEQUENCE_WEEKDAY = [1, 2, 3, 4, 5, 6, 0];
+
+/** 서버(Vercel, 보통 UTC)와 클라이언트(한국 사용자 브라우저)의 로컬 타임존이 서로 달라서
+ *  new Date().getDay()를 그냥 쓰면 자정 근처에 서버·클라이언트가 "오늘"을 다르게 계산해
+ *  하이드레이션이 어긋날 수 있다. 항상 KST(UTC+9) 기준으로 직접 계산해서 실행 환경의
+ *  타임존과 무관하게 항상 같은 값이 나오게 한다 */
+function getKstWeekday(): number {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDay();
+}
+
+function dayTokenToWeekdays(token: string): Set<number> {
+  if (token === "매일") return new Set([0, 1, 2, 3, 4, 5, 6]);
+  const chars = token
+    .replace("공휴일", "")
+    .split(/[~\-·]/)
+    .filter((c): c is (typeof DAY_SEQUENCE)[number] =>
+      (DAY_SEQUENCE as readonly string[]).includes(c),
+    );
+  if (chars.length === 0) return new Set();
+  const startIdx = DAY_SEQUENCE.indexOf(chars[0]);
+  const endIdx = DAY_SEQUENCE.indexOf(chars[chars.length - 1]);
+  if (startIdx < 0 || endIdx < 0 || startIdx > endIdx) return new Set();
+  return new Set(DAY_SEQUENCE_WEEKDAY.slice(startIdx, endIdx + 1));
+}
+
+const CLOSED_DAY_PATTERN = /(?:매주\s*)?([월화수목금토일])요일\s*휴무/;
+const DAY_TIME_PATTERN =
+  /(매일|[월화수목금토일](?:[~\-·][월화수목금토일])*(?:[~\-·]?공휴일)?)\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g;
+
+/** 카드에서 "월~금 16:30-24:00 토·일·공휴일 16:00-24:00" 처럼 요일별 영업시간을 다 나열하면
+ *  너무 길다 — "오늘"에 해당하는 구간 하나만 골라 보여준다. 매일 영업이면 요일 라벨 없이
+ *  시간만, 평일 전체(월~금)/주말 전체(토·일)면 "평일"/"주말"로, 그 외 애매한 구간(화-금 등)은
+ *  "오늘"로 라벨을 붙인다. 상세 페이지는 원문 그대로 두고 이 함수는 카드 전용이다.
+ *  lib/places.ts의 실제 영업시간 문자열 19개 × 요일 7개(133가지 조합)로 전부 검증했다 —
+ *  구분자(~, -, ·)와 표기(화-일/화-금/월요일 휴무 등)가 제각각이라 하나씩 확인이 필요했다 */
+export function todayBusinessHours(hours: string, today: number = getKstWeekday()): string {
+  const closedMatch = hours.match(CLOSED_DAY_PATTERN);
+  if (closedMatch) {
+    const closedIdx = DAY_SEQUENCE.indexOf(closedMatch[1] as (typeof DAY_SEQUENCE)[number]);
+    if (closedIdx >= 0 && DAY_SEQUENCE_WEEKDAY[closedIdx] === today) {
+      return "오늘 휴무";
+    }
+  }
+
+  for (const [, token, start, end] of hours.matchAll(DAY_TIME_PATTERN)) {
+    const weekdays = dayTokenToWeekdays(token);
+    if (!weekdays.has(today)) continue;
+    if (token === "매일") return `${start}-${end}`;
+    if (weekdays.size === 5 && [1, 2, 3, 4, 5].every((d) => weekdays.has(d))) {
+      return `평일 ${start}-${end}`;
+    }
+    if (weekdays.size === 2 && weekdays.has(6) && weekdays.has(0)) return `주말 ${start}-${end}`;
+    return `오늘 ${start}-${end}`;
+  }
+
+  // 예상 못 한 새 포맷이면 안전하게 기존 축약 로직으로 대체한다
+  return simplifyBusinessHours(hours);
+}
+
 /** 카드(PlaceCard)와 상세 페이지 둘 다 같은 fitLabel을 같은 Tag 색으로 보여줘야 해서
  *  공유 lib로 뺐다 — 예전엔 각 파일에 따로 정의돼 있어 둘이 어긋날 여지가 있었다.
  *  components/ui/Tag의 TagVariant를 그대로 import하지 않고 값만 맞춰 적었다 — lib가

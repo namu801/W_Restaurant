@@ -23,14 +23,15 @@ export default function LandingPage() {
         메인 컬러로 확실히 튀게 한다.
       */}
       <section className="rounded-lg border border-line bg-cream-soft p-6">
-        <p className="text-sm font-semibold text-accent">청모픽</p>
-        <h1 className="mt-2 text-[26px] font-bold leading-[1.35] tracking-tight text-ink text-balance">
+        <h1 className="text-[26px] font-bold leading-[1.35] tracking-tight text-ink text-balance">
           청첩장 모임 장소,
           <br />
           <span className="text-accent">고민 없이</span> 골라드려요
         </h1>
         <p className="mt-3 max-w-[30ch] text-[15px] leading-relaxed text-ink-soft">
-          용산역·신용산역·삼각지 인근에서 관계와 분위기에 맞는 곳을 찾아드려요.
+          용산역·신용산역·삼각지 인근에서
+          <br />
+          관계와 분위기에 맞는 곳을 찾아드려요.
         </p>
 
         <Image

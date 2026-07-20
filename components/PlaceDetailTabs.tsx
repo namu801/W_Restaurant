@@ -160,13 +160,20 @@ export function PlaceDetailTabs({
                 className="flex items-start gap-3 rounded-md border border-accent/25 bg-accent-soft/60 p-4"
               >
                 {/* 체크포인트와 같은 원형 배지+아이콘을 그대로 써서, 이 서비스 안에서
-                    아이콘 스타일이 하나로 통일되게 한다 */}
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-strong">
+                    아이콘 스타일이 하나로 통일되게 한다 — 배경은 cream-strong(미색)이 아니라
+                    흰색으로, 카드 자체의 옅은 accent 틴트 위에서 더 또렷하게 도드라지게 한다 */}
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
                   <CardIcon className={clsx("h-4 w-4", ICON_COLOR[card.icon])} strokeWidth={1.8} />
                 </span>
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <p className="text-sm font-bold text-ink">{card.headline}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">{card.description}</p>
+                  {card.emphasizeDescription ? (
+                    <p className="text-sm font-bold leading-relaxed text-ink">{card.description}</p>
+                  ) : (
+                    <>
+                      <p className="text-sm font-bold text-ink">{card.headline}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">{card.description}</p>
+                    </>
+                  )}
                 </div>
               </div>
             );

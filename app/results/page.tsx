@@ -74,9 +74,14 @@ export default async function ResultsPage({
       {/* 레퍼런스(마켓컬리 검색 결과)처럼 조건 요약을 박스로 묶지 않고, 좌측 총 개수 +
           우측 정렬·필터 한 줄로 바꿨다. 상세 조건은 "필터" 시트를 열어야 보이지만,
           그건 어차피 지금 즉시 알아야 할 정보라기보단 "고치고 싶을 때" 찾는 정보라
-          평소엔 숨겨두는 편이 화면을 덜 무겁게 한다 */}
+          평소엔 숨겨두는 편이 화면을 덜 무겁게 한다.
+          이 숫자는 matches.length(조건에 맞는 전체 개수, 예: 19)가 아니라
+          visibleMatches.length(실제로 지금 화면에 카드로 그려지는 개수, 예: 6)를 써야 한다 —
+          "총 19개"라고 띄워놓고 카드가 6장만 보이면, 바로 아래 "19곳 중 6곳을 골라드렸어요"
+          배지와 숫자가 겹쳐 보여서 마치 개수가 안 맞는 오류처럼 읽혔다. "전체 보기"를 눌러
+          showAll이 되면 visibleMatches === matches라 그때는 그대로 전체 개수가 뜬다 */}
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-ink">총 {matches.length}개</p>
+        <p className="text-sm font-semibold text-ink">총 {visibleMatches.length}개</p>
         <div className="flex items-center gap-3">
           <SortDropdown sort={sort} />
           <ConditionEditSheet condition={condition} resultCount={matches.length} />

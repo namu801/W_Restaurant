@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { ClockIcon, WalletIcon } from "@heroicons/react/24/solid";
-import { AREA_LABEL, FIT_TAG_VARIANT, formatFitScore, formatPrice, simplifyBusinessHours } from "@/lib/labels";
+import { AREA_LABEL, FIT_TAG_VARIANT, formatFitScore, formatPrice, todayBusinessHours } from "@/lib/labels";
 import { conditionToSearchParams } from "@/lib/condition-query";
 import { topStrengthTags } from "@/lib/reason";
 import type { Condition, MatchResult } from "@/lib/types";
@@ -77,9 +77,11 @@ export function PlaceCard({
           {place.curatedReason}
         </p>
 
-        {/* 가격·영업시간을 한 줄로 묶는다. 영업시간은 브레이크타임·라스트오더까지 다
-            보여주면 이 한 줄에 다 안 들어가서, 카드에서만 핵심 시간대만 남긴다
-            (상세 페이지에는 원문 그대로 보여준다) */}
+        {/* 가격·영업시간을 한 줄로 묶는다. 영업시간을 요일별로 다 나열하면(예: "월~금
+            16:30-24:00 토·일·공휴일 16:00-24:00") 한 줄에 다 안 들어가서, 카드에서는
+            "오늘" 요일에 해당하는 구간 하나만 골라 보여준다 — 매일이면 "11:00-22:00",
+            평일 전체/주말 전체면 "평일 16:30-24:00" 식으로 (상세 페이지엔 원문 그대로
+            보여준다) */}
         <p className="mt-2.5 flex items-center gap-3 text-sm font-medium text-ink">
           {/* lucide는 스트로크 전용이라 fill="currentColor"를 억지로 주면 시계 바늘 같은
               내부 디테일이 뭉개졌다 — 실제로 solid로 그려진 Heroicons로 바꿨다
@@ -90,7 +92,7 @@ export function PlaceCard({
           </span>
           <span className="flex items-center gap-1.5">
             <ClockIcon className="h-3.5 w-3.5 shrink-0 text-ink-faint" />
-            {simplifyBusinessHours(place.businessHours)}
+            {todayBusinessHours(place.businessHours)}
           </span>
         </p>
 

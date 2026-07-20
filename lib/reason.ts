@@ -8,6 +8,11 @@ export interface ReasonCard {
   /** 번호 배지 대신 조건입력 위저드와 같은 아이콘을 쓴다. 실제 컴포넌트가 아니라 키만
    *  담는 이유는 lib/checkpoints.ts 상단 주석 참고 (서버→클라이언트 함수 직렬화 문제) */
   icon: ReasonIconKey;
+  /** "이 식당만의 매력이에요" 같은 정형화된 제목은 모든 식당에서 똑같이 반복돼서, 정작
+   *  식당마다 다른 실제 매력(curatedReason)이 작고 옅은 보조 텍스트로 묻혔다. 이 카드는
+   *  제목 없이 description을 큰 텍스트로 보여준다 — description 자체가 이미 이 식당만의
+   *  구체적인 매력이라 별도 제목이 필요 없다 */
+  emphasizeDescription?: boolean;
 }
 
 /** 카테고리별 "왜 추천하나" 카드 한 장. 헤드라인은 짧게 단정, 설명은 조건을 그대로 반영해
@@ -124,11 +129,11 @@ export function generateDetailReason(condition: Condition, match: MatchResult): 
   return [
     reasonCard(s1, condition),
     reasonCard(s2, condition),
-    { headline: "이 식당만의 매력이에요", description: match.place.curatedReason, icon: "sparkles" },
+    { headline: "", description: match.place.curatedReason, icon: "sparkles", emphasizeDescription: true },
   ];
 }
 
 /** 조건 컨텍스트 없이(예: 북마크함) 장소를 볼 때 쓰는 기본 추천 이유 */
 export function genericReason(curatedReason: string): ReasonCard[] {
-  return [{ headline: "이 식당의 특징이에요", description: curatedReason, icon: "sparkles" }];
+  return [{ headline: "", description: curatedReason, icon: "sparkles", emphasizeDescription: true }];
 }
