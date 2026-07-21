@@ -16,7 +16,7 @@ export function PlacePhotoCarousel({ place }: { place: Place }) {
 
   if (place.photos.length <= 1) {
     return (
-      <div className="-mx-6 -mt-8">
+      <div className="-mx-6 -mt-8 overflow-hidden">
         <PlaceThumbnail place={place} className="h-64" iconClassName="h-16 w-16" />
       </div>
     );
@@ -29,7 +29,7 @@ export function PlacePhotoCarousel({ place }: { place: Place }) {
   }
 
   return (
-    <div className="relative -mx-6 -mt-8">
+    <div className="relative -mx-6 -mt-8 overflow-hidden">
       <div
         onScroll={handleScroll}
         className="flex h-64 snap-x snap-mandatory overflow-x-auto"
