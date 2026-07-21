@@ -26,7 +26,7 @@ export function MainArea({ children }: { children: React.ReactNode }) {
         isFullBleedMap
           ? "relative overflow-hidden"
           : clsx(
-              "overflow-y-auto px-6",
+              "scrollbar-hide overflow-y-auto px-6",
               isSearchWizard ? "pt-[120px]" : "pt-8",
               isResults ? "pb-8" : "pb-32",
             ),

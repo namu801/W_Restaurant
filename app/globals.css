@@ -31,6 +31,18 @@ body {
   animation: fade-in-up 0.4s ease-out;
 }
 
+/* 실제 모바일 기기에는 스크롤바가 안 보이는데, 데스크톱 브라우저에서 테스트할 때만
+   430px 프레임 오른쪽 끝에 스크롤바가 그어져 사진 등 풀블리드 영역을 가로지르는
+   것처럼 보인다. 스크롤 동작 자체는 그대로 두고 시각적으로만 숨긴다. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .animate-bounce {
