@@ -159,11 +159,19 @@ function fitParking(place: Place): number {
   return place.parkingAvailable ? 1 : 0.5;
 }
 
-/** PRD 11.2 결과 제외 조건: 필수 조건과 충돌하는 장소를 제외한다 */
+/** PRD 11.2 결과 제외 조건: 필수 조건과 충돌하는 장소를 제외한다.
+ *  음식 취향은 원래 점수에만 반영되는 가중치였다(fitFood) — 완전히 안 맞는 카테고리라도
+ *  다른 항목 점수가 좋으면 상위권에 뜰 수 있었다. "선택한 음식과 아예 안 맞으면 왜 나오지?"
+ *  라는 실제 사용자 피드백을 받고, 지역·인원·예산처럼 하드 필터로 바꿨다 — "상관없음"을
+ *  포함했거나 아무것도 안 골랐으면(둘 다 "선호 없음") 그대로 전부 통과시킨다 */
 function isExcluded(condition: Condition, place: Place): boolean {
   if (condition.area !== "all" && place.area !== condition.area) return true;
   if (fitPeople(condition, place) === null) return true;
   if (fitBudget(condition, place).excluded) return true;
+  const selectedCuisines = condition.cuisines.filter((c) => c !== "any");
+  if (selectedCuisines.length > 0 && !selectedCuisines.some((c) => place.cuisineTags.includes(c))) {
+    return true;
+  }
   for (const extra of condition.extraConditions) {
     switch (extra) {
       case "room-required":
@@ -274,6 +282,15 @@ export function findRelaxationSuggestion(
     candidates.push({
       label: "예산 조건을 '상관없어요'로 넓히면",
       next: { ...condition, budget: "any" },
+    });
+  }
+  // 음식 취향이 이제 하드 필터라(isExcluded 참고), 너무 좁게 고르면 0곳이 나올 수 있다 —
+  // 다른 필수 조건과 같은 자리에서 완화 후보로 제안한다
+  const selectedCuisines = condition.cuisines.filter((c) => c !== "any");
+  if (selectedCuisines.length > 0) {
+    candidates.push({
+      label: "음식 조건을 '상관없어요'로 넓히면",
+      next: { ...condition, cuisines: ["any"] },
     });
   }
   const EXTRA_RELAX_LABEL: Record<Condition["extraConditions"][number], string> = {
