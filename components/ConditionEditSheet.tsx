@@ -42,10 +42,14 @@ const SHEET_LABEL: Record<Question["key"], string> = {
 export function ConditionEditSheet({
   condition,
   resultCount,
+  trigger = "default",
 }: {
   condition: Condition;
   /** 결과 개수를 알 수 있는 화면(결과 목록)에서만 넘긴다. 상세 화면처럼 알 수 없는 곳에서는 생략한다 */
   resultCount?: number;
+  /** "emptyState"는 빈 결과 화면의 "조건 수정하기" 버튼 — 위저드를 처음부터 다시 밟게 하는
+   *  대신, 같은 시트를 그 자리 스타일(테두리 pill 버튼)로 여는 트리거로 쓴다 */
+  trigger?: "default" | "emptyState";
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -96,15 +100,26 @@ export function ConditionEditSheet({
       {/* 흰 배경+테두리로 강조하던 걸 걷어냈다 — 그 강조를 큐레이션 배지 쪽으로 몰아주고,
           여기는 옆의 "추천순" 드롭다운과 완전히 같은 방식(아이콘+텍스트, 배경·테두리 없음)
           으로 맞췄다. 둘 다 이 줄의 보조 컨트롤이라 같은 무게로 읽혀야 한다 */}
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={handleOpen}
-        className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-ink-soft transition-colors hover:text-ink"
-      >
-        <SlidersHorizontal className="h-3.5 w-3.5" />
-        필터
-      </button>
+      {trigger === "emptyState" ? (
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleOpen}
+          className="rounded-full border border-line px-4 py-2.5 text-sm font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
+        >
+          조건 수정하기
+        </button>
+      ) : (
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleOpen}
+          className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-ink-soft transition-colors hover:text-ink"
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          필터
+        </button>
+      )}
 
       <BottomSheet
         open={open}

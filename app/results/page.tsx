@@ -150,18 +150,13 @@ export default async function ResultsPage({
           }
           action={
             <div className="mt-2 flex flex-wrap gap-2">
-              <Link
-                href={`/search?${query}`}
-                className="rounded-full border border-line px-4 py-2.5 text-sm font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
-              >
-                조건 수정하기
-              </Link>
+              <ConditionEditSheet condition={condition} trigger="emptyState" />
               {relaxationHref ? (
                 <Link
                   href={relaxationHref}
                   className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
                 >
-                  조건 살짝 낮춰서 보기
+                  조건 넓혀서 보기
                 </Link>
               ) : (
                 <Link
