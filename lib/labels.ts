@@ -125,6 +125,14 @@ export function formatPrice(min: number, max: number): string {
  *  괄호 안에 브레이크타임/라스트오더가 낀 구간과, 괄호 밖에 단독으로 붙는 절 둘 다 지운다 —
  *  "(연중무휴)"처럼 그 두 단어가 없는 괄호는 그대로 남긴다. lib/places.ts의 20개 실제
  *  영업시간 문자열로 전부 검증했다 */
+/** 상세 페이지 전용. 요일 그룹이 콤마로 구분돼 있으면(예: "월~금 …, 토·일 …") 한 줄로
+ *  이어 붙이는 대신 그룹별로 줄을 나눠 보여준다 — 한 줄로 다 넣으면 폭이 좁을 때 아무
+ *  자리에서나 줄바꿈돼 두 번째 요일 그룹이 첫 줄과 안 맞게 잘려 보였다. 요일 그룹이
+ *  하나뿐이면(콤마가 없으면) 그대로 한 줄만 반환한다 */
+export function splitBusinessHoursLines(hours: string): string[] {
+  return hours.split(",").map((line) => line.trim());
+}
+
 export function simplifyBusinessHours(hours: string): string {
   return hours
     .replace(/\([^)]*(?:브레이크타임|라스트오더)[^)]*\)/g, "")

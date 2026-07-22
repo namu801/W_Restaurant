@@ -9,7 +9,7 @@ import {
   genericReason,
 } from "@/lib/reason";
 import { buildCheckpoints } from "@/lib/checkpoints";
-import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice } from "@/lib/labels";
+import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice, splitBusinessHoursLines } from "@/lib/labels";
 import { MapLinks } from "@/components/MapLinks";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
@@ -84,9 +84,16 @@ export default async function PlaceDetailPage({
             <MapPinIcon className="h-4 w-4 shrink-0 text-ink-faint" />
             {place.address}
           </p>
-          <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
-            <ClockIcon className="h-4 w-4 shrink-0 text-ink-faint" />
-            {place.businessHours}
+          {/* text-sm 기본 line-height(1.25rem = 1.429)는 원티드 타이포 스케일의 label1
+              (단일 줄 UI 라벨용) 값이다. 여기는 요일 그룹이 여러 줄로 나열되는 산문형 텍스트라
+              원티드 스펙이 구분해둔 label1-read(1.571)를 대신 쓴다 */}
+          <p className="flex items-start gap-1.5 text-sm font-medium leading-[1.571] text-ink">
+            <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" />
+            <span className="flex flex-col">
+              {splitBusinessHoursLines(place.businessHours).map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </span>
           </p>
           <p className="flex items-center gap-1.5 text-sm font-medium text-accent">
             <WalletIcon className="h-4 w-4 shrink-0 text-accent" />
