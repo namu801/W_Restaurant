@@ -73,7 +73,7 @@ export default function LandingPage() {
               <span
                 className={clsx(
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-bold",
-                  index === 0 ? "bg-accent text-white" : "bg-cream-strong text-ink-soft",
+                  index === 0 ? "bg-[#D8EAFF] text-[#0055CF]" : "bg-cream-strong text-ink-soft",
                 )}
               >
                 {index + 1}
