@@ -54,6 +54,13 @@ export type ReservationMethod = "available" | "phone" | "difficult" | "unavailab
 export type ParkingType = "self" | "valet" | "partner" | "none";
 export type SeatType = "open" | "wide" | "semi-private" | "room";
 
+/** 상세 페이지에 보여줄 대표 메뉴 한 줄 (이름 + 가격). 전체 메뉴판이 아니라 첫인상용으로
+ *  식당당 5개만 고른다 */
+export interface MenuItem {
+  name: string;
+  price: number; // 원 단위
+}
+
 /** PRD 10.1 places 스키마와 1:1로 대응하는 장소 모델 */
 export interface Place {
   id: string;
@@ -94,6 +101,7 @@ export interface Place {
   parkingType: ParkingType;
   curatedReason: string;
   cautionNote: string;
+  menu: MenuItem[];
   lastVerifiedAt: string; // ISO date
 }
 

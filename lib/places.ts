@@ -63,6 +63,13 @@ export const PLACES: Place[] = [
     parkingType: "partner",
     curatedReason: "아이파크몰 내에 있어 접근성이 좋고 캐주얼하게 즐기는 홍콩식 딤섬 전문점으로 부담 없는 모임에 어울린다",
     cautionNote: "예약을 받지 않고 현장 웨이팅(대기 등록) 방식으로만 운영되며 주차요금이 10분당 1500원으로 비싼 편이라 사전 정산 확인이 필요하고 룸 여부는 확인되지 않음",
+    menu: [
+      { name: "블랙 하가우(3pcs)", price: 9500 },
+      { name: "맑은 우육탕면", price: 15400 },
+      { name: "마라완탕비빔면", price: 15400 },
+      { name: "크리스피라페치킨", price: 27900 },
+      { name: "마늘칩꿔바육", price: 29900 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -97,6 +104,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "고급스럽고 아늑한 분위기의 관동식 스키야키 전문점으로 수다 떨며 대화하기 좋아 친구·가족 모임에 적합",
     cautionNote: "자체 주차장이 없어 인근 공영주차장을 이용해야 하며 점심·저녁 피크타임 웨이팅이 잦아 네이버예약/캐치테이블로 사전 예약(네이버 예약 시 1인 1만원 예약금)하는 것이 확실하고 주말 당일 워크인은 어려운 편",
+    menu: [
+      { name: "우목심(런치)", price: 19000 },
+      { name: "등심(런치)", price: 21000 },
+      { name: "살치살(런치)", price: 23000 },
+      { name: "와규(런치)", price: 37000 },
+      { name: "트러플 크로켓", price: 12000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -131,6 +145,11 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "넓고 정갈한 좌석 배치로 편안한 분위기에서 족발과 함께 모임을 즐기기 좋은 곳",
     cautionNote: "온라인 예약 채널(캐치테이블·네이버예약)은 이 지점에서 확인되지 않아 전화(02-797-6882)로 예약해야 하며 자체 주차장 정보가 확인되지 않아 인근 공영주차장 이용이 필요할 수 있음",
+    // 이 지점 전용 자료를 찾지 못해 가격이 확인된 2개만 실었다(다른 5곳처럼 5개를 채우지 않음)
+    menu: [
+      { name: "족발(대)", price: 44000 },
+      { name: "모듬족발", price: 48000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -167,6 +186,13 @@ export const PLACES: Place[] = [
     parkingType: "partner",
     curatedReason: "아모레퍼시픽 건물 내 위치한 고급스럽고 조용한 이탈리안 레스토랑으로 프라이빗 룸이 있어 격식 있는 접대나 모임에 적합",
     cautionNote: "룸은 4인 이상부터 예약 가능하며 이용 시 차지비용 5만원이 별도로 부과됨. 캐치테이블 예약이 활발하고 예약 없이도 약간의 대기 후 이용 가능한 편이나 건물 주차장은 2시간 무료 제공에 평일엔 여유가 없는 경우가 있음",
+    menu: [
+      { name: "양 안심 스테이크", price: 43000 },
+      { name: "봉골레소스 농어구이", price: 49000 },
+      { name: "로스트 치킨", price: 41000 },
+      { name: "피쉬앤칩스(런치)", price: 31000 },
+      { name: "티라미수", price: 12000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -203,6 +229,13 @@ export const PLACES: Place[] = [
     parkingType: "self",
     curatedReason: "4~5인부터 최대 12명까지 이용 가능한 룸이 있어 조용하게 대화하며 청첩장 모임이나 생일 파티를 하기 좋은 실내포차",
     cautionNote: "주차공간이 협소하고 주말에는 웨이팅이 많아 캐치테이블·네이버예약으로 사전 예약이 필수이며 다만 테라스(야장)석은 예약을 받지 않고 현장 방문 순으로 운영됨",
+    menu: [
+      { name: "광주식 오리감자탕", price: 34000 },
+      { name: "제철 숙성 모듬회", price: 45000 },
+      { name: "1++한우 영천식 미나리육회", price: 29000 },
+      { name: "청도미나리 새우전", price: 20000 },
+      { name: "순천식 돼지곱창전골", price: 28000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -237,6 +270,13 @@ export const PLACES: Place[] = [
     parkingType: "partner",
     curatedReason: "고급스러운 인테리어와 넓은 좌석으로 대화하며 식사하기 좋고 난·밥 무한리필로 가성비도 좋음",
     cautionNote: "인도 커리 전문점이며 개별 룸은 없는 오픈형 매장이라 완전한 프라이버시가 필요한 자리에는 부적합",
+    menu: [
+      { name: "인디아 세트(평일)", price: 18600 },
+      { name: "프리미엄 싱글(1인)", price: 29800 },
+      { name: "프리미엄 커플(2인)", price: 59600 },
+      { name: "프리미엄 트리플(3인)", price: 89400 },
+      { name: "프리미엄 패밀리(4인)", price: 118700 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -271,6 +311,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "1981년부터 이어온 삼각지 생탕 맛집으로 단체석·연인석·1인석 등 좌석 구성이 다양해 여러 관계의 모임에 두루 어울림",
     cautionNote: "온라인 예약 채널이 확인되지 않아 전화로만 예약 가능하며 금요일 저녁은 대기가 생길 수 있어 사전 예약 권장. 매장 주차는 불가하며 전쟁기념관 북문 쪽 소형차 주차장 이용 필요",
+    menu: [
+      { name: "갑오징어회", price: 45000 },
+      { name: "들기름막국수&냉제육", price: 29000 },
+      { name: "수비드목살&수제스팸구이", price: 29000 },
+      { name: "얼큰스지전골", price: 35000 },
+      { name: "두부김치", price: 25000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -306,6 +353,13 @@ export const PLACES: Place[] = [
     parkingType: "valet",
     curatedReason: "프라이빗 룸을 다수 보유해 회식·접대 모임에 적합하며 두꺼운 탕수육 등 코스요리로 유명함",
     cautionNote: "룸 예약은 최소 1주 전 예약을 권장하며 발렛비는 3000원 별도",
+    menu: [
+      { name: "원조 어향동고", price: 48000 },
+      { name: "원조 육즙탕수육", price: 36000 },
+      { name: "멘보샤(8pcs)", price: 49000 },
+      { name: "옛날짬뽕(밥)", price: 12000 },
+      { name: "짜장면(밥)", price: 9000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -340,6 +394,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "블루리본 선정 샤브샤브·쌀국수 맛집으로 플레이팅이 깔끔하고 서비스가 친절해 대접하는 자리에도 좋음",
     cautionNote: "인기가 많아 예약 없이 방문 시 웨이팅이 자주 발생하며 캐치테이블 예약 시 인당 1만원의 예약금이 필요함. 매장 주차는 불가",
+    menu: [
+      { name: "[2인분] 살치살 샤브", price: 43500 },
+      { name: "1++ 프리미엄 한우찜", price: 59000 },
+      { name: "1++ 한우 아롱사태 참나물 수육", price: 27000 },
+      { name: "1++ 한우 육회", price: 23000 },
+      { name: "빠삭! 한돈 미나리전", price: 17500 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -374,6 +435,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "동굴과 폭포 컨셉의 독특한 인테리어를 갖춘 신흥 이자카야로 사시미·모츠나베 등 메뉴가 다양하고 분위기가 뛰어남",
     cautionNote: "매장 주차는 불가해 인근 공영주차장을 이용해야 하며 라스트오더가 새벽 2시로 늦어 귀가 수단을 미리 고려해야 함. 온라인 예약 채널은 확인되지 않아 전화 예약을 권장",
+    menu: [
+      { name: "모듬사시미", price: 54000 },
+      { name: "고메드 오합", price: 57000 },
+      { name: "한우 육사시미", price: 37000 },
+      { name: "우나기 봉초밥", price: 27000 },
+      { name: "고등어 봉초밥", price: 26000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -408,6 +476,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "고사리파스타·리조또 등 아시안 터치를 가미한 유러피언 메뉴와 와인을 삼각지역 도보권에서 캐주얼하게 즐길 수 있어 소규모 모임에 좋음",
     cautionNote: "주말 저녁은 웨이팅이 잦은 편이고 전용 주차장이 없어 인근 공영주차장을 이용해야 함",
+    menu: [
+      { name: "살치살 스테이크", price: 59000 },
+      { name: "랍스터 비스큐 로제 파스타", price: 35000 },
+      { name: "우대갈비 리조또", price: 39000 },
+      { name: "라구 라자냐", price: 25500 },
+      { name: "고추오일 명란크림 파스타", price: 22500 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -442,6 +517,9 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "용문시장에서 장을 본 제철 식재료로 만든 퓨전 요리와 사케·위스키·소주를 함께 즐길 수 있는 캐주얼 다이닝",
     cautionNote: "좌석 규모·정확한 예약 채널에 대한 자료가 부족해 방문 전 전화 확인을 권장함. 월요일은 휴무임",
+    // 메뉴명(전복파스타·우니파스타 등)은 여러 후기에서 확인되지만 가격을 확인할 수 있는
+    // 자료를 찾지 못해 비워둔다. 없는 값을 지어내는 대신 빈 배열로 둔다
+    menu: [],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -476,6 +554,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "흑백요리사 출연 셰프가 운영하는 포지타노풍 인테리어의 이탈리안 브런치 맛집으로 브루스케타·시푸드 오일 파스타 등 시그니처 메뉴 평이 좋고 캐치테이블로 예약이 가능함",
     cautionNote: "테이블 간격이 좁아 옆자리와 가까운 편이고 월요일은 휴무이며 디너 타임에는 주류 주문이 필수임",
+    menu: [
+      { name: "Tenderloin Steak", price: 43000 },
+      { name: "Seafood Oil Pasta", price: 27900 },
+      { name: "Truffle Carbonara", price: 26900 },
+      { name: "Squid Ink Risotto", price: 26500 },
+      { name: "Homemade Tiramisu", price: 11900 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -510,6 +595,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "용리단길에 위치한 조용한 캐주얼 다이닝 바로 페코리노 치즈 리가토니·봉골레 파스타 등 시그니처 메뉴와 하우스와인이 좋은 평가를 받음",
     cautionNote: "전용 주차장이 없어 주차가 어려운 편이며 내부 공간이 작아(7~8팀 규모) 예약 없이는 대기할 수 있음",
+    menu: [
+      { name: "페코리노 치즈 리가토니", price: 19000 },
+      { name: "덕 라구 카사레치아 파스타", price: 22000 },
+      { name: "스파이시 쉬림프 파스타", price: 22000 },
+      { name: "한우 비프 타르타르", price: 21000 },
+      { name: "비프 프라임 스테이크", price: 39000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -544,6 +636,13 @@ export const PLACES: Place[] = [
     parkingType: "partner",
     curatedReason: "소롱포 등 정통 상해식 딤섬과 프라이빗 룸을 갖춰 격식 있는 소규모 접대·모임에 적합하며 아이파크몰 주차 연계로 접근성도 좋음",
     cautionNote: "대기가 많은 편이라 예약 없이는 웨이팅이 길 수 있으며 룸 최소 인원·주문 금액 등 세부 조건은 자료로 확인되지 않아 방문 전 문의 필요",
+    menu: [
+      { name: "싱가포르식 흑후추 마늘 소고기 안심", price: 50000 },
+      { name: "깐풍기", price: 39000 },
+      { name: "광동식 탕수육", price: 37000 },
+      { name: "딴딴면", price: 15000 },
+      { name: "오리지널 소롱포(6pcs)", price: 9500 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -578,6 +677,8 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "신용산역 도보 6분 거리의 신상 다이닝바로, 숯불요리 기반 안주 메뉴가 있어 소개팅이나 소규모 모임 장소로 추천됨",
     cautionNote: "매장 자체 주차 공간은 없어 인근 민영 주차장을 이용해야 함",
+    // 가격대(18,000~35,000원)만 확인되고 개별 메뉴명+가격 페어는 찾지 못해 비워둔다
+    menu: [],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -613,6 +714,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "신용산역 도보 5분 거리, 다양한 소스와 질 좋은 양꼬치, 2층 룸에서 단체 모임 가능",
     cautionNote: "평일 저녁에도 웨이팅이 있을 수 있어 캐치테이블·테이블링으로 사전 확인 추천. 전용 주차장 없어 인근 공영주차장 이용 필요",
+    menu: [
+      { name: "양복점 꽃갈비(양갈비)", price: 28900 },
+      { name: "양 등심꼬치", price: 25900 },
+      { name: "양복점 왕꼬치(양꼬치)", price: 18900 },
+      { name: "블랙 꿔바로우", price: 23000 },
+      { name: "마라샹궈", price: 25000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -648,6 +756,13 @@ export const PLACES: Place[] = [
     parkingType: "partner",
     curatedReason: "신용산역 인접, 히츠마부시를 현대적으로 재해석한 프라이빗 일식 다이닝으로 4~8인 룸을 보유해 소규모 모임에 적합",
     cautionNote: "브레이크타임(15:00-17:00)에는 이용이 어려우니 방문 시간을 미리 확인하는 게 좋음",
+    menu: [
+      { name: "특 히츠마부시", price: 58000 },
+      { name: "명란 히츠마부시", price: 52000 },
+      { name: "히츠마부시(나고야식 장어덮밥)", price: 42000 },
+      { name: "우나기 카바야키", price: 39000 },
+      { name: "토리마부시(숯불닭구이덮밥)", price: 29000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
   place({
@@ -682,6 +797,13 @@ export const PLACES: Place[] = [
     parkingType: "none",
     curatedReason: "삼각지역 도보권의 힙한 와인바 라운지로, 테라스와 디제잉이 있는 개방적인 분위기에서 스테이크·파스타 등 다양한 메뉴를 즐길 수 있음",
     cautionNote: "완전 독립된 룸은 아니고 오픈형·반분리형 단체석 위주라 프라이버시는 제한적임. 전용 주차장이 없어 인근 유료 공영주차장 이용 필요. 주말은 웨이팅이 있어 예약을 추천함",
+    menu: [
+      { name: "살치살 큐브 스테이크", price: 39000 },
+      { name: "카프레제 치킨 슈니첼", price: 26000 },
+      { name: "멜란자네 라구 파스타", price: 22000 },
+      { name: "포르치니 리조또", price: 21000 },
+      { name: "문어 아보카도 세비체", price: 20000 },
+    ],
     lastVerifiedAt: "2026-07-20",
   }),
 ];

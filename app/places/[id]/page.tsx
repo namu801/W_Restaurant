@@ -69,16 +69,17 @@ export default async function PlaceDetailPage({
 
         {/* 메타 줄(카테고리·지역)과 아래 위치·영업시간·가격 블록 사이는 같은 "정보 묶음"
             안에서 살짝만 끊어주는 자리라, 대분류를 가르는 다른 구분 밴드(h-2)와 달리
-            이 선만 유일하게 얇은 헤어라인(2px)으로 둔다 — bg-cream은 페이지 배경과
-            완전히 같은 색이라 실제로는 안 보이는 선이었어서 line-strong으로 바꿨다 */}
-        <div className="-mx-6 mt-3 h-0.5 bg-line-strong" />
+            이 선만 유일하게 얇은 헤어라인(1px)으로 둔다 — bg-cream은 페이지 배경과
+            완전히 같은 색이라 실제로는 안 보이는 선이었어서 line-strong으로 바꿨다.
+            프레임 끝까지 번지지 않고, 아래 "추천 이유" 카드와 같은 좌우 여백(px-6) 안에 머문다 */}
+        <div className="mt-3 h-px bg-line-strong" />
 
         {/* 카드로 감싸지 않는다 — 보더+패딩이 있으면 이 줄들이 식당명보다 안쪽(우측)에서
             시작해 좌측 정렬이 안 맞았다. 주소·영업시간·가격 세 줄 다 같은 크기·굵기로 두고,
             가격만 색(accent)으로만 구분한다 — 크기를 키우면 "예산"이 다른 정보보다
             중요하다는 착시를 준다. 아이콘은 lucide 라인 스타일 대신 Heroicons solid로
             채워서 시각적으로도 더 또렷하게 읽히게 했다 */}
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="mt-3 flex flex-col gap-3">
           <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
             <MapPinIcon className="h-4 w-4 shrink-0 text-ink-faint" />
             {place.address}
@@ -100,6 +101,7 @@ export default async function PlaceDetailPage({
       <div className="-mx-6 h-2 bg-line-strong" />
 
       <PlaceDetailTabs
+        menu={place.menu}
         checkpoints={checkpoints}
         reasonCards={reasonCards}
         bookingFacts={bookingFacts}
@@ -110,8 +112,8 @@ export default async function PlaceDetailPage({
       <hr className="border-line" />
 
       <p className="text-xs text-ink-faint">
-        리뷰, 메뉴, 예약 가능 여부는 지도 서비스에서 최신 정보를
-        확인해주세요. (정보 확인일 {place.lastVerifiedAt})
+        리뷰, 예약 가능 여부는 지도 서비스에서 최신 정보를 확인해주세요.
+        메뉴·가격은 변동될 수 있어요. (정보 확인일 {place.lastVerifiedAt})
       </p>
 
       <FeedbackWidget placeId={place.id} />

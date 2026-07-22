@@ -7,9 +7,12 @@ import { CheckpointList } from "@/components/CheckpointList";
 import { ICON_COLOR, ICON_MAP } from "@/components/checkpoint-icon-map";
 import type { Checkpoint } from "@/lib/checkpoints";
 import type { ReasonCard } from "@/lib/reason";
+import { formatWon } from "@/lib/labels";
+import type { MenuItem } from "@/lib/types";
 
 const TABS = [
   { id: "reason", label: "추천 이유" },
+  { id: "menu", label: "메뉴" },
   { id: "checkpoints", label: "체크포인트" },
   { id: "caution", label: "주의사항" },
 ] as const;
@@ -25,11 +28,13 @@ type TabId = (typeof TABS)[number]["id"];
  * IntersectionObserver로 지켜보다가 화면 밖으로 나가면 전환한다.
  */
 export function PlaceDetailTabs({
+  menu,
   checkpoints,
   reasonCards,
   bookingFacts,
   reservationAsk,
 }: {
+  menu: MenuItem[];
   checkpoints: Checkpoint[];
   reasonCards: ReasonCard[];
   /** 주의사항은 예전엔 place.cautionNote 한 줄만 보여줬는데, 실제 확인이 필요한 사실
@@ -44,8 +49,9 @@ export function PlaceDetailTabs({
   const [headerHeight, setHeaderHeight] = useState(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<TabId, HTMLElement | null>>({
-    checkpoints: null,
     reason: null,
+    menu: null,
+    checkpoints: null,
     caution: null,
   });
   const suppressObserverRef = useRef(false);
@@ -185,6 +191,30 @@ export function PlaceDetailTabs({
             );
           })}
         </div>
+      </section>
+
+      <div className="-mx-6 mt-8 h-2 bg-line-strong" />
+
+      <section
+        ref={(el) => {
+          sectionRefs.current.menu = el;
+        }}
+        data-tab-id="menu"
+        className="scroll-mt-14 pt-8"
+      >
+        <p className="mb-4 text-lg font-bold tracking-tight text-ink">대표 메뉴</p>
+        {menu.length > 0 ? (
+          <ul className="flex flex-col divide-y divide-line">
+            {menu.map((item) => (
+              <li key={item.name} className="flex items-center justify-between gap-3 py-3 text-sm">
+                <span className="text-ink">{item.name}</span>
+                <span className="shrink-0 font-semibold text-ink-soft">{formatWon(item.price)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-ink-faint">메뉴 정보를 아직 확인하지 못했어요. 지도 서비스에서 최신 메뉴를 확인해주세요.</p>
+        )}
       </section>
 
       {/* 레퍼런스(GS더프레시 매장상세)의 "우리매장 서비스"↔"픽업/배달 안내" 사이 구분
