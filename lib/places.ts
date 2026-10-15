@@ -75,7 +75,7 @@ export const PLACES: Place[] = [
   place({
     id: "maze-sukiyaki",
     name: "마제스키야키",
-    category: "관동식 스키야키·샤브샤브 전문점",
+    category: "스키야키·샤브샤브 전문점",
     cuisineTags: ["japanese", "meat"],
     area: "sinyongsan",
     address: "서울 용산구 한강대로40길 9-5",
@@ -241,7 +241,7 @@ export const PLACES: Place[] = [
   place({
     id: "agra-ipark",
     name: "아그라 용산아이파크몰점",
-    category: "인도음식(커리) 전문점",
+    category: "인도음식 전문점",
     cuisineTags: ["western"],
     area: "yongsan",
     address: "서울 용산구 한강대로23길 55",
@@ -568,7 +568,7 @@ export const PLACES: Place[] = [
   place({
     id: "munch-yongsan",
     name: "먼치 용산",
-    category: "캐주얼 다이닝 바(파스타·와인)",
+    category: "캐주얼 다이닝 바",
     cuisineTags: ["western", "wine-alcohol"],
     area: "sinyongsan",
     address: "서울 용산구 한강대로38가길 7-26",

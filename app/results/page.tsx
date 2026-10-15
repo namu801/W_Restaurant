@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, TriangleAlert } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import {
   searchParamsToCondition,
   conditionToSearchParams,
@@ -8,6 +8,7 @@ import {
 import {
   matchPlaces,
   findRelaxationSuggestion,
+  findNearMissMatches,
   NARROW_RESULT_THRESHOLD,
   RESULT_TRUNCATE_THRESHOLD,
   RESULT_DISPLAY_LIMIT,
@@ -102,6 +103,14 @@ export default async function ResultsPage({
   const relaxationHref = relaxation
     ? `/results?${conditionToSearchParams(relaxation.condition).toString()}`
     : null;
+  // 결과가 0곳이거나 너무 적을 때(isNarrow) 빈 화면·달랑 1~2장만 보여주면 아쉽다 —
+  // 제외 조건을 무시하고 그나마 점수가 가장 높은 후보들을 더 보여준다. describeViolations는
+  // 실제 매칭(위반 0개)은 자동으로 걸러내므로 매칭된 곳과 중복될 일이 없다. "청모픽 N순위"
+  // 배지는 진짜 매칭에만 붙는 신호라 여기서는 절대 뜨면 안 되므로, curationRank에 항상
+  // 배지 기준을 넘는 큰 값을 넘겨 배지를 강제로 숨긴다
+  const nearMisses = matches.length <= NARROW_RESULT_THRESHOLD ? findNearMissMatches(condition, 4) : [];
+  const [nearMissPrimary, ...nearMissSecondary] = matches.length === 0 ? nearMisses : [];
+  const NEAR_MISS_RANK = 999;
 
   return (
     <div className="flex flex-col gap-5">
@@ -112,7 +121,7 @@ export default async function ResultsPage({
       {matches.length === 0 && (
         <TrackOnMount
           event="empty_result_viewed"
-          props={{ extra_conditions: condition.extraConditions.join(",") }}
+          props={{ extra_conditions: condition.extraConditions.join(","), near_miss_count: nearMisses.length }}
         />
       )}
 
@@ -133,42 +142,71 @@ export default async function ResultsPage({
         </div>
       </div>
 
-      {isNarrow && (
-        <div className="flex items-start gap-2.5 rounded-md border border-clay/30 bg-clay-soft px-4 py-3.5 text-sm text-clay">
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>조건에 맞는 장소가 많지 않아요. 아래 후보부터 확인해보세요.</p>
-        </div>
-      )}
-
       {matches.length === 0 ? (
-        <EmptyState
-          title="조건에 딱 맞는 장소를 찾지 못했어요."
-          description={
-            relaxation
-              ? relaxation.message
-              : "지역을 넓히거나 조건을 조정해보세요."
-          }
-          action={
-            <div className="mt-2 flex flex-wrap gap-2">
-              <ConditionEditSheet condition={condition} trigger="emptyState" />
-              {relaxationHref ? (
-                <Link
-                  href={relaxationHref}
-                  className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
-                >
-                  조건 넓혀서 보기
-                </Link>
-              ) : (
-                <Link
-                  href={allAreaHref}
-                  className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
-                >
-                  용산권 전체로 보기
-                </Link>
-              )}
+        <div className="flex flex-col gap-6">
+          <EmptyState
+            title="조건에 딱 맞는 장소를 찾지 못했어요."
+            description={
+              relaxation
+                ? relaxation.message
+                : "지역을 넓히거나 조건을 조정해보세요."
+            }
+            action={
+              <div className="mt-2 flex flex-wrap gap-2">
+                <ConditionEditSheet condition={condition} trigger="emptyState" />
+                {relaxationHref ? (
+                  <Link
+                    href={relaxationHref}
+                    className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
+                  >
+                    조건 넓혀서 보기
+                  </Link>
+                ) : (
+                  <Link
+                    href={allAreaHref}
+                    className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
+                  >
+                    용산권 전체로 보기
+                  </Link>
+                )}
+              </div>
+            }
+          />
+
+          {nearMissPrimary && (
+            <div>
+              <p className="mb-3 text-base font-bold tracking-tight text-ink">그래도 가장 가까운 후보</p>
+              <PlaceCard
+                match={nearMissPrimary.match}
+                condition={condition}
+                rank={1}
+                curationRank={NEAR_MISS_RANK}
+                topBand={{ text: "조건에 가장 가까운 곳", tone: "neutral" }}
+              />
             </div>
-          }
-        />
+          )}
+
+          {nearMissSecondary.length > 0 && (
+            <div>
+              <div className="-mx-6 mb-6 h-2 bg-line-strong" />
+              <p className="mb-3 text-base font-bold tracking-tight text-ink">
+                조건엔 안 맞지만 이런 곳은 어때요?
+              </p>
+              <div className="flex flex-col gap-5">
+                {nearMissSecondary.map(({ match, violations }, i) => (
+                  <PlaceCard
+                    key={match.place.id}
+                    match={match}
+                    condition={condition}
+                    rank={i + 2}
+                    curationRank={NEAR_MISS_RANK}
+                    topBand={{ text: violations.join(" · "), tone: "neutral" }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <>
           {/* "N곳 중 M곳을 골라드렸어요"는 필터링 결과를 요약할 뿐, 큐레이터가 이 조건을
@@ -179,8 +217,8 @@ export default async function ResultsPage({
               다시 얹었다 — 대신 옆의 "필터" 버튼에서 테두리·채움을 걷어내 이 배지가 화면에서
               유일하게 "테두리+채움"을 다 쓰는 자리가 되게 했다. radius도 식당 카드와
               맞춰 rounded-sm으로 낮췄다(더는 pill이 아니다) */}
-          <div className="w-full rounded-sm bg-gradient-to-r from-accent to-gold p-[2px]">
-            <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-gold-soft px-3.5 py-2.5 text-sm font-semibold text-accent-strong">
+          <div className="w-full rounded-sm bg-gradient-to-r from-accent to-accent-light p-[2px]">
+            <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-accent-light-soft px-3.5 py-2.5 text-sm font-semibold text-accent-strong">
               <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.5} fill="currentColor" aria-hidden />
               {buildCurationSummary(condition)}
             </div>
@@ -259,6 +297,30 @@ export default async function ResultsPage({
             >
               전체 {matches.length}곳 보기
             </Link>
+          )}
+
+          {/* 실제 매칭이 1~2곳뿐이면 "조건 넓혀서 보기"를 눌러도 결과가 거의 그대로라
+              허탈하다 — 위의 진짜 매칭 아래에 조건엔 안 맞지만 점수가 높은 후보를
+              몇 곳 더 채워, 조건을 넓힐수록 더 볼 곳이 늘어난다는 기대를 지킨다 */}
+          {isNarrow && nearMisses.length > 0 && (
+            <div>
+              <div className="-mx-6 mb-6 h-2 bg-line-strong" />
+              <p className="mb-3 text-base font-bold tracking-tight text-ink">
+                조건엔 안 맞지만 이런 곳은 어때요?
+              </p>
+              <div className="flex flex-col gap-5">
+                {nearMisses.map(({ match, violations }, i) => (
+                  <PlaceCard
+                    key={match.place.id}
+                    match={match}
+                    condition={condition}
+                    rank={visibleMatches.length + i + 1}
+                    curationRank={NEAR_MISS_RANK}
+                    topBand={{ text: violations.join(" · "), tone: "neutral" }}
+                  />
+                ))}
+              </div>
+            </div>
           )}
         </>
       )}

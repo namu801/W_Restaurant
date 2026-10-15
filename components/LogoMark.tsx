@@ -1,5 +1,7 @@
 /** 정식 로고(public/logo_v2.svg)로 교체 — 배경 없이 두 개의 사선 막대가 겹쳐진
- *  블루 그라디언트 마크다. 크기에 관계없이 선명하게 렌더링되도록 인라인 SVG로 둔다. */
+ *  그라디언트 마크다. 크기에 관계없이 선명하게 렌더링되도록 인라인 SVG로 둔다.
+ *  그라디언트는 다른 색상으로 넘어가지 않고 같은 브랜드 hue 안에서 밝기만 오가도록
+ *  그린다. 스톱 색은 globals.css 테마 변수를 따라가서 테마를 바꾸면 로고도 같이 바뀐다. */
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 278 277" fill="none" className={className} aria-hidden>
@@ -27,8 +29,8 @@ export function LogoMark({ className }: { className?: string }) {
           y2="195.168"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#A6CCFF" />
-          <stop offset="1" stopColor="#2978ED" />
+          <stop style={{ stopColor: "var(--color-accent-light-soft)" }} />
+          <stop offset="1" style={{ stopColor: "var(--color-accent-light)" }} />
         </linearGradient>
         <linearGradient
           id="logo-mark-gradient-2"
@@ -38,8 +40,8 @@ export function LogoMark({ className }: { className?: string }) {
           y2="247.255"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#026AF9" stopOpacity="0.6" />
-          <stop offset="1" stopColor="#006BF9" />
+          <stop style={{ stopColor: "var(--color-accent-light)" }} />
+          <stop offset="1" style={{ stopColor: "var(--color-accent)" }} />
         </linearGradient>
       </defs>
     </svg>

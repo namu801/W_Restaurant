@@ -28,7 +28,11 @@ export default function LandingPage() {
           <br />
           <span className="text-accent">조건에 맞춰</span> 골라드려요
         </h1>
-        <p className="mt-3 max-w-[30ch] text-[15px] leading-relaxed text-ink-soft">
+        {/* max-w-[30ch]가 있으면 두 번째 줄("관계, 인원, 예산에 맞는 곳을 찾아보세요.")이
+            CJK 폭 기준으로 30ch를 넘어서, 이미 <br />로 의도한 2줄 구성 위에 또 한 번
+            "찾아보세 / 요."처럼 어색하게 꺾였다 — <br />가 이미 줄바꿈 지점을 정하므로
+            폭 제한 자체를 없앤다 */}
+        <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
           용산역·신용산역·삼각지에서
           <br />
           관계, 인원, 예산에 맞는 곳을 찾아보세요.
@@ -46,7 +50,7 @@ export default function LandingPage() {
         {/* 이 홈 화면에서 타이틀 다음으로 중요한 요소라 본문(text-sm)보다 한 단계 키웠다 */}
         <SearchCta
           source="landing"
-          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-accent px-5 py-3.5 text-base font-semibold text-white transition-all hover:bg-accent-strong"
+          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-accent px-5 py-3.5 text-base font-semibold text-white transition-all hover:brightness-95 active:brightness-90"
         >
           내 조건으로 추천받기
           <ArrowRight className="h-4 w-4" />
@@ -56,24 +60,27 @@ export default function LandingPage() {
       {/*
         조회수·저장수 같은 실집계 데이터가 아직 없어서, "실시간 랭킹"이라고 과장하지 않고
         지금 갖고 있는 큐레이션 점수 기준임을 그대로 밝힌다 (lib/places.ts getTopRatedPlaces 참고).
-        카드는 그림자 대신 헤어라인 보더로 분리하고, 가격은 숫자만 굵게 써서 한눈에 읽히게 한다.
-        순위 번호는 박스로 구분하고, 1위만 포인트 컬러로 강조해 눈에 먼저 들어오게 한다.
+        카드는 그림자 대신 헤어라인 보더로 분리한다. hover 채움색(cream-strong)은 페이지 바닥과
+        거의 같아 카드가 사라져 보여서, 흰 카드는 그대로 두고 보더를 진하게 + 옅은 그림자로 띄운다. 순위 번호는 박스로 구분하고, 1위만 포인트
+        컬러로 강조해 눈에 먼저 들어오게 한다. 가격은 브랜드색 대신 잉크로 숫자만 굵게 써서
+        포인트 컬러가 1위 박스·CTA에만 남게 한다.
+        부제·식당 메타는 배너 설명과 같은 위계의 보조 텍스트라 모두 같은 ink-soft를 쓴다.
       */}
       <section>
         <h2 className="text-lg font-bold tracking-tight text-ink">먼저 둘러볼 만한 곳</h2>
-        <p className="mt-1 text-xs text-ink-faint">청모에 필요한 조건을 기준으로 살펴봤어요.</p>
+        <p className="mt-1 text-xs text-ink-soft">청모에 필요한 조건을 기준으로 살펴봤어요.</p>
 
         <div className="mt-4 flex flex-col gap-3">
           {topPlaces.map((place, index) => (
             <Link
               key={place.id}
               href={`/places/${place.id}`}
-              className="flex items-center gap-4 rounded-md border border-line bg-cream-soft p-4 transition-all hover:bg-cream-strong active:bg-cream-strong"
+              className="flex items-center gap-4 rounded-md border border-line bg-cream-soft p-4 transition-all hover:border-line-strong hover:shadow-lift active:scale-[0.99]"
             >
               <span
                 className={clsx(
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-bold",
-                  index === 0 ? "bg-[#D8EAFF] text-[#0055CF]" : "bg-cream-strong text-ink-soft",
+                  index === 0 ? "bg-accent-soft text-accent-strong" : "bg-cream-strong text-ink-soft",
                 )}
               >
                 {index + 1}
@@ -81,10 +88,10 @@ export default function LandingPage() {
               <PlaceThumbnail place={place} className="h-16 w-16 shrink-0 rounded-sm" />
               <div className="min-w-0 flex-1">
                 <p className="text-[15px] font-semibold leading-snug tracking-tight text-ink">{place.name}</p>
-                <p className="mt-1.5 text-xs text-ink-faint">
+                <p className="mt-1.5 text-xs text-ink-soft">
                   {place.category} · {AREA_LABEL[place.area]}
                 </p>
-                <p className="mt-1.5 text-xs font-semibold text-accent">
+                <p className="mt-1.5 text-xs font-bold text-ink">
                   {formatPrice(place.priceMin, place.priceMax)}
                 </p>
               </div>
@@ -94,7 +101,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <p className="text-center text-xs text-ink-faint">
+      <p className="text-center text-xs text-ink-soft">
         지금은 용산역 · 신용산역 · 삼각지 인근 장소만 다루고 있어요.
       </p>
     </div>

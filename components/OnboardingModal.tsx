@@ -78,7 +78,7 @@ export function OnboardingModal() {
           ref={startButtonRef}
           type="button"
           onClick={handleStart}
-          className="mt-5 w-full rounded-md bg-accent py-3 text-sm font-semibold text-white transition-all hover:bg-accent-strong"
+          className="mt-5 w-full rounded-md bg-accent py-3 text-sm font-semibold text-white transition-all hover:brightness-95 active:brightness-90"
         >
           시작하기
         </button>

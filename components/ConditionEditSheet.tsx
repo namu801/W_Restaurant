@@ -97,9 +97,9 @@ export function ConditionEditSheet({
 
   return (
     <>
-      {/* 흰 배경+테두리로 강조하던 걸 걷어냈다 — 그 강조를 큐레이션 배지 쪽으로 몰아주고,
-          여기는 옆의 "추천순" 드롭다운과 완전히 같은 방식(아이콘+텍스트, 배경·테두리 없음)
-          으로 맞췄다. 둘 다 이 줄의 보조 컨트롤이라 같은 무게로 읽혀야 한다 */}
+      {/* 흰 배경+테두리로 강조하던 걸 걷어냈다 — 그 강조를 큐레이션 배지 쪽으로 몰아줬다.
+          다만 옆의 "추천순" 드롭다운과 같은 옅은 톤(ink-soft)으로 맞췄더니 필터 진입점이
+          눈에 잘 안 띄어서, 이 버튼만 진한 잉크(text-ink)로 한 단계 더 또렷하게 뺐다 */}
       {trigger === "emptyState" ? (
         <button
           ref={triggerRef}
@@ -114,7 +114,7 @@ export function ConditionEditSheet({
           ref={triggerRef}
           type="button"
           onClick={handleOpen}
-          className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-ink-soft transition-colors hover:text-ink"
+          className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-ink transition-colors hover:text-accent"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           필터
@@ -186,17 +186,21 @@ export function ConditionEditSheet({
                             : selectSingle(question.key, option.value)
                         }
                         className={clsx(
+                          // 위저드 선택칩과 같은 이유로 진한 단색 보더+bg-accent-soft 대신
+                          // 옅은 배경(accent-light-soft)+얇은 보더(accent/25)로 가볍게 표시한다
                           "inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3.5 py-2 text-left transition",
                           selected
-                            ? "border-2 border-accent bg-accent-soft"
+                            ? "border border-accent/25 bg-accent-light-soft"
                             : "border border-line bg-white hover:border-line-strong active:bg-cream-strong",
                         )}
                       >
-                        {selected && <Check className="h-4 w-4 shrink-0 text-accent" strokeWidth={2.5} />}
+                        {selected && (
+                          <Check className="h-4 w-4 shrink-0 text-accent-strong" strokeWidth={2.5} />
+                        )}
                         <span
                           className={clsx(
                             "whitespace-nowrap text-sm font-semibold leading-snug",
-                            selected ? "text-accent" : "text-ink-soft",
+                            selected ? "text-accent-strong" : "text-ink-soft",
                           )}
                         >
                           {option.label}

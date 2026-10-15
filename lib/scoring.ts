@@ -197,10 +197,9 @@ function fitLabelFor(ratio: number): MatchResult["fitLabel"] {
   return "일부 조건을 확인해보세요";
 }
 
-/** 조건 하나에 대해 장소 하나의 매칭 점수를 계산한다. 제외 조건에 해당하면 null (PRD 11.1~11.3) */
-export function scorePlace(condition: Condition, place: Place): MatchResult | null {
-  if (isExcluded(condition, place)) return null;
-
+/** 제외 조건 여부와 무관하게 항상 매칭 점수를 계산한다. scorePlace(정상 경로)와
+ *  findNearMissMatches(0곳일 때 그나마 가까운 후보 찾기) 둘 다 이 계산을 그대로 쓴다 */
+function computeMatch(condition: Condition, place: Place): MatchResult {
   const weights = computeWeights(condition);
   const ratios: Record<ScoreCategory, number> = {
     relationship: fitRelationship(condition, place),
@@ -236,6 +235,12 @@ export function scorePlace(condition: Condition, place: Place): MatchResult | nu
     subScores,
     ratios,
   };
+}
+
+/** 조건 하나에 대해 장소 하나의 매칭 점수를 계산한다. 제외 조건에 해당하면 null (PRD 11.1~11.3) */
+export function scorePlace(condition: Condition, place: Place): MatchResult | null {
+  if (isExcluded(condition, place)) return null;
+  return computeMatch(condition, place);
 }
 
 /** PRD 11.9 정렬 기준: 총점 → 역 접근성 → 대화 가능성 */
@@ -315,4 +320,53 @@ export function findRelaxationSuggestion(
   }
   if (!best) return null;
   return { message: `${best.label} ${best.count}곳을 더 볼 수 있어요.`, condition: best.condition };
+}
+
+/** isExcluded와 같은 순서로 검사해서, 왜 이 장소가 제외됐는지 사람이 읽을 문장으로 돌려준다.
+ *  findNearMissMatches 전용 — 정상 매칭 경로(scorePlace)는 이유가 필요 없어 그대로 둔다 */
+/** 카드 위 topBand 띠에 얹을 자리라 짧은 명사형으로 통일한다(문장형 아님) */
+function describeViolations(condition: Condition, place: Place): string[] {
+  const reasons: string[] = [];
+  if (condition.area !== "all" && place.area !== condition.area) {
+    reasons.push("지역 조건 밖");
+  }
+  if (fitPeople(condition, place) === null) {
+    reasons.push("인원 규모 불일치");
+  }
+  if (fitBudget(condition, place).excluded) {
+    reasons.push("예산 범위 초과");
+  }
+  const selectedCuisines = condition.cuisines.filter((c) => c !== "any");
+  if (selectedCuisines.length > 0 && !selectedCuisines.some((c) => place.cuisineTags.includes(c))) {
+    reasons.push("음식 종류 불일치");
+  }
+  for (const extra of condition.extraConditions) {
+    if (extra === "room-required" && !place.privateRoomAvailable) reasons.push("룸 없음");
+    if (extra === "parking-required" && !place.parkingAvailable) reasons.push("주차 불가");
+    if (extra === "wide-seating" && place.spaceScore < 6) reasons.push("좌석 간격 부족");
+    if (extra === "reservation-possible" && place.reservationMethod === "unavailable") {
+      reasons.push("예약 불가");
+    }
+  }
+  return reasons;
+}
+
+export interface NearMissMatch {
+  match: MatchResult;
+  /** 이 장소가 왜 조건에서 제외됐는지(한 개 이상일 수 있다) */
+  violations: string[];
+}
+
+/** 결과가 0개일 때 "그래도 가장 가까운 후보"를 보여주기 위해, 제외 조건을 무시하고 전체
+ *  장소를 점수순으로 훑어 상위 N곳을 돌려준다. isExcluded를 통과한(=진짜 매칭된) 곳은
+ *  애초에 여기 부를 일이 없는 상황(0곳)이지만, 방어적으로 실제 제외 사유가 있는
+ *  장소만 후보로 남긴다 */
+export function findNearMissMatches(condition: Condition, limit: number): NearMissMatch[] {
+  return PLACES.map((place) => ({
+    match: computeMatch(condition, place),
+    violations: describeViolations(condition, place),
+  }))
+    .filter((r) => r.violations.length > 0)
+    .sort((a, b) => b.match.fitRatio - a.match.fitRatio)
+    .slice(0, limit);
 }

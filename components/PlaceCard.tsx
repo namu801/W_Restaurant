@@ -60,7 +60,7 @@ export function PlaceCard({
   return (
     <article
       className={clsx(
-        "relative overflow-hidden rounded-sm border transition-transform duration-[120ms] ease-out hover:-translate-y-0.5",
+        "relative overflow-hidden rounded-sm border shadow-subtle transition-transform duration-[120ms] ease-out hover:-translate-y-0.5",
         topBand?.tone === "accent" ? "border-accent/30" : "border-line",
         "bg-cream-soft",
       )}
@@ -121,8 +121,12 @@ export function PlaceCard({
         {/* 예전엔 장소마다 고정된 curatedReason 한 줄을 그대로 보여줘서, 조건이 달라도
             6장이 전부 비슷한 톤으로 나열됐다 — 지금 이 조건에서 실제로 가장 강한 점(들)을
             열고, 뚜렷한 약점이 있으면(생성 로직의 CAVEAT_FRAGMENT 기준) 정직하게
-            트레이드오프까지 말해줘서 카드마다 다른, "이 장소만의" 문장이 나오게 한다 */}
-        <p className="mt-3 flex items-start gap-1.5 rounded-sm bg-accent-soft px-3 py-2 text-xs font-medium leading-relaxed text-ink">
+            트레이드오프까지 말해줘서 카드마다 다른, "이 장소만의" 문장이 나오게 한다.
+            배경은 예전엔 bg-accent-soft(코랄 틴트)였는데, 카드마다 매번 반복되다 보니
+            위 큐레이션 배지·1위 topBand의 코랄과 겹쳐서 화면 전체가 온통 분홍으로 보였다 —
+            이 박스는 중성 회색(cream-strong)으로 낮추고, 강조는 Sparkles 아이콘 하나에만
+            남겨서 "코랄 = 정말 특별한 자리(큐레이션 배지·1위 띠)"라는 위계를 지킨다 */}
+        <p className="mt-3 flex items-start gap-1.5 rounded-sm bg-cream-strong px-3 py-2 text-xs font-medium leading-relaxed text-ink">
           <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-accent" strokeWidth={2} fill="currentColor" aria-hidden />
           {generateCardSentence(condition, match)}
         </p>

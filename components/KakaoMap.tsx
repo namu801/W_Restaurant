@@ -43,8 +43,8 @@ function applyPinStyle(el: HTMLDivElement, selected: boolean) {
   const size = selected ? PIN_SIZE_SELECTED : PIN_SIZE;
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
-  el.style.background = selected ? "#006BF9" : "#FFFFFF";
-  el.style.border = selected ? "3px solid #FFFFFF" : "2px solid #006BF9";
+  el.style.background = selected ? "var(--color-accent)" : "#FFFFFF";
+  el.style.border = selected ? "3px solid #FFFFFF" : "2px solid var(--color-accent)";
   el.style.boxShadow = selected
     ? "0 8px 18px rgba(10,11,12,0.35)"
     : "0 2px 6px rgba(10,11,12,0.18)";
@@ -54,7 +54,7 @@ function applyPinStyle(el: HTMLDivElement, selected: boolean) {
     const dotSize = selected ? 10 : 7;
     dot.style.width = `${dotSize}px`;
     dot.style.height = `${dotSize}px`;
-    dot.style.background = selected ? "#FFFFFF" : "#006BF9";
+    dot.style.background = selected ? "#FFFFFF" : "var(--color-accent)";
   }
 }
 
@@ -293,7 +293,7 @@ export const KakaoMap = forwardRef<
           cy={0}
           r={0}
           fill="none"
-          stroke="#006BF9"
+          style={{ stroke: "var(--color-accent)" }}
           strokeWidth={2}
           strokeDasharray="7 6"
         />

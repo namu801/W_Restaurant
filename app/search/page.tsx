@@ -179,7 +179,7 @@ function SearchWizard() {
             채워진 너비가 부드럽게 늘어나는 인터랙션을 준다. 이 상단바 자체의 좌우 패딩(px-6)을
             -mx-6로 상쇄해서 화면 끝까지 번지게 한다(레퍼런스도 풀블리드). */}
         <div
-          className="mt-4 -mx-6 h-1.5 bg-line"
+          className="mt-4 -mx-6 h-1.5 bg-line-strong"
           role="progressbar"
           aria-valuemin={1}
           aria-valuemax={SCREENS.length}
@@ -240,6 +240,10 @@ function SearchWizard() {
                   // 스텝마다 뱃지 유무·라벨 길이가 달라 높이가 들쭉날쭉했다. min-h-14로 기본 높이는
                   // 모든 스텝에서 맞추되, 말줄임(...)은 절대 쓰지 않는다 — 라벨이 길면 카드가
                   // 그만큼 자연스럽게 늘어나 두 줄까지 허용한다
+                  // 선택 상태: 레퍼런스(알바몬 필터칩·이력서 스킬태그)처럼 꽉 찬 진한 색이 아니라
+                  // 아주 옅은 코랄 배경(accent-light-soft) + 얇고 은은한 보더(accent/25)로 가볍게
+                  // 표시한다 — 예전엔 border-accent(진한 단색)+bg-accent-soft라 선택칩이 너무
+                  // 무겁고, 그 안 텍스트(accent-strong)와의 대비가 오히려 흐릿해 보였다
                   "flex min-h-14 items-center gap-2.5 rounded-md border p-3 text-left transition",
                   selected
                     ? "border-accent bg-accent-soft"
@@ -266,7 +270,7 @@ function SearchWizard() {
           type="button"
           onClick={handleNext}
           disabled={!canProceed()}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cream-strong disabled:text-ink-faintest disabled:hover:brightness-100"
         >
           {isLastScreen ? "내 조건에 맞는 곳 보기" : "다음"}
           <ArrowRight className="h-4 w-4" />

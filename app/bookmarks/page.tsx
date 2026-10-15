@@ -54,7 +54,7 @@ export default function BookmarksPage() {
       {places.map((place) => (
         <article
           key={place.id}
-          className="overflow-hidden rounded-lg border border-line bg-cream-soft"
+          className="overflow-hidden rounded-lg border border-line bg-cream-soft shadow-subtle"
         >
           <div className="flex gap-3.5 p-4">
             <PlaceThumbnail place={place} className="h-24 w-24 rounded-md" />

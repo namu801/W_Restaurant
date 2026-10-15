@@ -90,7 +90,8 @@ export function BudgetSlider({
 
       <div className={clsx("flex flex-col gap-2.5 transition-opacity", isAny && "pointer-events-none opacity-40")}>
         {/* 네이티브 range 인풋을 그대로 쓰면 드래그·키보드·터치가 모두 기본으로 접근성 있게 동작한다.
-            accent-* 유틸리티가 트랙 채움과 손잡이 색을 우리 브랜드 컬러로 맞춰준다 */}
+            accent-color만으로는 크롬에서 안 채워진 트랙이 진회색으로 나와서, 트랙·손잡이 모양은
+            globals.css의 .range-brand가 그린다(채운 비율은 --fill로 넘긴다) */}
         <input
           type="range"
           min={MIN}
@@ -99,7 +100,8 @@ export function BudgetSlider({
           value={raw}
           disabled={isAny}
           onChange={(e) => handleSlide(Number(e.target.value))}
-          className="h-2 w-full cursor-pointer accent-accent"
+          className="range-brand h-6 w-full cursor-pointer"
+          style={{ "--fill": `${((raw - MIN) / (MAX - MIN)) * 100}%` } as React.CSSProperties}
           aria-label="1인당 예산"
         />
         <div className="flex justify-between text-xs text-ink-faint">

@@ -2,18 +2,199 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  컬러·서체 토큰. tailwind.config.ts의 cream/ink/line/accent/... 이름은 그대로 두고 "값"만
+  여기 CSS 변수에서 읽는다 — 테마를 바꿀 때 컴포넌트를 건드리지 않고 이 블록만 갈아끼운다.
+
+  기본(:root) = 배포된 레이아웃의 뉴트럴(연회색 바닥 + 흰 카드) 위에 브랜드 오렌지 #ff3d00.
+  보조 텍스트(ink-soft)는 배너 설명·섹션 부제·식당 메타·"의견 보내기"가 모두 같은 위계라
+  한 가지 진한 회색(#666666)으로 통일했다.
+  비교용으로 중간 톤([data-theme="mid"]), 이전 코랄([data-theme="coral"]),
+  당근 원본([data-theme="carrot"])을 보존한다.
+*/
+:root {
+  /* 표면: 연회색 바닥 위에 흰 카드 */
+  --color-cream: #f5f5f7; /* 페이지 바닥면 */
+  --color-cream-soft: #ffffff; /* 카드/표면 */
+  --color-cream-strong: #f2f2f3; /* hover 채움, 순위 박스 */
+
+  /* 텍스트 */
+  --color-ink: #0a0b0c; /* 헤드라인, 카드 타이틀, 가격 */
+  --color-ink-soft: #666666; /* 보조 텍스트 — 흰 바탕 5.74:1 */
+  --color-ink-faint: #a4a5a7; /* 아이콘·부차 메타 */
+  --color-ink-faintest: #c4c4c6; /* 비활성 텍스트 */
+
+  /* 선 */
+  --color-line: #f3f3f4; /* 카드 헤어라인 */
+  --color-line-soft: #f3f3f4;
+  --color-line-strong: #dddee0; /* hover 보더, 슬라이더 트랙 */
+
+  /* 브랜드: oklch(0.654 0.235 34). 나머지는 같은 hue 34°에서 명도만 바꿨다 */
+  --color-accent: #ff3d00;
+  --color-accent-soft: #ffdbd1; /* oklch(0.92 0.045 34) — 옅은 틴트 배경(1위 박스·선택 옵션) */
+  --color-accent-strong: #ba2f0c; /* oklch(0.52 0.18 34) — accent-soft 위 텍스트 4.66:1 (AA) */
+  --color-accent-light: #ff977f; /* oklch(0.78 0.13 34) — 그라디언트 짝 */
+  --color-accent-light-soft: #ffefea; /* oklch(0.965 0.022 34) */
+
+  /* 시맨틱 */
+  --color-sage: #117f20;
+  --color-sage-soft: #dbffe5;
+  --color-clay: #a8590e;
+  --color-clay-soft: #fff3de;
+  --color-gold: #986c08;
+  --color-gold-soft: #faf0d7;
+  --color-focus-ring: #ff3d00;
+
+  /* 카드는 그림자 없이 헤어라인으로 분리, 그림자는 떠 있는 크롬(시트·팝오버)에만 */
+  --shadow-subtle: none;
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-sheet: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.07);
+
+  --font-body: var(--font-pretendard), -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 코랄-오렌지 중간 톤 (비교용). 바탕·선은 이전 코랄 값, 버튼은 알약형 */
+[data-theme="mid"] {
+  --color-cream: #f7f7f7;
+  --color-cream-strong: #f2f2f2;
+  --color-ink-faint: #929292;
+  --color-ink-faintest: #b0b0b0;
+  --color-line: #ebebeb;
+  --color-line-soft: #ebebeb;
+  --color-line-strong: #c1c1c1;
+  --color-accent: #fc5b2d; /* oklch(0.68 0.205 36) */
+  --color-accent-soft: #ffd8cc;
+  --color-accent-strong: #b73305;
+  --color-accent-light: #ff9d82;
+  --color-accent-light-soft: #ffede8;
+  --color-focus-ring: #fc5b2d;
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* 이전 코랄 테마 (비교용) */
+[data-theme="coral"] {
+  --color-cream: #f7f7f7;
+  --color-cream-strong: #f2f2f2;
+  --color-ink-soft: #6a6a6a;
+  --color-ink-faint: #929292;
+  --color-ink-faintest: #b0b0b0;
+  --color-line: #ebebeb;
+  --color-line-soft: #ebebeb;
+  --color-line-strong: #c1c1c1;
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --color-accent: #f0594c;
+  --color-accent-soft: #f9d0cd;
+  --color-accent-strong: #b61a0c;
+  --color-accent-light: #f39991;
+  --color-accent-light-soft: #f9e5e2;
+  --color-focus-ring: #f0594c;
+}
+
+/* 당근 시안 원본 (비교용). getdesign.kr 당근 design.md 역할 토큰, OKLCH 값 원문 그대로.
+   괄호 안이 원문의 역할 토큰 이름이다 */
+[data-theme="carrot"] {
+  /* 표면: 깊이는 그림자보다 표면색 층위로 먼저 표현한다 (basement → default) */
+  --color-cream: oklch(0.967 0.002 248); /* gray-200 (bg-layer-basement) */
+  --color-cream-soft: oklch(1 0 0); /* gray-00 (bg-layer-default) */
+  --color-cream-strong: oklch(0.979 0.002 248); /* gray-100 (bg-layer-default-pressed) */
+
+  /* 텍스트 */
+  --color-ink: oklch(0.226 0.008 264); /* gray-1000 (fg-neutral) */
+  --color-ink-soft: oklch(0.477 0.028 264); /* gray-800 (fg-neutral-muted) */
+  --color-ink-faint: oklch(0.636 0.015 262); /* gray-700 (fg-neutral-subtle) */
+  --color-ink-faintest: oklch(0.766 0.01 267); /* gray-600 (fg-placeholder) */
+
+  /* 선: 기본 구분선은 알파 6.3% 검정이라 흰 표면·회색 바닥 어디서나 같은 농도로 보인다 */
+  --color-line: oklch(0 0 0 / 0.063); /* static-black-alpha-300 (stroke-neutral-muted) */
+  --color-line-soft: oklch(0 0 0 / 0.047); /* static-black-alpha-200 (stroke-neutral-subtle) */
+  --color-line-strong: oklch(0.901 0.007 269); /* gray-400 (stroke-neutral-weak) */
+
+  /* 브랜드: 주황 하나. "꼭 필요한 곳에만" 쓴다 */
+  --color-accent: oklch(0.696 0.204 43); /* carrot-600 (bg-brand-solid, fg-brand) */
+  --color-accent-soft: oklch(0.97 0.016 47); /* carrot-100 (bg-brand-weak) */
+  --color-accent-strong: oklch(0.618 0.195 40); /* carrot-700 (bg-brand-solid-pressed, fg-brand-contrast) */
+  /* 아래 둘은 원문에 대응 역할이 없어 같은 carrot 램프에서 골랐다(추정 매핑) */
+  --color-accent-light: oklch(0.769 0.144 44); /* carrot-500 — 진행바·로고 그라디언트 짝 */
+  --color-accent-light-soft: oklch(0.97 0.016 47); /* carrot-100 — 선택된 옵션 카드 채움 */
+
+  /* 시맨틱 */
+  --color-sage: oklch(0.585 0.115 170); /* green-700 (fg-positive) */
+  --color-sage-soft: oklch(0.974 0.015 176); /* green-100 (bg-positive-weak) */
+  --color-clay: oklch(0.592 0.109 85); /* yellow-700 (fg-warning) */
+  --color-clay-soft: oklch(0.976 0.034 92); /* yellow-100 (bg-warning-weak) */
+  /* gold는 아이콘의 "4번째 카테고리 색"이다. 당근 경고색(노랑)이 clay와 겹쳐 구분이 안 돼서
+     informative 파랑으로 돌렸다(추정 매핑) */
+  --color-gold: oklch(0.606 0.205 258); /* blue-700 (fg-informative) */
+  --color-gold-soft: oklch(0.97 0.014 255); /* blue-100 (bg-informative-weak) */
+
+  --color-focus-ring: oklch(0.688 0.163 261); /* blue-600 (stroke-focus-ring) */
+
+  /* 그림자 3단(s1~s3) — 원문 수치 그대로 */
+  --shadow-subtle: 0px 1px 4px 0px oklch(0 0 0 / 0.078);
+  --shadow-card: 0px 2px 10px 0px oklch(0 0 0 / 0.102);
+  --shadow-sheet: 0px 4px 16px 0px oklch(0 0 0 / 0.122);
+
+  /* 서체: 자체 서체 없이 디바이스 시스템 폰트 스택을 쓴다 */
+  --font-body: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 :focus-visible {
-  outline: 2px solid #006bf9;
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
 body {
-  background-color: #f5f5f7;
-  color: #0a0b0c;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+}
+
+/* 예산 슬라이더: 채운 구간은 브랜드, 나머지는 회색 트랙 + 흰 손잡이.
+   크롬 기본 range는 안 채워진 트랙이 진회색으로 나와서 직접 그린다 */
+.range-brand {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.range-brand::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) var(--fill, 0%),
+    var(--color-line-strong) var(--fill, 0%)
+  );
+}
+.range-brand::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-line-strong);
+}
+.range-brand::-moz-range-progress {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+.range-brand::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--color-line);
+}
+.range-brand::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--color-line);
 }
 
 @keyframes fade-in-up {
@@ -45,7 +226,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
-  .animate-bounce {
+  .animate-bounce,
+  .animate-pulse {
     animation: none;
   }
 }
