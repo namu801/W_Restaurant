@@ -9,7 +9,8 @@ import { BudgetSlider } from "@/components/BudgetSlider";
 import { conditionToSearchParams } from "@/lib/condition-query";
 import { track } from "@/lib/analytics";
 import {
-  SCREENS,
+  SHEET_QUESTIONS,
+  conditionFromDraft,
   emptyDraft,
   draftFromCondition,
   isDraftComplete,
@@ -30,9 +31,8 @@ const SHEET_LABEL: Record<Question["key"], string> = {
   area: "지역",
   budget: "예산",
   cuisines: "음식",
-  noise: "소음",
-  moodFormality: "분위기",
-  extraConditions: "추가 조건",
+  vibe: "분위기",
+  extraConditions: "꼭 챙길 것",
 };
 
 /**
@@ -82,9 +82,10 @@ export function ConditionEditSheet({
   }
 
   function handleApply() {
-    if (!isDraftComplete(draft)) return;
+    const next = conditionFromDraft(draft);
+    if (!next) return;
     setOpen(false);
-    router.push(`/results?${conditionToSearchParams(draft).toString()}`);
+    router.push(`/results?${conditionToSearchParams(next).toString()}`);
   }
 
   // 레퍼런스(네이버쇼핑 필터)처럼 전부 비운 상태로 되돌린다 — 열기 전 조건으로 되돌리는
@@ -158,7 +159,7 @@ export function ConditionEditSheet({
                칩 패턴). 선택-비선택 대비를 위해 선택은 두꺼운 보더(border-2)+진한 텍스트,
                비선택은 얇은 보더+옅은 텍스트(text-ink-soft)로 갈랐다. */}
         <div className="flex flex-col divide-y divide-line">
-          {SCREENS.map(({ question }) => (
+          {SHEET_QUESTIONS.map((question) => (
             <div key={question.key} className="flex flex-col gap-3 py-5 first:pt-4">
               <p className="text-lg font-bold text-ink">{SHEET_LABEL[question.key]}</p>
               {question.key === "budget" ? (

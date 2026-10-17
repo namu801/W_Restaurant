@@ -128,7 +128,7 @@ export function PlaceCard({
             남겨서 "코랄 = 정말 특별한 자리(큐레이션 배지·1위 띠)"라는 위계를 지킨다 */}
         <p className="mt-3 flex items-start gap-1.5 rounded-sm bg-cream-strong px-3 py-2 text-xs font-medium leading-relaxed text-ink">
           <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-accent" strokeWidth={2} fill="currentColor" aria-hidden />
-          {generateCardSentence(condition, match)}
+          {generateCardSentence(condition, match, { withOpener: curationRank === 1 })}
         </p>
 
         {/* 가격·영업시간을 한 줄로 묶는다. 영업시간을 요일별로 다 나열하면(예: "월~금

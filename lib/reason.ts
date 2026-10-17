@@ -1,14 +1,14 @@
-import { AREA_LABEL, PEOPLE_LABEL, RELATIONSHIP_LABEL } from "./labels";
+import { AREA_LABEL, PEOPLE_LABEL, RELATIONSHIP_LABEL, formatPrice } from "./labels";
 import type {
   Condition,
   ExtraConditionKey,
   MatchResult,
   MoodFormalityKey,
-  NoiseKey,
   NoiseLevel,
   Place,
   ReservationMethod,
   ScoreCategory,
+  VibeKey,
 } from "./types";
 import type { ReasonIconKey } from "./icon-keys";
 
@@ -217,19 +217,14 @@ const EXTRA_SIGNAL: Record<ExtraConditionKey, string> = {
   "parking-required": "주차",
   "wide-seating": "좌석 간격",
   "reservation-possible": "예약 가능 여부",
+  "with-drinks": "술 한잔 곁들일 자리",
 };
 
-const NOISE_SIGNAL: Record<Exclude<NoiseKey, "any">, string> = {
-  quiet: "조용함",
-  "lively-but-talkable": "적당한 활기",
-  "lively-important": "활기",
-};
-
-const MOOD_SIGNAL: Record<Exclude<MoodFormalityKey, "any">, string> = {
-  casual: "편안한 분위기",
-  balanced: "무난한 분위기",
-  hospitable: "정성스러운 서비스",
-  formal: "격식 있는 분위기",
+const VIBE_SIGNAL: Record<Exclude<VibeKey, "any">, string> = {
+  "quiet-dining": "조용한 다이닝 분위기",
+  "wine-bar": "와인바 같은 분위기",
+  "casual-dining": "캐주얼한 분위기",
+  "lively-pub": "활기찬 분위기",
 };
 
 /** 실제로 "우선한 조건"이라고 부를 만한 신호를 우선순위대로 모은다 — 사용자가 명시적으로
@@ -237,9 +232,14 @@ const MOOD_SIGNAL: Record<Exclude<MoodFormalityKey, "any">, string> = {
  *  예산이 빠듯한 경우만 넣는다("상관없음"은 신호가 아니라서 뺀다) */
 function prioritySignals(condition: Condition): string[] {
   const signals: string[] = [];
-  for (const extra of condition.extraConditions) signals.push(EXTRA_SIGNAL[extra]);
-  if (condition.noise !== "any") signals.push(NOISE_SIGNAL[condition.noise]);
-  if (condition.moodFormality !== "any") signals.push(MOOD_SIGNAL[condition.moodFormality]);
+  // 필수 조건(룸·주차 등) → 분위기 카드 → 술 순서. 술은 가점일 뿐이라, 사용자가 직접 고른
+  // 분위기보다 앞에 나오면 "무엇을 먼저 봤는지"가 어긋나 보인다
+  for (const extra of condition.extraConditions) {
+    if (extra !== "with-drinks") signals.push(EXTRA_SIGNAL[extra]);
+  }
+  // 분위기는 사진 카드 한 장으로 고른다 — 사용자가 실제로 고른 그 말(카드 이름)로 받아준다
+  if (condition.vibe !== "any") signals.push(VIBE_SIGNAL[condition.vibe]);
+  if (condition.extraConditions.includes("with-drinks")) signals.push(EXTRA_SIGNAL["with-drinks"]);
   if (condition.budget === "under-20k" || condition.budget === "20-30k") signals.push("1인 예산");
   return signals;
 }
@@ -256,124 +256,265 @@ export function buildCurationSummary(condition: Condition): string {
   return `${withConjunctionParticle(audience)}의 자리인 만큼, ${withObjectParticle(joinedSignal)} 먼저 살펴봤어요.`;
 }
 
-const POSITIVE_FRAGMENT: Record<ScoreCategory, (condition: Condition, place: Place) => string> = {
-  relationship: (condition) => `${RELATIONSHIP_LABEL[condition.relationship]} 자리에 잘 어울려요`,
-  people: (condition) => `${PEOPLE_LABEL[condition.people]}이 편하게 앉을 수 있어요`,
-  budget: () => "예산 안에서 부담 없이 즐길 수 있어요",
-  access: (_condition, place) => `${AREA_LABEL[place.area]}에서 가까워 모이기 편해요`,
-  food: () => "찾으시던 음식과 잘 맞아요",
-  conversation: () => "차분히 이야기 나누기 좋아요",
-  mood: () => "원하시는 분위기와 잘 맞아요",
-  seat: () => "좌석 간격이 여유로워요",
-  reservation: () => "예약·웨이팅 부담이 적어요",
-  parking: () => "주차 걱정 없이 이동할 수 있어요",
-};
+/* ───────────────────────── 상황 언어 ─────────────────────────
+ * 예전 카드 문구는 점수가 가장 높은 카테고리에 고정 문장을 붙이는 방식이라("원하시는 분위기와
+ * 잘 맞아요", "찾으시던 음식과 잘 맞아요") 어느 식당에 붙여도 똑같았고, 사용자가 고른 조건을
+ * 되읽어줄 뿐 "왜 나를 위한 곳인지"가 안 느껴졌다.
+ * 이제는 [관계 × 원하는 분위기]로 이 모임이 어떤 "자리"인지(윗분 모시는 자리, 친구와 편한
+ * 자리…) 먼저 정하고, 그 자리에서 중요한 순서대로 이 식당의 실제 데이터(룸·좌석·소음·응대·
+ * 예약·수용 인원·가격·주차·역 접근성)에서 근거를 골라 문장으로 번역한다. 데이터에 없는
+ * 내용은 지어내지 않는다 — 근거가 되는 필드가 조건을 만족할 때만 그 문장이 나온다. */
 
-const CAVEAT_FRAGMENT: Record<ScoreCategory, string> = {
-  relationship: "이 관계엔 조금 아쉬울 수 있어요",
-  people: "이 인원엔 좌석이 살짝 좁거나 넓을 수 있어요",
-  budget: "예산보다는 살짝 있는 편이에요",
-  access: "이동은 조금 번거로울 수 있어요",
-  food: "찾으시는 음식과는 살짝 다를 수 있어요",
-  conversation: "대화에 집중하긴 조금 아쉬울 수 있어요",
-  mood: "원하시는 분위기와는 살짝 다를 수 있어요",
-  seat: "좌석 간격은 넉넉하지 않을 수 있어요",
-  reservation: "예약은 조금 번거로울 수 있어요",
-  parking: "주차는 마땅치 않을 수 있어요",
-};
+type Scene = "host" | "coworker" | "friend" | "group" | "family" | "neutral";
 
-/** 카드(8.8)의 추천 문구. 예전엔 모든 카드가 place.curatedReason(장소 고정 문구)을 그대로
- *  보여줘서, 조건이 달라도 6개 카드가 같은 톤으로 나열돼 결국 사용자가 직접 다시 비교해야
- *  했다 — 이 조건·이 장소 조합에서 실제로 가장 강한 점(들)을 열고, ratios 중 뚜렷한 약점
- *  (0.5 미만)이 있으면 정직하게 트레이드오프까지 알려준다. relationship/people은 이미
- *  이 문장의 "누구와" 맥락으로 다뤄지므로 강점 후보에서 제외해 카테고리가 겹치지 않게 한다 */
-export function generateCardSentence(condition: Condition, match: MatchResult): string {
-  const { place, ratios } = match;
-  const rankedOthers = (Object.keys(ratios) as ScoreCategory[])
-    .filter((k) => k !== "relationship" && k !== "people")
-    .sort((a, b) => ratios[b] - ratios[a]);
-
-  const [best, second] = rankedOthers;
-  const weakest = rankedOthers[rankedOthers.length - 1];
-
-  const audience = `${AUDIENCE_NOUN[condition.relationship]} ${withConjunctionParticle(PEOPLE_LABEL[condition.people])} 함께`;
-  const opening = `${audience} ${POSITIVE_FRAGMENT[best](condition, place)}`;
-
-  if (ratios[weakest] < 0.5 && weakest !== best) {
-    return `${opening}. ${CAVEAT_FRAGMENT[weakest]}.`;
+function sceneOf(condition: Condition): Scene {
+  const wantsCare = condition.moodFormality === "formal" || condition.moodFormality === "hospitable";
+  switch (condition.relationship) {
+    case "workplace-senior":
+      return "host";
+    case "school-senior":
+      // 선후배는 위아래가 모두 가능해서, 격식·정성을 원했을 때만 "모시는 자리"로 본다
+      return wantsCare ? "host" : "coworker";
+    case "family":
+      return "family";
+    case "coworker":
+      return "coworker";
+    case "close-friend":
+      return "friend";
+    case "friend-group":
+      return "group";
+    case "other":
+      return wantsCare ? "host" : "neutral";
   }
-  if (second && ratios[second] >= 0.65) {
-    return `${opening}. ${POSITIVE_FRAGMENT[second](condition, place)}.`;
-  }
-  return `${opening}.`;
 }
 
-/** "OO와 XX의 균형이 가장 좋아요"는 추상적이라 "그래서 나한테 왜 좋은데?"가 안 와닿았다
- *  — 실제 상황("차로 오는 사람이 있다면", "차분히 대화하고 싶다면")에 말을 건네는 헤드라인
- *  으로 바꿔서, 이 장소가 어떤 사람에게 특히 유리한지 바로 느껴지게 한다 */
-const PERSONA_HEADLINE: Record<ScoreCategory, string> = {
-  relationship: "이 관계에 특히 잘 맞는 곳이에요",
-  people: "이 인원에 딱 맞는 곳이에요",
-  budget: "예산 부담을 줄이고 싶다면 좋은 선택이에요",
-  access: "역에서 가까운 곳을 찾는다면 좋은 선택이에요",
-  food: "찾으시던 음식이 있다면 잘 맞아요",
-  conversation: "차분히 대화하고 싶다면 좋은 선택이에요",
-  mood: "제대로 대접하고 싶은 자리라면 잘 맞아요",
-  seat: "여유롭게 앉고 싶다면 좋은 선택이에요",
-  reservation: "예약 부담 없이 가고 싶다면 좋은 선택이에요",
-  parking: "차로 오는 사람이 있다면 가장 편한 선택이에요",
+/** 문장 첫머리: 누구와 몇 명이 어떤 자리인지 */
+function sceneOpener(scene: Scene, condition: Condition): string {
+  const people = PEOPLE_LABEL[condition.people];
+  const audience = AUDIENCE_NOUN[condition.relationship];
+  switch (scene) {
+    case "host":
+      return condition.relationship === "other"
+        ? `${withObjectParticle(people)} 모시는 자리로`
+        : `${audience} ${withObjectParticle(people)} 모시는 자리로`;
+    case "family":
+      return `${audience} ${withConjunctionParticle(people)} 함께하는 자리로`;
+    case "coworker":
+      return `${audience} ${withConjunctionParticle(people)} 모이는 자리로`;
+    case "friend":
+      return `${audience} ${withConjunctionParticle(people)} 편하게 만나는 자리로`;
+    case "group":
+      return `${audience} ${withSubjectParticle(people)} 다 같이 모이는 자리로`;
+    case "neutral":
+      return `${people} 모임으로`;
+  }
+}
+
+/** 1순위 카드 띠(헤드라인). "~라면 좋은 선택이에요" 같은 가정형은 이미 그렇게 답한 사용자에게
+ *  일반 조언처럼 읽혀서, 이 모임이 어떤 자리인지 짚어 단정하는 문장으로 바꿨다 */
+const SCENE_HEADLINE: Record<Scene, string> = {
+  host: "윗분 모시는 자리로 가장 잘 맞는 곳이에요",
+  coworker: "동료들과 부담 없이 모이기 가장 좋은 곳이에요",
+  friend: "친구와 편하게 만나기 가장 좋은 곳이에요",
+  group: "여럿이 다 같이 모이기 가장 좋은 곳이에요",
+  family: "가족 모임으로 가장 잘 맞는 곳이에요",
+  neutral: "이번 모임에 가장 잘 맞는 곳이에요",
 };
 
-/** 결론 리드 문장에서 강점 두 개를 하나로 이어붙일 때 쓰는 연결형("-고") 조각.
- *  POSITIVE_FRAGMENT(종결형 "-아요/-어요")와 어간이 같은 짝이라, 이 둘을 따로
- *  손으로 관리한다 — 종결형에서 연결형을 기계적으로 만들면(불규칙 활용 때문에)
- *  틀린 문장이 나올 위험이 있어서다 */
-const CONNECTIVE_FRAGMENT: Record<ScoreCategory, (condition: Condition, place: Place) => string> = {
-  relationship: (condition) => `${RELATIONSHIP_LABEL[condition.relationship]} 자리에 잘 어울리고`,
-  people: (condition) => `${PEOPLE_LABEL[condition.people]}이 편하게 앉을 수 있고`,
-  budget: () => "예산 부담이 적고",
-  access: (_condition, place) => `${AREA_LABEL[place.area]}과 가깝고`,
-  food: () => "찾으시던 음식과 잘 맞고",
-  conversation: () => "차분히 대화하기 좋고",
-  mood: () => "분위기도 잘 맞고",
-  seat: () => "좌석 간격도 여유롭고",
-  reservation: () => "예약 부담도 적고",
-  parking: () => "주차도 가능하고",
+type EvidenceKey =
+  | "room"
+  | "semiPrivate"
+  | "quiet"
+  | "lively"
+  | "formal"
+  | "hospitality"
+  | "wide"
+  | "capacity"
+  | "reservation"
+  | "budget"
+  | "parking"
+  | "access";
+
+/** 근거 한 개를 두 가지 꼴로 들고 다닌다 — 앞 절에 쓰는 연결형("-고")과 마지막 절의
+ *  종결형("-요"). 불규칙 활용 때문에 기계적으로 바꾸면 틀린 문장이 나와서 손으로 짝을 맞춘다 */
+interface Evidence {
+  and: string;
+  end: string;
+}
+
+function evidenceFor(key: EvidenceKey, scene: Scene, condition: Condition, place: Place): Evidence | null {
+  const formal = scene === "host" || scene === "family";
+  const price = formatPrice(place.priceMin, place.priceMax);
+  switch (key) {
+    case "room":
+      if (!place.privateRoomAvailable && place.seatType !== "room") return null;
+      return formal
+        ? { and: "룸이 있어 다른 테이블 신경 쓰지 않고 청첩장을 건넬 수 있고", end: "룸이 있어 다른 테이블 신경 쓰지 않고 청첩장을 건넬 수 있어요" }
+        : { and: "룸이 있어 우리끼리 편하게 이야기할 수 있고", end: "룸이 있어 우리끼리 편하게 이야기할 수 있어요" };
+    case "semiPrivate":
+      if (place.seatType !== "semi-private") return null;
+      return { and: "칸막이 좌석이라 옆 테이블과 분리돼 있고", end: "칸막이 좌석이라 옆 테이블과 분리돼 있어요" };
+    case "quiet":
+      if (place.noiseLevel !== "quiet") return null;
+      return { and: "조용한 편이라 목소리 높이지 않고 대화할 수 있고", end: "조용한 편이라 목소리 높이지 않고 대화할 수 있어요" };
+    case "lively":
+      // 조용함을 원했거나 윗분·가족 자리라면 "활기"는 강점이 아니다
+      if (place.noiseLevel !== "lively" || formal || condition.noise === "quiet") return null;
+      return { and: "활기찬 분위기라 수다 떨기 좋고", end: "활기찬 분위기라 수다 떨기 좋아요" };
+    case "formal":
+      if (!place.formalityTags.includes("formal")) return null;
+      return { and: "차분하고 격식 있는 분위기라 윗분 모시기 좋고", end: "차분하고 격식 있는 분위기라 윗분 모시기 좋아요" };
+    case "hospitality":
+      if (place.hospitalityScore < 8) return null;
+      if (scene === "family")
+        return { and: "응대가 정성스러워 어른들 모시기 좋고", end: "응대가 정성스러워 어른들 모시기 좋아요" };
+      if (scene === "host")
+        return { and: "응대가 정성스러워 대접하기에 손색없고", end: "응대가 정성스러워 대접하기에 손색없어요" };
+      return { and: "응대가 세심하고", end: "응대가 세심해요" };
+    case "wide": {
+      if (place.seatType !== "wide" && place.spaceScore < 7) return null;
+      const many = condition.people === "5-6" || condition.people === "7-8" || condition.people === "9+";
+      return many
+        ? { and: "테이블 간격이 넉넉해 여럿이 앉아도 답답하지 않고", end: "테이블 간격이 넉넉해 여럿이 앉아도 답답하지 않아요" }
+        : { and: "테이블 간격이 넉넉해 답답하지 않고", end: "테이블 간격이 넉넉해 답답하지 않아요" };
+    }
+    case "capacity": {
+      const needsRoom = condition.people === "5-6" || condition.people === "7-8" || condition.people === "9+";
+      if (!needsRoom || place.capacityMax < 8) return null;
+      const people = PEOPLE_LABEL[condition.people];
+      return {
+        and: `최대 ${place.capacityMax}명까지 앉을 수 있어 ${people} 모임도 넉넉하고`,
+        end: `최대 ${place.capacityMax}명까지 앉을 수 있어 ${people} 모임도 넉넉해요`,
+      };
+    }
+    case "reservation":
+      if (place.reservationMethod !== "available" || place.waitingRisk > 5) return null;
+      return formal
+        ? { and: "예약이 돼서 당일 기다리시게 할 걱정이 없고", end: "예약이 돼서 당일 기다리시게 할 걱정이 없어요" }
+        : { and: "예약이 돼서 당일 기다릴 걱정이 없고", end: "예약이 돼서 당일 기다릴 걱정이 없어요" };
+    case "budget":
+      if (condition.budget === "any" || place.priceMax > BUDGET_UPPER[condition.budget]) return null;
+      return scene === "host"
+        ? { and: `1인 ${price}이라 대접하기에도 부담이 적고`, end: `1인 ${price}이라 대접하기에도 부담이 적어요` }
+        : { and: `1인 ${price}으로 예산 안에서 즐길 수 있고`, end: `1인 ${price}으로 예산 안에서 즐길 수 있어요` };
+    case "parking":
+      if (!place.parkingAvailable) return null;
+      return scene === "family"
+        ? { and: "주차가 돼서 차로 오시는 어른들도 편하고", end: "주차가 돼서 차로 오시는 어른들도 편해요" }
+        : { and: "주차가 돼서 차로 와도 편하고", end: "주차가 돼서 차로 와도 편해요" };
+    case "access":
+      if (place.accessScore < 8) return null;
+      return {
+        and: `${AREA_LABEL[place.area]}에서 가까워 모이기 편하고`,
+        end: `${AREA_LABEL[place.area]}에서 가까워 모이기 편해요`,
+      };
+  }
+}
+
+/** 자리마다 "먼저 챙겨야 할 것"의 순서 */
+const SCENE_PRIORITY: Record<Scene, EvidenceKey[]> = {
+  host: ["room", "quiet", "formal", "hospitality", "semiPrivate", "reservation", "budget", "access", "parking"],
+  family: ["room", "parking", "hospitality", "quiet", "wide", "semiPrivate", "reservation", "budget", "access"],
+  coworker: ["access", "reservation", "quiet", "semiPrivate", "budget", "room", "wide", "hospitality"],
+  friend: ["budget", "quiet", "lively", "semiPrivate", "room", "access", "hospitality", "reservation"],
+  group: ["capacity", "wide", "lively", "reservation", "room", "budget", "access"],
+  neutral: ["budget", "access", "reservation", "quiet", "room", "wide", "hospitality"],
 };
+
+/** 사용자가 직접 고른 조건에 해당하는 근거는 자리별 순서보다 앞에 둔다 */
+function explicitEvidence(condition: Condition): EvidenceKey[] {
+  const keys: EvidenceKey[] = [];
+  const fromExtra: Partial<Record<ExtraConditionKey, EvidenceKey>> = {
+    "room-required": "room",
+    "parking-required": "parking",
+    "wide-seating": "wide",
+    "reservation-possible": "reservation",
+  };
+  for (const extra of condition.extraConditions) {
+    const key = fromExtra[extra];
+    if (key) keys.push(key);
+  }
+  if (condition.noise === "quiet") keys.push("quiet", "room", "semiPrivate");
+  if (condition.noise === "lively-important") keys.push("lively");
+  if (condition.moodFormality === "formal") keys.push("formal");
+  if (condition.moodFormality === "hospitable") keys.push("hospitality");
+  return keys;
+}
+
+function pickEvidence(scene: Scene, condition: Condition, place: Place, n = 2): Evidence[] {
+  const order = [...explicitEvidence(condition), ...SCENE_PRIORITY[scene]];
+  const seen = new Set<EvidenceKey>();
+  const picked: Evidence[] = [];
+  for (const key of order) {
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const ev = evidenceFor(key, scene, condition, place);
+    if (ev) picked.push(ev);
+    if (picked.length === n) break;
+  }
+  return picked;
+}
+
+/** 이 자리에서 꼭 알아야 할 아쉬운 점 하나. 사용자가 직접 고른 조건과 어긋나는 것부터 본다 */
+function situationCaveat(scene: Scene, condition: Condition, place: Place): string | null {
+  const formal = scene === "host" || scene === "family";
+  const bigGroup = condition.people === "5-6" || condition.people === "7-8" || condition.people === "9+";
+  const hasRoom = place.privateRoomAvailable || place.seatType === "room";
+  if ((condition.noise === "quiet" || formal) && place.noiseLevel === "lively" && !hasRoom)
+    return "다만 홀이 활기찬 편이라 조용히 대화하긴 어려울 수 있어요";
+  if (condition.extraConditions.includes("parking-required") && !place.parkingAvailable)
+    return "다만 주차는 어려워요";
+  if (place.reservationMethod === "unavailable" && (formal || bigGroup))
+    return "다만 예약을 받지 않아 웨이팅이 생길 수 있어요";
+  if (place.reservationMethod === "difficult" && formal)
+    return "다만 예약이 치열한 편이라 미리 잡아두는 게 좋아요";
+  if (condition.budget !== "any" && place.priceMax > BUDGET_UPPER[condition.budget])
+    return "다만 메뉴에 따라 예산을 조금 넘을 수 있어요";
+  if (scene === "family" && !place.parkingAvailable) return "다만 주차는 어려워요";
+  return null;
+}
+
+/** withOpener: "직장 선배·상사 3~4명을 모시는 자리로," 같은 첫머리를 붙일지. 모든 카드에
+ *  붙이면 6장이 같은 말로 시작해 길고 비슷해 보여서, 1순위 카드에만 붙인다 */
+function situationSentence(condition: Condition, place: Place, withOpener: boolean): string {
+  const scene = sceneOf(condition);
+  const evidence = pickEvidence(scene, condition, place);
+  if (evidence.length === 0) return place.curatedReason;
+  const body = evidence.length === 2 ? `${evidence[0].and} ${evidence[1].end}` : evidence[0].end;
+  return withOpener ? `${sceneOpener(scene, condition)}, ${body}.` : `${body}.`;
+}
+
+/** 카드(8.8)의 추천 문구: [어떤 자리인지(1순위만)] + [이 식당 데이터에서 고른 근거 1~2개]
+ *  + [이 자리에서 아쉬운 점 0~1개] */
+export function generateCardSentence(
+  condition: Condition,
+  match: MatchResult,
+  { withOpener = false }: { withOpener?: boolean } = {},
+): string {
+  const { place } = match;
+  const caveat = situationCaveat(sceneOf(condition), condition, place);
+  const main = situationSentence(condition, place, withOpener);
+  return caveat ? `${main} ${caveat}.` : main;
+}
 
 export interface Verdict {
-  /** "차로 오는 사람이 있다면 가장 편한 선택이에요" 같은 상황 대입형 결론 헤드라인 */
+  /** 이 모임이 어떤 자리인지 짚어 단정하는 결론 헤드라인 */
   headline: string;
-  /** 누구와 몇 명이 어떤 점 덕분에 모이기 편한지, 강점 1~2개를 한 문장으로 묶는다 */
+  /** 어떤 자리인지 + 이 식당 데이터에서 고른 근거 1~2개 */
   lead: string;
-  /** 뚜렷한 약점(ratio 0.5 미만)이 있을 때만 채워진다 — 없는데 억지로 트집 잡지 않는다 */
+  /** 이 자리에서 꼭 알아야 할 아쉬운 점이 있을 때만 채워진다 */
   caveat: string | null;
 }
 
-/** 상세 페이지 최상단 "청모픽 한 줄 결론". 체크포인트·추천 이유 카드가 아무리 많아도
- *  "그래서 왜 여기를 고르면 되는지" 최종 판단은 따로 안 내려져 있었다 — 이 페이지에서
- *  가장 먼저 보이는 자리에 청모픽이 대신 결론을 내려준다. headline은 가장 강한 카테고리
- *  하나를 "이럴 때 좋다"는 상황으로, lead는 강점 1~2개를 누구와·몇 명 맥락과 묶어 한
- *  문장으로, caveat은 뚜렷한 약점이 있을 때만 담는다 — 이 두 카테고리(best/second)는
- *  아래 "이 모임에 잘 맞는 이유" 카드에서 다시 안 다룬다(generateDetailReason 참고) */
+/** 결과 1순위 카드의 띠(헤드라인)와 리드 문장 */
 export function generateVerdict(condition: Condition, match: MatchResult): Verdict {
-  const { place, ratios } = match;
-  const rankedOthers = (Object.keys(ratios) as ScoreCategory[])
-    .filter((k) => k !== "relationship" && k !== "people")
-    .sort((a, b) => ratios[b] - ratios[a]);
-  const [best, second] = rankedOthers;
-  const weakest = rankedOthers[rankedOthers.length - 1];
-
-  const headline = PERSONA_HEADLINE[best];
-
-  const strengthClause = second
-    ? `${CONNECTIVE_FRAGMENT[best](condition, place)} ${CONNECTIVE_FRAGMENT[second](condition, place)}`
-    : CONNECTIVE_FRAGMENT[best](condition, place);
-  const lead = `${strengthClause}, ${withSubjectParticle(PEOPLE_LABEL[condition.people])} 모이기 편해요.`;
-
-  const caveat = ratios[weakest] < 0.5 ? `${CAVEAT_FRAGMENT[weakest]}.` : null;
-
-  return { headline, lead, caveat };
+  const scene = sceneOf(condition);
+  const caveat = situationCaveat(scene, condition, match.place);
+  return {
+    headline: SCENE_HEADLINE[scene],
+    lead: situationSentence(condition, match.place, true),
+    caveat: caveat ? `${caveat}.` : null,
+  };
 }
 
 const BUDGET_UPPER: Record<Exclude<Condition["budget"], "any">, number> = {

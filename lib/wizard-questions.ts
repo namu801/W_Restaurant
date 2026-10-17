@@ -1,43 +1,40 @@
 import {
+  AREA_HINT,
   AREA_LABEL,
   AREA_OPTIONS,
   BUDGET_LABEL,
   BUDGET_OPTIONS,
   CUISINE_LABEL,
-  CUISINE_OPTIONS,
   EXTRA_CONDITION_LABEL,
   EXTRA_CONDITION_OPTIONS,
-  MOOD_FORMALITY_LABEL,
-  MOOD_FORMALITY_OPTIONS,
-  NOISE_LABEL,
-  NOISE_OPTIONS,
   PEOPLE_LABEL,
   PEOPLE_OPTIONS,
-  RELATIONSHIP_LABEL,
+  RELATIONSHIP_CHIP_LABEL,
   RELATIONSHIP_OPTIONS,
+  VIBE_CONDITION,
+  VIBE_LABEL,
+  VIBE_OPTIONS,
+  WIZARD_CUISINE_OPTIONS,
 } from "./labels";
-import {
-  CUISINE_ICON,
-  EXTRA_CONDITION_ICON,
-  MOOD_FORMALITY_ICON,
-  NOISE_ICON,
-  RELATIONSHIP_ICON,
-  type CategoryIcon,
-} from "./option-icons";
 import type { Condition } from "./types";
 
 /**
- * 조건입력 질문의 단일 소스. 전체 스텝 위저드(app/search)와
- * 결과 화면의 바텀시트 편집기(components/ConditionEditSheet)가 이 정의를 함께 쓴다.
+ * 조건입력 질문의 단일 소스. 6화면 위저드(app/search)와 결과 화면의 바텀시트
+ * 편집기(components/ConditionEditSheet)가 이 정의를 함께 쓴다.
+ *
+ * 레퍼런스(다글로·장소 추천 앱·플랜핏)의 공통 문법을 따른다 — 선택지는 짧은 말, 선택지별
+ * 설명은 두지 않는다(지역만 같은 줄 회색 한 구절). 분위기와 음식은 사진으로 고른다.
+ * 위저드 화면 묶음·머리말·사진은 app/search 쪽에서 정하고, 여기는 질문과 선택지만 정의한다.
  */
 
 export interface OptionDef {
   value: string;
   label: string;
-  icon?: CategoryIcon;
+  /** 같은 줄 회색 한 구절(지역 전용) */
+  hint?: string;
 }
 
-export type SingleKey = "relationship" | "people" | "area" | "budget" | "noise" | "moodFormality";
+export type SingleKey = "relationship" | "people" | "area" | "budget" | "vibe";
 
 export type MultiKey = "cuisines" | "extraConditions";
 
@@ -45,9 +42,6 @@ export interface SingleQuestion {
   kind: "single";
   key: SingleKey;
   title: string;
-  helper?: string;
-  /** 라벨이 한 줄 문장급으로 길어 2열에서 줄바꿈되면 지저분해 보이는 질문은 1열로 세로 나열한다 */
-  columns?: 1 | 2;
   options: OptionDef[];
 }
 
@@ -55,7 +49,6 @@ export interface MultiQuestion {
   kind: "multi";
   key: MultiKey;
   title: string;
-  helper: string;
   max: number;
   required: boolean;
   exclusiveValue?: string;
@@ -64,109 +57,77 @@ export interface MultiQuestion {
 
 export type Question = SingleQuestion | MultiQuestion;
 
-export interface Stage {
-  name: string;
-  questions: Question[];
-}
-
 const toOptions = <T extends string>(
   keys: readonly T[],
   labels: Record<T, string>,
-  icons?: Record<T, CategoryIcon>,
-): OptionDef[] => keys.map((value) => ({ value, label: labels[value], icon: icons?.[value] }));
+  hints?: Partial<Record<T, string>>,
+): OptionDef[] => keys.map((value) => ({ value, label: labels[value], hint: hints?.[value] }));
 
-export const STAGES: Stage[] = [
-  {
-    name: "모임 정보",
-    questions: [
-      {
-        kind: "single",
-        key: "relationship",
-        title: "누구와 만나는 자리인가요?",
-        helper: "관계에 따라 편한 분위기와 예산이 달라져요.",
-        options: toOptions(RELATIONSHIP_OPTIONS, RELATIONSHIP_LABEL, RELATIONSHIP_ICON),
-      },
-      {
-        kind: "single",
-        key: "people",
-        title: "몇 명이 모이나요?",
-        helper: "인원에 맞는 좌석과 예약 가능한 곳을 찾아볼게요.",
-        options: toOptions(PEOPLE_OPTIONS, PEOPLE_LABEL),
-      },
-      {
-        kind: "single",
-        key: "area",
-        title: "어디에서 만날까요?",
-        helper: "모두가 오기 편한 지역을 골라주세요.",
-        options: toOptions(AREA_OPTIONS, AREA_LABEL),
-      },
-    ],
+/** 지역은 "어디든 괜찮아요"를 맨 뒤로 보낸다 — 구체적인 역부터 보이는 편이 고르기 쉽다 */
+const AREA_ORDER = [...AREA_OPTIONS.filter((a) => a !== "all"), "all" as const];
+
+export const QUESTIONS = {
+  relationship: {
+    kind: "single",
+    key: "relationship",
+    title: "누구를 만나세요?",
+    options: toOptions(RELATIONSHIP_OPTIONS, RELATIONSHIP_CHIP_LABEL),
   },
-  {
-    name: "식사 조건",
-    questions: [
-      {
-        kind: "single",
-        key: "budget",
-        title: "한 사람당 최대 얼마까지 괜찮나요?",
-        helper: "식사와 음료를 포함한 예상 금액이에요.",
-        options: toOptions(BUDGET_OPTIONS, BUDGET_LABEL),
-      },
-      {
-        kind: "multi",
-        key: "cuisines",
-        title: "먹고 싶은 메뉴가 있나요?",
-        helper: "최대 4개까지 고를 수 있어요.",
-        max: 4,
-        required: true,
-        exclusiveValue: "any",
-        options: toOptions(CUISINE_OPTIONS, CUISINE_LABEL, CUISINE_ICON),
-      },
-    ],
+  people: {
+    kind: "single",
+    key: "people",
+    title: "인원",
+    options: toOptions(PEOPLE_OPTIONS, PEOPLE_LABEL),
   },
-  {
-    name: "분위기·공간",
-    questions: [
-      {
-        kind: "single",
-        key: "noise",
-        title: "얼마나 조용한 곳이 좋나요?",
-        helper: "청첩장을 건네고 이야기 나누기 편한 정도를 골라주세요.",
-        columns: 1,
-        options: toOptions(NOISE_OPTIONS, NOISE_LABEL, NOISE_ICON),
-      },
-      {
-        kind: "single",
-        key: "moodFormality",
-        title: "어떤 분위기에서 만나고 싶나요?",
-        helper: "편안함부터 격식까지, 가장 가까운 분위기를 골라주세요.",
-        columns: 1,
-        options: toOptions(MOOD_FORMALITY_OPTIONS, MOOD_FORMALITY_LABEL, MOOD_FORMALITY_ICON),
-      },
-    ],
+  area: {
+    kind: "single",
+    key: "area",
+    title: "지역",
+    options: toOptions(AREA_ORDER, { ...AREA_LABEL, all: "어디든 괜찮아요" }, AREA_HINT),
   },
-  {
-    name: "운영 조건",
-    questions: [
-      {
-        kind: "multi",
-        key: "extraConditions",
-        title: "꼭 필요한 조건이 있나요?",
-        helper: "꼭 필요한 조건만 골라주세요. 없어도 괜찮아요.",
-        max: EXTRA_CONDITION_OPTIONS.length,
-        required: false,
-        options: toOptions(EXTRA_CONDITION_OPTIONS, EXTRA_CONDITION_LABEL, EXTRA_CONDITION_ICON),
-      },
-    ],
+  budget: {
+    kind: "single",
+    key: "budget",
+    title: "한 분당 어느 정도 생각하세요?",
+    options: toOptions(BUDGET_OPTIONS, BUDGET_LABEL),
   },
+  cuisines: {
+    kind: "multi",
+    key: "cuisines",
+    title: "어떤 음식이 좋을까요?",
+    max: 3,
+    required: true,
+    exclusiveValue: "any",
+    options: toOptions(WIZARD_CUISINE_OPTIONS, { ...CUISINE_LABEL, any: "메뉴는 상관없어요" }),
+  },
+  vibe: {
+    kind: "single",
+    key: "vibe",
+    title: "어떤 분위기의 자리가 좋으세요?",
+    options: toOptions(VIBE_OPTIONS, VIBE_LABEL),
+  },
+  extraConditions: {
+    kind: "multi",
+    key: "extraConditions",
+    title: "꼭 챙겨야 할 게 있나요?",
+    max: EXTRA_CONDITION_OPTIONS.length,
+    required: false,
+    options: toOptions(EXTRA_CONDITION_OPTIONS, EXTRA_CONDITION_LABEL),
+  },
+} satisfies Record<SingleKey | MultiKey, Question>;
+
+/** 결과 화면 필터 시트에 나열하는 순서 (위저드 화면 순서와 같다) */
+export const SHEET_QUESTIONS: Question[] = [
+  QUESTIONS.relationship,
+  QUESTIONS.people,
+  QUESTIONS.area,
+  QUESTIONS.budget,
+  QUESTIONS.cuisines,
+  QUESTIONS.vibe,
+  QUESTIONS.extraConditions,
 ];
 
-/** STAGES를 평평하게 펼친 질문 화면 목록. 전체 위저드의 스텝 진행과 바텀시트의 전체 나열에 함께 쓴다 */
-export const SCREENS = STAGES.flatMap((stage, stageIndex) =>
-  stage.questions.map((question) => ({ stageIndex, stageName: stage.name, question })),
-);
-
-export type DraftCondition = Partial<Condition> & {
+export type DraftCondition = Partial<Omit<Condition, "cuisines" | "extraConditions">> & {
   cuisines: string[];
   extraConditions: string[];
 };
@@ -179,19 +140,35 @@ export function draftFromCondition(condition: Condition): DraftCondition {
   return { ...condition };
 }
 
-export function isDraftComplete(draft: DraftCondition): draft is Condition {
+export function isDraftComplete(draft: DraftCondition): boolean {
   return Boolean(
     draft.relationship &&
       draft.people &&
       draft.area &&
       draft.budget &&
       draft.cuisines.length > 0 &&
-      draft.noise &&
-      draft.moodFormality,
+      draft.vibe,
   );
 }
 
-/** 멀티 셀렉트 토글 로직. exclusiveValue(예: "상관없어요")는 다른 선택을 모두 지우고, max 초과 시 가장 먼저 고른 값을 밀어낸다 */
+/** 완성된 초안을 조건으로 바꾼다. 점수 계산용 noise·moodFormality는 분위기 카드에서 채운다 */
+export function conditionFromDraft(draft: DraftCondition): Condition | null {
+  if (!isDraftComplete(draft)) return null;
+  const vibe = draft.vibe!;
+  return {
+    relationship: draft.relationship!,
+    people: draft.people!,
+    area: draft.area!,
+    budget: draft.budget!,
+    cuisines: draft.cuisines as Condition["cuisines"],
+    vibe,
+    ...VIBE_CONDITION[vibe],
+    extraConditions: draft.extraConditions as Condition["extraConditions"],
+  };
+}
+
+/** 멀티 셀렉트 토글 로직. exclusiveValue(예: "상관없어요")는 다른 선택을 모두 지우고,
+ *  max에 닿으면 더 고르지 못하게 그대로 둔다(가장 먼저 고른 걸 몰래 밀어내지 않는다) */
 export function toggleMultiValue(
   current: string[],
   question: MultiQuestion,
@@ -206,7 +183,5 @@ export function toggleMultiValue(
   const withoutExclusive = question.exclusiveValue
     ? current.filter((v) => v !== question.exclusiveValue)
     : current;
-  return withoutExclusive.length >= question.max
-    ? [...withoutExclusive.slice(1), value]
-    : [...withoutExclusive, value];
+  return withoutExclusive.length >= question.max ? withoutExclusive : [...withoutExclusive, value];
 }

@@ -11,7 +11,7 @@ import {
   WalletIcon,
 } from "@heroicons/react/24/solid";
 import { searchParamsToCondition, conditionToSearchParams } from "@/lib/condition-query";
-import { BUDGET_LABEL, CUISINE_LABEL, RELATIONSHIP_LABEL } from "@/lib/labels";
+import { BUDGET_LABEL, CUISINE_LABEL, RELATIONSHIP_LABEL, VIBE_LABEL } from "@/lib/labels";
 import { track } from "@/lib/analytics";
 import type { Condition } from "@/lib/types";
 
@@ -47,7 +47,9 @@ function buildMessages(condition: Condition): string[] {
     `${RELATIONSHIP_LABEL[condition.relationship]} 모임에 맞는지 보고 있어요`,
     budgetText,
     cuisineText,
-    "대화하기 좋은 곳인지 확인하고 있어요",
+    condition.vibe !== "any"
+      ? `${VIBE_LABEL[condition.vibe]} 분위기인지 살펴보고 있어요`
+      : "대화하기 좋은 곳인지 확인하고 있어요",
     "청모픽이 가장 잘 맞는 곳을 골랐어요!",
   ];
 }

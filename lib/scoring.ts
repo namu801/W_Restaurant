@@ -103,11 +103,22 @@ function fitRelationship(condition: Condition, place: Place): number {
   return place.relationshipTags.includes(condition.relationship) ? 1 : 0;
 }
 
-function fitFood(condition: Condition, place: Place): number {
+function fitCuisine(condition: Condition, place: Place): number {
   const selected = condition.cuisines.filter((c) => c !== "any");
   if (condition.cuisines.includes("any") || selected.length === 0) return 0.65;
   const matched = selected.filter((c) => place.cuisineTags.includes(c));
   return matched.length === 0 ? 0.2 : matched.length / selected.length;
+}
+
+/** "술도 곁들여요"는 제외 필터가 아니라 가점이다 — 술을 곁들이기 좋은 곳(wine-alcohol 태그)이면
+ *  음식 점수의 20%를 채워주고, 아니면 그만큼 덜 받는다. 술을 안 파는 곳이 결과에서 빠지진 않는다 */
+const DRINKS_SHARE = 0.2;
+
+function fitFood(condition: Condition, place: Place): number {
+  const cuisine = fitCuisine(condition, place);
+  if (!condition.extraConditions.includes("with-drinks")) return cuisine;
+  const drinks = place.cuisineTags.includes("wine-alcohol") ? 1 : 0;
+  return cuisine * (1 - DRINKS_SHARE) + drinks * DRINKS_SHARE;
 }
 
 const NOISE_MATCH: Record<Exclude<NoiseKey, "any">, Record<NoiseLevel, number>> = {
@@ -303,8 +314,10 @@ export function findRelaxationSuggestion(
     "parking-required": "'주차 필수' 조건을 해제하면",
     "wide-seating": "'좌석 간격' 조건을 해제하면",
     "reservation-possible": "'예약 가능' 조건을 해제하면",
+    "with-drinks": "",
   };
   for (const extra of condition.extraConditions) {
+    if (extra === "with-drinks") continue; // 가점이라 결과를 줄이지 않는다 — 완화할 이유가 없다
     candidates.push({
       label: EXTRA_RELAX_LABEL[extra],
       next: { ...condition, extraConditions: condition.extraConditions.filter((e) => e !== extra) },

@@ -9,6 +9,7 @@ import type {
   PeopleKey,
   RelationshipKey,
   SeatType,
+  VibeKey,
 } from "./types";
 
 export const RELATIONSHIP_LABEL: Record<RelationshipKey, string> = {
@@ -19,6 +20,18 @@ export const RELATIONSHIP_LABEL: Record<RelationshipKey, string> = {
   "workplace-senior": "직장 선배·상사",
   family: "가족·친척",
   other: "그 밖의 관계",
+};
+
+/** 조건 입력 칩에 쓰는 짧은 관계 라벨. RELATIONSHIP_LABEL은 결과 화면 문장("직장 선배·상사
+ *  자리 적합")에 들어가서 그대로 두고, 고르는 화면에서만 이 말을 쓴다 */
+export const RELATIONSHIP_CHIP_LABEL: Record<RelationshipKey, string> = {
+  "close-friend": "가까운 친구",
+  "friend-group": "친구 모임",
+  coworker: "직장 동료",
+  "school-senior": "학교 선후배",
+  "workplace-senior": "선배·상사",
+  family: "가족·친척",
+  other: "그 밖의 분",
 };
 
 export const PEOPLE_LABEL: Record<PeopleKey, string> = {
@@ -37,6 +50,14 @@ export const AREA_LABEL: Record<AreaKey, string> = {
 };
 
 /** PRD 8.4: 반열림 구간(하한 포함, 상한 미포함)으로 겹치지 않게 정의 */
+/** 지역 선택지 옆에 같은 줄 회색 한 구절로 붙는 설명. 지역만 고르기 전에 알아야 판단이 쉬워서 둔다 */
+export const AREA_HINT: Record<AreaKey, string> = {
+  yongsan: "KTX·1호선, 아이파크몰",
+  sinyongsan: "4호선, 용리단길",
+  samgakji: "4·6호선, 오랜 골목",
+  all: "세 곳 모두에서",
+};
+
 export const BUDGET_LABEL: Record<BudgetKey, string> = {
   "under-20k": "2만 원 이하",
   "20-30k": "2만~3만 원",
@@ -65,6 +86,23 @@ export const NOISE_LABEL: Record<NoiseKey, string> = {
   any: "소음은 크게 상관없어요",
 };
 
+export const VIBE_LABEL: Record<VibeKey, string> = {
+  "quiet-dining": "조용한 다이닝",
+  "wine-bar": "와인바·라운지",
+  "casual-dining": "캐주얼 다이닝",
+  "lively-pub": "활기찬 주점",
+  any: "분위기는 상관없어요",
+};
+
+/** 분위기 카드 → 점수 계산용 조건값. 카드 한 장이 소음·격식 두 값을 함께 정한다 */
+export const VIBE_CONDITION: Record<VibeKey, { noise: NoiseKey; moodFormality: MoodFormalityKey }> = {
+  "quiet-dining": { noise: "quiet", moodFormality: "hospitable" },
+  "wine-bar": { noise: "lively-but-talkable", moodFormality: "balanced" },
+  "casual-dining": { noise: "lively-but-talkable", moodFormality: "casual" },
+  "lively-pub": { noise: "lively-important", moodFormality: "casual" },
+  any: { noise: "any", moodFormality: "any" },
+};
+
 export const MOOD_FORMALITY_LABEL: Record<MoodFormalityKey, string> = {
   casual: "편하고 캐주얼하게",
   balanced: "깔끔하고 무난하게",
@@ -85,10 +123,11 @@ export const SEAT_TYPE_LABEL: Record<SeatType, string> = {
  *  예약·웨이팅은 원래 별도 질문(예약 필수/유연/줄서기 허용 등)이었으나 선택지가 복잡해
  *  "예약 가능한 곳" 한 칩으로 단순화해 여기로 합쳤다 */
 export const EXTRA_CONDITION_LABEL: Record<ExtraConditionKey, string> = {
-  "room-required": "룸이 있는 식당",
-  "parking-required": "주차 가능한 식당",
-  "wide-seating": "좌석 간격이 넉넉한 식당",
-  "reservation-possible": "예약 가능한 식당",
+  "room-required": "룸",
+  "parking-required": "주차",
+  "wide-seating": "넉넉한 좌석",
+  "reservation-possible": "예약 가능",
+  "with-drinks": "술도 곁들여요",
 };
 
 export const RELATIONSHIP_OPTIONS = Object.keys(RELATIONSHIP_LABEL) as RelationshipKey[];
@@ -96,6 +135,10 @@ export const PEOPLE_OPTIONS = Object.keys(PEOPLE_LABEL) as PeopleKey[];
 export const AREA_OPTIONS = Object.keys(AREA_LABEL) as AreaKey[];
 export const BUDGET_OPTIONS = Object.keys(BUDGET_LABEL) as BudgetKey[];
 export const CUISINE_OPTIONS = Object.keys(CUISINE_LABEL) as CuisineKey[];
+/** 조건 입력에서 고르는 음식 종류. "와인·주류"는 음식 종류가 아니라서 빼고 ⑥ "술도 곁들여요"로
+ *  옮겼다 — 식당 데이터의 wine-alcohol 태그와 지도 필터는 그대로 쓴다 */
+export const WIZARD_CUISINE_OPTIONS = CUISINE_OPTIONS.filter((c) => c !== "wine-alcohol");
+export const VIBE_OPTIONS = Object.keys(VIBE_LABEL) as VibeKey[];
 export const NOISE_OPTIONS = Object.keys(NOISE_LABEL) as NoiseKey[];
 export const MOOD_FORMALITY_OPTIONS = Object.keys(MOOD_FORMALITY_LABEL) as MoodFormalityKey[];
 export const EXTRA_CONDITION_OPTIONS = Object.keys(

@@ -29,13 +29,21 @@ export type NoiseKey = "quiet" | "lively-but-talkable" | "lively-important" | "a
 
 export type MoodFormalityKey = "casual" | "balanced" | "hospitable" | "formal" | "any";
 
-/** PRD 8.6 기타 조건: "꼭 필요한" 조건만 모은 다중선택 칩 (선택 입력, 모두 제외 필터로 동작).
- *  예약·웨이팅은 원래 별도 질문이었으나 선택지가 복잡해 "예약 가능한 곳" 한 칩으로 단순화해 여기로 합쳤다 */
+/** 조건 입력의 "분위기" 사진 카드. [조용함 ↔ 활기] × [격식 ↔ 캐주얼] 두 축에서 겹치지 않게
+ *  나눈 4가지다. 점수 계산은 그대로 noise·moodFormality를 쓰고, 이 값에서 자동으로 채운다
+ *  (lib/labels.ts VIBE_CONDITION) */
+export type VibeKey = "quiet-dining" | "wine-bar" | "casual-dining" | "lively-pub" | "any";
+
+/** PRD 8.6 기타 조건: "꼭 챙길 것" 다중선택 칩 (선택 입력).
+ *  예약·웨이팅은 원래 별도 질문이었으나 선택지가 복잡해 "예약 가능한 곳" 한 칩으로 단순화해 여기로 합쳤다.
+ *  with-drinks(술도 곁들여요)만 제외 필터가 아니라 가점이다 — 술은 음식 종류가 아니라 어떤
+ *  메뉴와도 곁들일 수 있어서, 원래 음식 선택지에 있던 "와인·주류"를 여기로 옮겼다 */
 export type ExtraConditionKey =
   | "room-required"
   | "parking-required"
   | "wide-seating"
-  | "reservation-possible";
+  | "reservation-possible"
+  | "with-drinks";
 
 /** 조건 입력 단계에서 수집하는 청첩장 모임 조건 */
 export interface Condition {
@@ -44,7 +52,10 @@ export interface Condition {
   area: AreaKey;
   budget: BudgetKey;
   cuisines: CuisineKey[]; // 최대 4개
+  vibe: VibeKey;
+  /** vibe에서 자동으로 채운다(사용자가 직접 고르지 않는다) — 점수 계산용 */
   noise: NoiseKey;
+  /** vibe에서 자동으로 채운다(사용자가 직접 고르지 않는다) — 점수 계산용 */
   moodFormality: MoodFormalityKey;
   extraConditions: ExtraConditionKey[]; // 선택 입력, 0개 이상
 }

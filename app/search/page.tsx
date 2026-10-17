@@ -1,29 +1,115 @@
 "use client";
 
 import { clsx } from "clsx";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { conditionToSearchParams, searchParamsToCondition } from "@/lib/condition-query";
 import { track } from "@/lib/analytics";
 import { StickyBottomBar } from "@/components/StickyBottomBar";
-import { OptionBadge } from "@/components/OptionBadge";
 import { BudgetSlider } from "@/components/BudgetSlider";
+import { AREA_LABEL, BUDGET_LABEL, PEOPLE_LABEL, VIBE_LABEL } from "@/lib/labels";
 import {
-  SCREENS,
-  emptyDraft,
+  QUESTIONS,
+  conditionFromDraft,
   draftFromCondition,
+  emptyDraft,
   toggleMultiValue,
   type DraftCondition,
   type MultiQuestion,
   type SingleKey,
 } from "@/lib/wizard-questions";
-import type { Condition } from "@/lib/types";
+import { cuisinePhoto, vibePhoto } from "@/lib/wizard-photos";
+import type { Condition, CuisineKey, RelationshipKey, VibeKey } from "@/lib/types";
+
+/**
+ * 조건 입력 6화면. 레퍼런스(다글로·장소 추천 앱·플랜핏)의 공통 문법을 따른다.
+ * - 선택지는 짧은 말. 선택지별 설명은 두지 않는다(지역만 같은 줄 회색 한 구절).
+ * - 앞에서 고른 내용은 다음 질문 위 주황 한 줄(머리말)로 받아준다. 따로 응답 영역을 두지 않는다.
+ * - 가벼운 질문(인원·지역)은 한 화면에 묶는다.
+ * - 메뉴가 공간 성격을 크게 정해서 음식을 분위기보다 먼저 묻고, 둘 다 사진으로 고른다.
+ */
+const STEPS = [
+  { name: "relationship", title: "누구를 만나세요?", help: null },
+  { name: "people_area", title: "몇 분과, 어디서 만나세요?", help: null },
+  { name: "budget", title: "한 분당 어느 정도 생각하세요?", help: "식사와 음료를 포함한 금액이에요" },
+  { name: "cuisines", title: "어떤 음식이 좋을까요?", help: "최대 3개까지 고를 수 있어요" },
+  { name: "vibe", title: "어떤 분위기의 자리가 좋으세요?", help: "가장 가까운 한 곳을 골라주세요" },
+  { name: "extra", title: "꼭 챙겨야 할 게 있나요?", help: "없으면 바로 결과를 볼 수 있어요" },
+] as const;
+
+/** ② 머리말. "~자리군요"로 관계를 받아준다 */
+const RELATIONSHIP_ECHO: Record<RelationshipKey, string> = {
+  "close-friend": "가까운 친구와 편하게 만나는 자리군요",
+  "friend-group": "친구들과 다 같이 모이는 자리군요",
+  coworker: "동료들과 함께하는 자리군요",
+  "workplace-senior": "선배·상사를 모시는 자리군요",
+  "school-senior": "학교 선후배와 만나는 자리군요",
+  family: "어른들이 함께하시는 자리군요",
+  other: "소중한 분을 만나는 자리군요",
+};
+
+/** 다음 질문 위에 붙는 머리말. 단계마다 다른 동사를 써서(자리군요 → 좁혀둘게요 →
+ *  기억해둘게요 → 추려둘게요 → 담았어요) 고를수록 후보가 좁혀지는 느낌을 준다 —
+ *  매번 같은 꼴이면 기계적으로 읽힌다. 앞에서 "상관없어요"를 골랐으면 비워 둔다 */
+function echoFor(step: number, d: DraftCondition): string | null {
+  switch (step) {
+    case 0:
+      return "청첩장 모임 장소, 같이 골라봐요";
+    case 1:
+      return d.relationship ? RELATIONSHIP_ECHO[d.relationship] : null;
+    case 2: {
+      if (!d.people || !d.area) return null;
+      const people = PEOPLE_LABEL[d.people];
+      return d.area === "all"
+        ? `${people} 자리로 좁혀둘게요`
+        : `${AREA_LABEL[d.area]} 근처, ${people} 자리로 좁혀둘게요`;
+    }
+    case 3:
+      if (!d.budget) return null;
+      // 슬라이더는 "4만원 이하"처럼 정확한 값을 보여주지만 점수는 구간(3만~5만 원)으로 매긴다 —
+      // 숫자가 달라 보이지 않게 "~대"를 붙여 구간이라는 걸 드러낸다
+      if (d.budget === "any") return "예산보다 자리를 먼저 볼게요";
+      {
+        const label = BUDGET_LABEL[d.budget];
+        const isRange = label.includes("~"); // "2만 원 이하"·"5만 원 이상"엔 "대"가 어색하다
+        return `예산은 1인 ${label}${isRange ? "대" : ""}, 기억해둘게요`;
+      }
+    case 4: {
+      const picked = d.cuisines.filter((c) => c !== "any");
+      if (picked.length === 0) return null;
+      const labels = picked.map((c) => QUESTIONS.cuisines.options.find((o) => o.value === c)?.label ?? c);
+      return `${labels.join("·")} 쪽으로 추려둘게요`;
+    }
+    case 5:
+      return d.vibe && d.vibe !== "any" ? `${VIBE_LABEL[d.vibe]}까지 담았어요. 이제 마지막이에요` : null;
+    default:
+      return null;
+  }
+}
+
+function canProceed(step: number, d: DraftCondition): boolean {
+  switch (step) {
+    case 0:
+      return Boolean(d.relationship);
+    case 1:
+      return Boolean(d.people && d.area);
+    case 2:
+      return Boolean(d.budget);
+    case 3:
+      return d.cuisines.length > 0;
+    case 4:
+      return Boolean(d.vibe);
+    default:
+      return true;
+  }
+}
 
 function SearchWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [screenIndex, setScreenIndex] = useState(0);
+  const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<DraftCondition>(emptyDraft());
   const sessionId = useMemo(
     () => (typeof crypto !== "undefined" ? crypto.randomUUID() : `${Date.now()}`),
@@ -37,22 +123,12 @@ function SearchWizard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const screen = SCREENS[screenIndex];
-  const { question } = screen;
-  const isLastScreen = screenIndex === SCREENS.length - 1;
-
   useEffect(() => {
-    // step_number는 screen.stageIndex(모임정보/식사조건/분위기·공간/운영조건 4개)가 아니라
-    // screenIndex(관계·인원·지역·예산·음식·소음·분위기·추가조건, 실제 8개 질문 화면) 기준이어야
-    // 한다 — stageIndex를 쓰면 같은 스테이지 안 여러 질문이 같은 번호로 찍혀서, 화면에 보이는
-    // "n/8" 진행률과도 어긋나고 믹스패널에서 8단계 중 정확히 어디서 이탈하는지 구분이 안 됐다
-    track("filter_step_viewed", {
-      step_number: screenIndex + 1,
-      step_name: question.key,
-      stage_name: screen.stageName,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screenIndex]);
+    track("filter_step_viewed", { step_number: step + 1, step_name: STEPS[step].name });
+  }, [step]);
+
+  const isLast = step === STEPS.length - 1;
+  const echo = echoFor(step, draft);
 
   function selectSingle(key: SingleKey, value: string) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -62,222 +138,342 @@ function SearchWizard() {
   function toggleMulti(question: MultiQuestion, value: string) {
     setDraft((prev) => ({
       ...prev,
-      [question.key]: toggleMultiValue((prev[question.key] as string[]) ?? [], question, value),
+      [question.key]: toggleMultiValue(prev[question.key], question, value),
     }));
     track("filter_option_selected", { condition_type: question.key, condition_value: value });
   }
 
-  function canProceed(): boolean {
-    if (question.kind === "single") {
-      return typeof draft[question.key] === "string" && (draft[question.key] as string).length > 0;
-    }
-    if (!question.required) return true;
-    return (draft[question.key] as string[]).length > 0;
+  function goToResults(condition: Condition) {
+    router.push(`/search/loading?${conditionToSearchParams(condition).toString()}`);
   }
 
   function handleNext() {
-    if (!canProceed()) return;
-
-    track("filter_step_completed", {
-      step_number: screenIndex + 1,
-      step_name: question.key,
-      completion_time: Date.now(),
-    });
-
-    if (!isLastScreen) {
-      setScreenIndex((i) => i + 1);
+    if (!canProceed(step, draft)) return;
+    track("filter_step_completed", { step_number: step + 1, step_name: STEPS[step].name, completion_time: Date.now() });
+    if (!isLast) {
+      setStep((s) => s + 1);
       return;
     }
-
-    const condition: Condition = {
-      relationship: draft.relationship!,
-      people: draft.people!,
-      area: draft.area!,
-      budget: draft.budget!,
-      cuisines: draft.cuisines as Condition["cuisines"],
-      noise: draft.noise!,
-      moodFormality: draft.moodFormality!,
-      extraConditions: draft.extraConditions as Condition["extraConditions"],
-    };
-
+    const condition = conditionFromDraft(draft);
+    if (!condition) return;
     track("filter_submitted", {
       relationship: condition.relationship,
       people: condition.people,
       area: condition.area,
       budget: condition.budget,
+      vibe: condition.vibe,
     });
-
-    router.push(`/search/loading?${conditionToSearchParams(condition).toString()}`);
+    goToResults(condition);
   }
 
   function handlePrev() {
-    if (screenIndex === 0) {
+    if (step === 0) {
       router.push("/");
       return;
     }
-    setScreenIndex((i) => i - 1);
+    setStep((s) => s - 1);
   }
 
-  /** 스텝이 많다 보니 조건을 하나도 안 고르고 바로 결과부터 보고 싶은 사람도 있다.
-   *  지금까지 답한 건 그대로 쓰고, 나머지는 "상관없음"에 가까운 값으로 채워 넘어간다.
-   *  관계·인원은 그런 값이 없어 각각 "기타"/"3~4명"으로 중립값을 둔다 */
+  /** 지금까지 답한 건 그대로 쓰고, 나머지는 "상관없음"에 가까운 값으로 채워 바로 결과로 간다.
+   *  관계·인원은 그런 값이 없어 각각 "그 밖의 분"/"3~4명"을 중립값으로 둔다 */
   function handleSkip() {
-    const condition: Condition = {
+    const condition = conditionFromDraft({
       relationship: draft.relationship ?? "other",
       people: draft.people ?? "3-4",
       area: draft.area ?? "all",
       budget: draft.budget ?? "any",
-      cuisines: (draft.cuisines && draft.cuisines.length > 0 ? draft.cuisines : ["any"]) as Condition["cuisines"],
-      noise: draft.noise ?? "any",
-      moodFormality: draft.moodFormality ?? "any",
-      extraConditions: (draft.extraConditions ?? []) as Condition["extraConditions"],
-    };
-
-    track("filter_skipped", { step_number: screenIndex + 1, step_name: question.key });
-    router.push(`/search/loading?${conditionToSearchParams(condition).toString()}`);
+      cuisines: draft.cuisines.length > 0 ? draft.cuisines : ["any"],
+      vibe: draft.vibe ?? "any",
+      extraConditions: draft.extraConditions,
+    });
+    if (!condition) return;
+    track("filter_skipped", { step_number: step + 1, step_name: STEPS[step].name });
+    goToResults(condition);
   }
+
+  // 예산은 슬라이더가 늘 값을 보여주고 있어 건너뛸 이유가 없고, 마지막 화면은 그 자체가
+  // 선택 입력이라 "건너뛰기"를 두지 않는다
+  const showSkip = step !== 2 && !isLast;
 
   return (
     <>
-      {/* 위저드는 화면마다 상단 영역의 "역할"이 달라서 공용 Header(로고)를 아예 끄고
-          (Header.tsx 참고) 이 화면 전용 상단바를 프레임 기준 absolute로 직접 그린다 —
-          BottomNav와 같은 방식이라 <main>이 스크롤돼도 항상 프레임 맨 위에 고정된다.
-          레퍼런스(단어 학습 앱) 배치를 그대로 가져왔다 — 좌: 뒤로가기, 가운데: 현재 단계,
-          우: 텍스트 버튼. 뒤로가기는 장소 상세 페이지의 뒤로가기와 높이·위치·스타일을
-          그대로 맞췄다. 우측 버튼은 레퍼런스의 "읽어주기"(적극 액션)와 달리 "건너뛰기"라
-          강조색을 쓰면 이탈을 부추기는 신호가 된다 — 잉크 톤으로만, 가운데보다 뚜렷하게
-          작게 둔다. 가운데 라벨이 좌우 버튼 폭 차이와 무관하게 항상 정중앙에 오도록
-          flex justify-between 대신 3열 grid(좌우 1fr + 가운데 auto)로 짠다. */}
-      <div className="absolute inset-x-0 top-0 z-20 bg-cream px-6 pb-4 pt-6">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      {/* 상단바: 뒤로가기 · 건너뛰기 + 6칸 진행 표시. 공용 Header를 끄고(Header.tsx 참고)
+          프레임 기준 absolute로 그려서 <main>이 스크롤돼도 항상 맨 위에 고정된다 */}
+      <div className="absolute inset-x-0 top-0 z-20 bg-cream px-6 pb-3 pt-6">
+        <div className="flex h-9 items-center justify-between">
           <button
             type="button"
             onClick={handlePrev}
-            aria-label={screenIndex === 0 ? "홈으로 나가기" : "이전 질문"}
-            className="-ml-2 flex h-9 w-9 shrink-0 items-center justify-center justify-self-start rounded-full text-ink transition-colors hover:bg-cream-strong active:bg-cream-strong"
+            aria-label={step === 0 ? "홈으로 나가기" : "이전 질문"}
+            className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream-strong active:bg-cream-strong"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2} />
           </button>
-
-          {/* 스테이지명은 아래 질문 제목(h1)이 이미 맡고 있어 여기서는 순수 진행률(n/N)만
-              보여준다 — 건너뛰기보다는 크지만, 진짜 주인공인 질문 제목(text-xl)보다는
-              작고 옅은 톤으로 눌러서 위계가 제목에서 밀리지 않게 한다 */}
-          <p className="justify-self-center text-lg font-medium text-ink-soft">
-            {screenIndex + 1}/{SCREENS.length}
-          </p>
-
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="justify-self-end text-sm font-medium text-ink-faint hover:text-ink-soft"
-          >
-            건너뛰기
-          </button>
+          {showSkip && (
+            <button type="button" onClick={handleSkip} className="text-sm font-medium text-ink-faint hover:text-ink-soft">
+              건너뛰기
+            </button>
+          )}
         </div>
-
-        {/* 레퍼런스처럼 세그먼트로 쪼개지 않은 하나의 연속된 바로 바꾸고, 단계가 바뀔 때마다
-            채워진 너비가 부드럽게 늘어나는 인터랙션을 준다. 이 상단바 자체의 좌우 패딩(px-6)을
-            -mx-6로 상쇄해서 화면 끝까지 번지게 한다(레퍼런스도 풀블리드). */}
         <div
-          className="mt-4 -mx-6 h-1.5 bg-line-strong"
+          className="mt-3 flex gap-1"
           role="progressbar"
           aria-valuemin={1}
-          aria-valuemax={SCREENS.length}
-          aria-valuenow={screenIndex + 1}
-          aria-label={`전체 ${SCREENS.length}개 질문 중 ${screenIndex + 1}번째: ${screen.stageName}`}
+          aria-valuemax={STEPS.length}
+          aria-valuenow={step + 1}
+          aria-label={`전체 ${STEPS.length}단계 중 ${step + 1}번째`}
         >
-          <div
-            className="h-full rounded-r-full bg-accent transition-all duration-300 ease-out"
-            style={{ width: `${((screenIndex + 1) / SCREENS.length) * 100}%` }}
-          />
+          {STEPS.map((s, i) => (
+            <span
+              key={s.name}
+              className={clsx("h-1 flex-1 rounded-full transition-colors duration-300", i <= step ? "bg-accent" : "bg-line-strong")}
+            />
+          ))}
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
-      <div>
-        {/* 음식·추가조건처럼 여러 개 고를 수 있는 질문은 "최대 4개까지" 안내만으론 지금 몇 개
-            골랐는지 매번 세어봐야 했다 — 제목 옆에 (n/max)를 실시간으로 붙여서 선택할 때마다
-            바로바로 갱신되게 한다 */}
-        <h1 className="text-xl font-bold leading-snug tracking-tight text-ink text-balance">
-          {question.title}
-          {question.kind === "multi" && (
-            <span className="ml-1.5 text-ink-soft">
-              ({((draft[question.key] as string[]) ?? []).length}/{question.max})
-            </span>
+      <div className="flex flex-col gap-6 pb-8">
+        <div className="flex flex-col gap-1.5">
+          {echo && (
+            <p key={`${step}-${echo}`} className="animate-fade-in-up text-[13px] font-bold text-accent-strong">
+              {echo}
+            </p>
           )}
-        </h1>
-        {question.helper && <p className="mt-2 text-sm text-ink-soft">{question.helper}</p>}
-      </div>
+          <h1 className="text-xl font-bold leading-snug tracking-tight text-ink text-balance">{STEPS[step].title}</h1>
+          {STEPS[step].help && <p className="text-[13px] text-ink-faint">{STEPS[step].help}</p>}
+        </div>
 
-      {question.key === "budget" ? (
-        <BudgetSlider
-          value={draft.budget}
-          onChange={(value) => selectSingle("budget", value)}
-        />
-      ) : (
-        // 기본은 2열이지만, 라벨이 한 줄 문장급으로 길어 2열에서 줄바꿈되면 지저분해 보이는
-        // 질문(소음·분위기)은 columns: 1로 세로 1열 나열한다
-        <div
-          className={clsx(
-            "grid gap-2.5",
-            question.kind === "single" && question.columns === 1 ? "grid-cols-1" : "grid-cols-2",
-          )}
-        >
-          {question.options.map((option) => {
-            const isMulti = question.kind === "multi";
-            const selected = isMulti
-              ? ((draft[question.key] as string[]) ?? []).includes(option.value)
-              : draft[question.key] === option.value;
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() =>
-                  isMulti ? toggleMulti(question, option.value) : selectSingle(question.key, option.value)
-                }
-                className={clsx(
-                  // 스텝마다 뱃지 유무·라벨 길이가 달라 높이가 들쭉날쭉했다. min-h-14로 기본 높이는
-                  // 모든 스텝에서 맞추되, 말줄임(...)은 절대 쓰지 않는다 — 라벨이 길면 카드가
-                  // 그만큼 자연스럽게 늘어나 두 줄까지 허용한다
-                  // 선택 상태: 레퍼런스(알바몬 필터칩·이력서 스킬태그)처럼 꽉 찬 진한 색이 아니라
-                  // 아주 옅은 코랄 배경(accent-light-soft) + 얇고 은은한 보더(accent/25)로 가볍게
-                  // 표시한다 — 예전엔 border-accent(진한 단색)+bg-accent-soft라 선택칩이 너무
-                  // 무겁고, 그 안 텍스트(accent-strong)와의 대비가 오히려 흐릿해 보였다
-                  "flex min-h-14 items-center gap-2.5 rounded-md border p-3 text-left transition",
-                  selected
-                    ? "border-accent bg-accent-soft"
-                    : "border-line bg-cream-soft hover:border-line-strong active:bg-cream-strong",
-                )}
+        {step === 0 && (
+          <div className="grid grid-cols-2 gap-2">
+            {QUESTIONS.relationship.options.map((o) => (
+              <Chip
+                key={o.value}
+                block
+                selected={draft.relationship === o.value}
+                onClick={() => selectSingle("relationship", o.value)}
               >
-                <OptionBadge question={question} option={option} />
-                <span
-                  className={clsx(
-                    "min-w-0 flex-1 text-sm font-semibold leading-snug",
-                    selected ? "text-accent-strong" : "text-ink",
-                  )}
-                >
-                  {option.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+                {o.label}
+              </Chip>
+            ))}
+          </div>
+        )}
+
+        {step === 1 && (
+          <>
+            <Section label="인원">
+              <div className="flex flex-wrap gap-2">
+                {QUESTIONS.people.options.map((o) => (
+                  <Chip key={o.value} selected={draft.people === o.value} onClick={() => selectSingle("people", o.value)}>
+                    {o.label}
+                  </Chip>
+                ))}
+              </div>
+            </Section>
+            <Section label="지역">
+              <div className="flex flex-col gap-2">
+                {QUESTIONS.area.options.map((o) => {
+                  const selected = draft.area === o.value;
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => selectSingle("area", o.value)}
+                      className={clsx(
+                        "flex items-baseline gap-2 rounded-md border px-3.5 py-3 text-left transition",
+                        selected ? "border-accent bg-accent-soft" : "border-line bg-cream-soft hover:border-line-strong",
+                      )}
+                    >
+                      <span className={clsx("text-sm font-bold", selected ? "text-accent-strong" : "text-ink")}>{o.label}</span>
+                      {o.hint && <span className="text-xs text-ink-faint">{o.hint}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+          </>
+        )}
+
+        {step === 2 && <BudgetSlider value={draft.budget} onChange={(value) => selectSingle("budget", value)} />}
+
+        {step === 3 && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              {QUESTIONS.cuisines.options
+                .filter((o) => o.value !== "any")
+                .map((o) => (
+                  <PhotoTile
+                    key={o.value}
+                    label={o.label}
+                    photo={cuisinePhoto(o.value as CuisineKey)!}
+                    alt={`${o.label} 음식 사진`}
+                    selected={draft.cuisines.includes(o.value)}
+                    onClick={() => toggleMulti(QUESTIONS.cuisines, o.value)}
+                  />
+                ))}
+            </div>
+            <AnyOption
+              label="메뉴는 상관없어요"
+              selected={draft.cuisines.includes("any")}
+              onClick={() => toggleMulti(QUESTIONS.cuisines, "any")}
+            />
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              {QUESTIONS.vibe.options
+                .filter((o) => o.value !== "any")
+                .map((o) => (
+                  <PhotoTile
+                    key={o.value}
+                    label={o.label}
+                    photo={vibePhoto(o.value as VibeKey)!}
+                    alt={`${o.label} 예시 공간 사진`}
+                    selected={draft.vibe === o.value}
+                    onClick={() => selectSingle("vibe", o.value)}
+                  />
+                ))}
+            </div>
+            <AnyOption label={VIBE_LABEL.any} selected={draft.vibe === "any"} onClick={() => selectSingle("vibe", "any")} />
+          </>
+        )}
+
+        {step === 5 && (
+          <div className="flex flex-wrap gap-2">
+            {QUESTIONS.extraConditions.options.map((o) => (
+              <Chip
+                key={o.value}
+                selected={draft.extraConditions.includes(o.value)}
+                onClick={() => toggleMulti(QUESTIONS.extraConditions, o.value)}
+              >
+                {o.label}
+              </Chip>
+            ))}
+          </div>
+        )}
+      </div>
 
       <StickyBottomBar>
         <button
           type="button"
           onClick={handleNext}
-          disabled={!canProceed()}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cream-strong disabled:text-ink-faintest disabled:hover:brightness-100"
+          disabled={!canProceed(step, draft)}
+          className="flex w-full items-center justify-center rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cream-strong disabled:text-ink-faintest disabled:hover:brightness-100"
         >
-          {isLastScreen ? "내 조건에 맞는 곳 보기" : "다음"}
-          <ArrowRight className="h-4 w-4" />
+          {isLast ? "내 조건에 맞는 곳 보기" : "다음"}
         </button>
       </StickyBottomBar>
-      </div>
     </>
+  );
+}
+
+function Section({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      <p className="text-[13px] font-bold text-ink-soft">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+/** 한 개 고르는 질문은 2열 칸(block), 여러 개 고르거나 짧은 값은 줄바꿈되는 칩 */
+function Chip({
+  selected,
+  onClick,
+  block = false,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  block?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={clsx(
+        "border text-sm transition",
+        // 모든 선택 버튼은 같은 모서리(rounded-md)를 쓴다 — 한 칸짜리든 줄바꿈 칩이든 크기만 다르다
+        block ? "rounded-md px-3 py-3.5 text-center" : "rounded-md px-4 py-2.5",
+        selected
+          ? "border-accent bg-accent-soft font-bold text-accent-strong"
+          : "border-line bg-cream-soft font-medium text-ink hover:border-line-strong",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** 사진 카드: 모두 같은 크기(정사각형). 선택하면 브랜드색 테두리 + 체크 */
+function PhotoTile({
+  label,
+  photo,
+  alt,
+  selected,
+  onClick,
+}: {
+  label: string;
+  photo: string;
+  alt: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className="relative isolate aspect-square overflow-hidden rounded-md bg-cream-strong text-left"
+    >
+      <Image src={photo} alt={alt} fill sizes="(max-width: 430px) 50vw, 200px" className="object-cover" />
+      <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" aria-hidden />
+      <span className="absolute bottom-2.5 left-3 right-3 text-sm font-bold text-white">{label}</span>
+      <span
+        aria-hidden
+        className={clsx(
+          "absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border-2",
+          selected ? "border-accent bg-accent text-white" : "border-white/90 bg-black/20",
+        )}
+      >
+        {selected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+      </span>
+      {selected && <span aria-hidden className="pointer-events-none absolute inset-0 rounded-md border-[3px] border-accent" />}
+    </button>
+  );
+}
+
+/** "상관없어요"는 사진 카드 중 하나가 아니라 "고르지 않는" 선택이라, 그리드 밖 아래에 구분선과
+ *  함께 전체 폭 한 줄로 따로 둔다 — 사진 카드와 같은 모양이면 또 하나의 메뉴·분위기처럼 읽힌다 */
+function AnyOption({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <div className="flex flex-col gap-3 border-t border-line-strong pt-4">
+      <p className="text-[13px] text-ink-faint">딱히 정한 게 없다면</p>
+      <button
+        type="button"
+        aria-pressed={selected}
+        onClick={onClick}
+        className={clsx(
+          "flex items-center justify-between rounded-md border px-4 py-3.5 text-left text-sm transition",
+          selected ? "border-accent bg-accent-soft font-bold text-accent-strong" : "border-line bg-cream-soft font-medium text-ink hover:border-line-strong",
+        )}
+      >
+        {label}
+        <span
+          aria-hidden
+          className={clsx(
+            "flex h-5 w-5 items-center justify-center rounded-full border-2",
+            selected ? "border-accent bg-accent text-white" : "border-line-strong",
+          )}
+        >
+          {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+        </span>
+      </button>
+    </div>
   );
 }
 
