@@ -55,7 +55,7 @@ export function SortDropdown({ sort }: { sort: SortValue }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-1 text-sm font-medium text-ink-soft transition-colors hover:text-ink"
+        className="flex items-center gap-1 text-label font-medium text-ink-soft transition-colors hover:text-ink"
       >
         {current.label}
         <ChevronDown className={clsx("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
@@ -74,7 +74,7 @@ export function SortDropdown({ sort }: { sort: SortValue }) {
               aria-selected={option.value === sort}
               onClick={() => handleSelect(option.value)}
               className={clsx(
-                "block w-full px-3.5 py-2.5 text-left text-sm transition-colors hover:bg-cream-strong",
+                "block w-full px-3.5 py-2.5 text-left text-label transition-colors hover:bg-cream-strong",
                 option.value === sort ? "font-bold text-accent" : "font-medium text-ink",
               )}
             >

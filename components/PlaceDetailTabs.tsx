@@ -125,7 +125,7 @@ export function PlaceDetailTabs({
             className={clsx(
               // 원티드 tabs 스펙: active는 fg-strong(잉크) 텍스트 + 2px fg-strong 언더라인이다 —
               // "화면당 단일 강조색" 원칙대로 탭 강조엔 브랜드 블루를 쓰지 않는다
-              "flex-1 border-b-2 py-3 text-sm transition-colors",
+              "flex-1 border-b-2 py-3 text-label transition-colors",
               active === tab.id
                 ? "border-ink font-semibold text-ink"
                 : "border-transparent font-medium text-ink-soft hover:text-ink",
@@ -162,7 +162,7 @@ export function PlaceDetailTabs({
         data-tab-id="reason"
         className="scroll-mt-14 pt-8"
       >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">이 모임에 추천하는 이유</p>
+        <p className="mb-4 text-h2 font-bold text-ink">이 모임에 추천하는 이유</p>
         <div className="flex flex-col gap-3">
           {reasonCards.map((card, i) => {
             const CardIcon = ICON_MAP[card.icon];
@@ -179,11 +179,11 @@ export function PlaceDetailTabs({
                 </span>
                 <div className="min-w-0 flex-1 pt-0.5">
                   {card.emphasizeDescription ? (
-                    <p className="text-sm font-bold leading-relaxed text-ink">{card.description}</p>
+                    <p className="text-body font-bold text-ink">{card.description}</p>
                   ) : (
                     <>
-                      <p className="text-sm font-bold text-ink">{card.headline}</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">{card.description}</p>
+                      <p className="text-body font-bold text-ink">{card.headline}</p>
+                      <p className="mt-0.5 text-caption text-ink-soft">{card.description}</p>
                     </>
                   )}
                 </div>
@@ -202,18 +202,18 @@ export function PlaceDetailTabs({
         data-tab-id="menu"
         className="scroll-mt-14 pt-8"
       >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">대표 메뉴</p>
+        <p className="mb-4 text-h2 font-bold text-ink">대표 메뉴</p>
         {menu.length > 0 ? (
           <ul className="flex flex-col divide-y divide-line">
             {menu.map((item) => (
-              <li key={item.name} className="flex items-center justify-between gap-3 py-3 text-sm">
+              <li key={item.name} className="flex items-center justify-between gap-3 py-3 text-label">
                 <span className="text-ink">{item.name}</span>
                 <span className="shrink-0 font-semibold text-ink-soft">{formatWon(item.price)}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-ink-faint">메뉴 정보를 아직 확인하지 못했어요. 지도 서비스에서 최신 메뉴를 확인해주세요.</p>
+          <p className="text-label text-ink-faint">메뉴 정보를 아직 확인하지 못했어요. 지도 서비스에서 최신 메뉴를 확인해주세요.</p>
         )}
       </section>
 
@@ -230,7 +230,7 @@ export function PlaceDetailTabs({
         data-tab-id="checkpoints"
         className="scroll-mt-14 pt-8"
       >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">청첩장 모임 체크포인트</p>
+        <p className="mb-4 text-h2 font-bold text-ink">청첩장 모임 체크포인트</p>
         <CheckpointList checkpoints={checkpoints} />
       </section>
 
@@ -246,17 +246,17 @@ export function PlaceDetailTabs({
         data-tab-id="caution"
         className="scroll-mt-14 pt-8 pb-2"
       >
-        <p className="mb-4 text-lg font-bold tracking-tight text-ink">주의할 점</p>
+        <p className="mb-4 text-h2 font-bold text-ink">주의할 점</p>
         <ul className="flex flex-col gap-2.5">
           {bookingFacts.map((fact, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-ink">
+            <li key={i} className="flex items-start gap-2 text-body text-ink">
               <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-clay" strokeWidth={2.2} />
               {fact}
             </li>
           ))}
         </ul>
         <div className="mt-4 rounded-md border border-clay/30 bg-clay-soft p-4">
-          <p className="text-sm leading-relaxed text-ink">{reservationAsk}</p>
+          <p className="text-body text-ink">{reservationAsk}</p>
         </div>
       </section>
     </div>

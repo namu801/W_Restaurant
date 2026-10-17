@@ -56,14 +56,14 @@ export default async function PlaceDetailPage({
 
       <div>
         <div className="flex items-start justify-between gap-2">
-          <h1 className="text-2xl font-bold tracking-tight text-ink text-balance">{place.name}</h1>
+          <h1 className="text-h1 font-bold text-ink text-balance">{place.name}</h1>
           {match && rank && rank <= 5 && (
             <Tag variant={FIT_TAG_VARIANT[match.fitLabel]}>청모픽 {rank}순위</Tag>
           )}
         </div>
         {/* text-ink-faint(#A4A5A7)는 페이지 배경(#F5F5F7)과 명도差가 작아 거의 안 읽혔다
             — PlaceCard의 동일한 지역·카테고리 메타 줄과 같은 톤(ink-soft)으로 맞춘다 */}
-        <p className="mt-1 text-sm text-ink-soft">
+        <p className="mt-1 text-label text-ink-soft">
           {place.category} · {AREA_LABEL[place.area]}
         </p>
 
@@ -80,14 +80,14 @@ export default async function PlaceDetailPage({
             중요하다는 착시를 준다. 아이콘은 lucide 라인 스타일 대신 Heroicons solid로
             채워서 시각적으로도 더 또렷하게 읽히게 했다 */}
         <div className="mt-3 flex flex-col gap-3">
-          <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+          <p className="flex items-center gap-1.5 text-label font-medium text-ink">
             <MapPinIcon className="h-4 w-4 shrink-0 text-ink-faint" />
             {place.address}
           </p>
           {/* text-sm 기본 line-height(1.25rem = 1.429)는 원티드 타이포 스케일의 label1
               (단일 줄 UI 라벨용) 값이다. 여기는 요일 그룹이 여러 줄로 나열되는 산문형 텍스트라
               원티드 스펙이 구분해둔 label1-read(1.571)를 대신 쓴다 */}
-          <p className="flex items-start gap-1.5 text-sm font-medium leading-[1.571] text-ink">
+          <p className="flex items-start gap-1.5 text-body-sm font-medium text-ink">
             <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" />
             <span className="flex flex-col">
               {splitBusinessHoursLines(place.businessHours).map((line) => (
@@ -95,8 +95,9 @@ export default async function PlaceDetailPage({
               ))}
             </span>
           </p>
-          <p className="flex items-center gap-1.5 text-sm font-medium text-accent">
-            <WalletIcon className="h-4 w-4 shrink-0 text-accent" />
+          {/* 가격은 다른 화면(홈·북마크)과 같이 브랜드색 대신 잉크로, 숫자만 굵게 */}
+          <p className="flex items-center gap-1.5 text-label font-bold text-ink">
+            <WalletIcon className="h-4 w-4 shrink-0 text-ink-faint" />
             1인 {formatPrice(place.priceMin, place.priceMax)}
           </p>
         </div>
@@ -118,7 +119,7 @@ export default async function PlaceDetailPage({
       {/* 탭 콘텐츠와는 성격이 다른 블록(정보 출처 안내, 피드백 위젯)이라 구분선으로 한 번 끊어준다 */}
       <hr className="border-line" />
 
-      <p className="text-xs text-ink-faint">
+      <p className="text-caption text-ink-faint">
         리뷰, 예약 가능 여부는 지도 서비스에서 최신 정보를 확인해주세요.
         메뉴·가격은 변동될 수 있어요. (정보 확인일 {place.lastVerifiedAt})
       </p>

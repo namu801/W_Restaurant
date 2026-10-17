@@ -64,10 +64,10 @@ export function OnboardingModal() {
         >
           <MailOpen className="h-7 w-7 text-accent" strokeWidth={1.8} />
         </span>
-        <h2 id="onboarding-title" className="mt-4 text-lg font-bold leading-snug text-ink">
+        <h2 id="onboarding-title" className="mt-4 text-h2 font-bold text-ink">
           청모 장소, 같이 골라봐요
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+        <p className="mt-2 text-body-sm text-ink-soft">
           좋은 사람들과 만나는 자리니까
           <br />
           아무 곳이나 고르기는 어렵잖아요.
@@ -78,7 +78,7 @@ export function OnboardingModal() {
           ref={startButtonRef}
           type="button"
           onClick={handleStart}
-          className="mt-5 w-full rounded-md bg-accent py-3 text-sm font-semibold text-white transition-all hover:brightness-95 active:brightness-90"
+          className="mt-5 w-full rounded-md bg-accent py-3 text-button font-bold text-white transition-all hover:brightness-95 active:brightness-90"
         >
           시작하기
         </button>

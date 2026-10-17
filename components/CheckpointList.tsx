@@ -35,7 +35,7 @@ export function CheckpointList({ checkpoints }: { checkpoints: Checkpoint[] }) {
               레퍼런스(쏘카 "대여조건")처럼 이 라벨이 하위 항목들을 실제로 묶어주는
               소제목으로 읽혀야 위계가 산다 — 예전의 작은 대문자 캡션(text-xs uppercase)
               대신 본문급 굵은 제목(text-sm font-bold)으로 키웠다 */}
-          <p className="mb-2 text-sm font-bold text-ink">{group}</p>
+          <p className="mb-2 text-label font-bold text-ink">{group}</p>
           <ul className="divide-y divide-line rounded-md border border-line bg-cream-soft">
             {items.map((c, i) => {
               const ToneIcon = TONE_ICON[c.tone];
@@ -45,7 +45,7 @@ export function CheckpointList({ checkpoints }: { checkpoints: Checkpoint[] }) {
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cream-strong">
                     <CategoryIcon className={clsx("h-4 w-4", ICON_COLOR[c.icon])} strokeWidth={1.8} />
                   </span>
-                  <p className="min-w-0 flex-1 text-sm text-ink">{c.text}</p>
+                  <p className="min-w-0 flex-1 text-body-sm text-ink">{c.text}</p>
                   <ToneIcon className={clsx("h-4 w-4 shrink-0", TONE_STYLE[c.tone])} />
                 </li>
               );

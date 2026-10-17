@@ -65,7 +65,7 @@ export function BottomNav() {
               )}
             >
               <Icon className="h-6 w-6" />
-              <span className="text-[11px] font-semibold leading-none">{label}</span>
+              <span className="text-tab font-semibold">{label}</span>
             </Link>
           );
         })}

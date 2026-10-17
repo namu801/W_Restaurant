@@ -43,7 +43,7 @@ export function BookmarkButton({
       onClick={handleClick}
       aria-pressed={saved}
       className={clsx(
-        "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition",
+        "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-label font-medium transition",
         saved
           ? "border-accent bg-accent-soft text-accent-strong"
           : "border-line bg-cream-soft text-ink-soft hover:border-ink-faint active:bg-cream-strong",

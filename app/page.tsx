@@ -23,7 +23,7 @@ export default function LandingPage() {
         메인 컬러로 확실히 튀게 한다.
       */}
       <section className="rounded-lg border border-line bg-cream-soft p-6">
-        <h1 className="text-[26px] font-bold leading-[1.35] tracking-tight text-ink text-balance">
+        <h1 className="text-display font-bold text-ink text-balance">
           청첩장 모임 장소,
           <br />
           <span className="text-accent">조건에 맞춰</span> 골라드려요
@@ -32,7 +32,7 @@ export default function LandingPage() {
             CJK 폭 기준으로 30ch를 넘어서, 이미 <br />로 의도한 2줄 구성 위에 또 한 번
             "찾아보세 / 요."처럼 어색하게 꺾였다 — <br />가 이미 줄바꿈 지점을 정하므로
             폭 제한 자체를 없앤다 */}
-        <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
+        <p className="mt-3 text-body text-ink-soft">
           용산역·신용산역·삼각지에서
           <br />
           관계, 인원, 예산에 맞는 곳을 찾아보세요.
@@ -53,7 +53,7 @@ export default function LandingPage() {
             단색 오렌지가 화면에서 가장 쨍하게 보여서, 같은 색에서 왼쪽 위만 살짝 밝힌 그라디언트를 쓴다 */}
         <SearchCta
           source="landing"
-          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-gradient-to-br from-accent-glow to-accent px-5 py-3.5 text-base font-semibold text-white transition-all hover:brightness-95 active:brightness-90"
+          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-gradient-to-br from-accent-glow to-accent px-5 py-3.5 text-button font-bold text-white transition-all hover:brightness-95 active:brightness-90"
         >
           내 조건으로 추천받기
           <ArrowRight className="h-4 w-4" />
@@ -70,8 +70,8 @@ export default function LandingPage() {
         부제·식당 메타는 배너 설명과 같은 위계의 보조 텍스트라 모두 같은 ink-soft를 쓴다.
       */}
       <section>
-        <h2 className="text-lg font-bold tracking-tight text-ink">먼저 둘러볼 만한 곳</h2>
-        <p className="mt-1 text-xs text-ink-soft">청모에 필요한 조건을 기준으로 살펴봤어요.</p>
+        <h2 className="text-h2 font-bold text-ink">먼저 둘러볼 만한 곳</h2>
+        <p className="mt-1.5 text-caption text-ink-soft">청모에 필요한 조건을 기준으로 살펴봤어요.</p>
 
         <div className="mt-4 flex flex-col gap-3">
           {topPlaces.map((place, index) => (
@@ -82,7 +82,7 @@ export default function LandingPage() {
             >
               <span
                 className={clsx(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-bold",
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-label font-bold",
                   index === 0 ? "bg-accent-soft text-accent-strong" : "bg-cream-strong text-ink-soft",
                 )}
               >
@@ -90,11 +90,11 @@ export default function LandingPage() {
               </span>
               <PlaceThumbnail place={place} className="h-16 w-16 shrink-0 rounded-sm" />
               <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-semibold leading-snug tracking-tight text-ink">{place.name}</p>
-                <p className="mt-1.5 text-xs text-ink-soft">
+                <p className="text-title-sm font-semibold text-ink">{place.name}</p>
+                <p className="mt-1.5 text-caption text-ink-soft">
                   {place.category} · {AREA_LABEL[place.area]}
                 </p>
-                <p className="mt-1.5 text-xs font-bold text-ink">
+                <p className="mt-1.5 text-caption font-bold text-ink">
                   {formatPrice(place.priceMin, place.priceMax)}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <p className="text-center text-xs text-ink-soft">
+      <p className="text-center text-caption text-ink-soft">
         지금은 용산역 · 신용산역 · 삼각지 인근 장소만 다루고 있어요.
       </p>
     </div>

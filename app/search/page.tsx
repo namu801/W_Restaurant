@@ -2,12 +2,13 @@
 
 import { clsx } from "clsx";
 import Image from "next/image";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Sparkle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { conditionToSearchParams, searchParamsToCondition } from "@/lib/condition-query";
 import { track } from "@/lib/analytics";
 import { StickyBottomBar } from "@/components/StickyBottomBar";
+import { TypingText } from "@/components/TypingText";
 import { BudgetSlider } from "@/components/BudgetSlider";
 import { AREA_LABEL, BUDGET_LABEL, PEOPLE_LABEL, VIBE_LABEL } from "@/lib/labels";
 import {
@@ -210,7 +211,7 @@ function SearchWizard() {
             <ArrowLeft className="h-5 w-5" strokeWidth={2} />
           </button>
           {showSkip && (
-            <button type="button" onClick={handleSkip} className="text-sm font-medium text-ink-faint hover:text-ink-soft">
+            <button type="button" onClick={handleSkip} className="text-label font-medium text-ink-faint hover:text-ink-soft">
               건너뛰기
             </button>
           )}
@@ -233,14 +234,22 @@ function SearchWizard() {
       </div>
 
       <div className="flex flex-col gap-6 pb-8">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col">
+          {/* 머리말은 청모픽이 말을 건네는 작은 말풍선이다. 더 중요한 건 아래 질문 제목이라
+              말풍선은 작게 두고, 브랜드색은 안쪽 반짝임 아이콘에만 쓴다. 회색 바닥(cream) 위
+              흰 말풍선은 그대로면 경계가 거의 안 보여서 옅은 테두리와 그림자로 살짝 띄운다 */}
           {echo && (
-            <p key={`${step}-${echo}`} className="animate-fade-in-up text-[13px] font-bold text-accent-strong">
-              {echo}
+            <p
+              key={`${step}-${echo}`}
+              className="animate-fade-in-up mb-3.5 inline-flex items-center gap-1.5 self-start rounded-[4px_12px_12px_12px] border border-line-strong/70 bg-cream-soft py-1.5 pl-2.5 pr-3 text-caption font-medium text-ink/80 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+            >
+              <Sparkle className="h-3 w-3 shrink-0 text-accent" fill="currentColor" strokeWidth={1.5} aria-hidden />
+              {/* 청모픽이 실제로 답을 쓰는 것처럼 한 글자씩 찍는다 */}
+              <TypingText text={echo} />
             </p>
           )}
-          <h1 className="text-xl font-bold leading-snug tracking-tight text-ink text-balance">{STEPS[step].title}</h1>
-          {STEPS[step].help && <p className="text-[13px] text-ink-faint">{STEPS[step].help}</p>}
+          <h1 className="text-h1 font-bold text-ink text-balance">{STEPS[step].title}</h1>
+          {STEPS[step].help && <p className="mt-1.5 text-caption text-ink-faint">{STEPS[step].help}</p>}
         </div>
 
         {step === 0 && (
@@ -284,8 +293,8 @@ function SearchWizard() {
                         selected ? "border-accent bg-accent-soft" : "border-line bg-cream-soft hover:border-line-strong",
                       )}
                     >
-                      <span className={clsx("text-sm font-bold", selected ? "text-accent-strong" : "text-ink")}>{o.label}</span>
-                      {o.hint && <span className="text-xs text-ink-faint">{o.hint}</span>}
+                      <span className={clsx("text-body font-bold", selected ? "text-accent-strong" : "text-ink")}>{o.label}</span>
+                      {o.hint && <span className="text-micro text-ink-faint">{o.hint}</span>}
                     </button>
                   );
                 })}
@@ -360,7 +369,7 @@ function SearchWizard() {
           type="button"
           onClick={handleNext}
           disabled={!canProceed(step, draft)}
-          className="flex w-full items-center justify-center rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cream-strong disabled:text-ink-faintest disabled:hover:brightness-100"
+          className="flex w-full items-center justify-center rounded-lg bg-accent py-3.5 text-button font-bold text-white transition-all hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cream-strong disabled:text-ink-faintest disabled:hover:brightness-100"
         >
           {isLast ? "내 조건에 맞는 곳 보기" : "다음"}
         </button>
@@ -372,7 +381,7 @@ function SearchWizard() {
 function Section({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2.5">
-      <p className="text-[13px] font-bold text-ink-soft">{label}</p>
+      <p className="text-caption font-bold text-ink-soft">{label}</p>
       {children}
     </div>
   );
@@ -396,7 +405,7 @@ function Chip({
       aria-pressed={selected}
       onClick={onClick}
       className={clsx(
-        "border text-sm transition",
+        "border text-body transition",
         // 모든 선택 버튼은 같은 모서리(rounded-md)를 쓴다 — 한 칸짜리든 줄바꿈 칩이든 크기만 다르다
         block ? "rounded-md px-3 py-3.5 text-center" : "rounded-md px-4 py-2.5",
         selected
@@ -432,7 +441,7 @@ function PhotoTile({
     >
       <Image src={photo} alt={alt} fill sizes="(max-width: 430px) 50vw, 200px" className="object-cover" />
       <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" aria-hidden />
-      <span className="absolute bottom-2.5 left-3 right-3 text-sm font-bold text-white">{label}</span>
+      <span className="absolute bottom-2.5 left-3 right-3 text-label font-bold text-white">{label}</span>
       <span
         aria-hidden
         className={clsx(
@@ -452,13 +461,13 @@ function PhotoTile({
 function AnyOption({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
     <div className="flex flex-col gap-3 border-t border-line-strong pt-4">
-      <p className="text-[13px] text-ink-faint">딱히 정한 게 없다면</p>
+      <p className="text-caption text-ink-faint">딱히 정한 게 없다면</p>
       <button
         type="button"
         aria-pressed={selected}
         onClick={onClick}
         className={clsx(
-          "flex items-center justify-between rounded-md border px-4 py-3.5 text-left text-sm transition",
+          "flex items-center justify-between rounded-md border px-4 py-3.5 text-left text-body transition",
           selected ? "border-accent bg-accent-soft font-bold text-accent-strong" : "border-line bg-cream-soft font-medium text-ink hover:border-line-strong",
         )}
       >

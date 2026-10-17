@@ -135,7 +135,7 @@ export default async function ResultsPage({
           배지와 숫자가 겹쳐 보여서 마치 개수가 안 맞는 오류처럼 읽혔다. "전체 보기"를 눌러
           showAll이 되면 visibleMatches === matches라 그때는 그대로 전체 개수가 뜬다 */}
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-ink">총 {visibleMatches.length}개</p>
+        <p className="text-label font-semibold text-ink">총 {visibleMatches.length}개</p>
         <div className="flex items-center gap-3">
           <SortDropdown sort={sort} />
           <ConditionEditSheet condition={condition} resultCount={matches.length} />
@@ -157,14 +157,14 @@ export default async function ResultsPage({
                 {relaxationHref ? (
                   <Link
                     href={relaxationHref}
-                    className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
+                    className="rounded-full bg-accent px-4 py-2.5 text-label font-medium text-white transition-all hover:bg-accent-strong"
                   >
                     조건 넓혀서 보기
                   </Link>
                 ) : (
                   <Link
                     href={allAreaHref}
-                    className="rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
+                    className="rounded-full bg-accent px-4 py-2.5 text-label font-medium text-white transition-all hover:bg-accent-strong"
                   >
                     용산권 전체로 보기
                   </Link>
@@ -175,7 +175,7 @@ export default async function ResultsPage({
 
           {nearMissPrimary && (
             <div>
-              <p className="mb-3 text-base font-bold tracking-tight text-ink">그래도 가장 가까운 후보</p>
+              <p className="mb-3 text-h2 font-bold text-ink">그래도 가장 가까운 후보</p>
               <PlaceCard
                 match={nearMissPrimary.match}
                 condition={condition}
@@ -189,7 +189,7 @@ export default async function ResultsPage({
           {nearMissSecondary.length > 0 && (
             <div>
               <div className="-mx-6 mb-6 h-2 bg-line-strong" />
-              <p className="mb-3 text-base font-bold tracking-tight text-ink">
+              <p className="mb-3 text-h2 font-bold text-ink">
                 조건엔 안 맞지만 이런 곳은 어때요?
               </p>
               <div className="flex flex-col gap-5">
@@ -218,7 +218,7 @@ export default async function ResultsPage({
               유일하게 "테두리+채움"을 다 쓰는 자리가 되게 했다. radius도 식당 카드와
               맞춰 rounded-sm으로 낮췄다(더는 pill이 아니다) */}
           <div className="w-full rounded-sm bg-gradient-to-r from-accent to-accent-light p-[2px]">
-            <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-accent-light-soft px-3.5 py-2.5 text-sm font-semibold text-accent-strong">
+            <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-accent-light-soft px-3.5 py-2.5 text-label font-semibold text-accent-strong">
               <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.5} fill="currentColor" aria-hidden />
               {buildCurationSummary(condition)}
             </div>
@@ -240,7 +240,7 @@ export default async function ResultsPage({
 
               {alternatives.length > 0 && (
                 <div>
-                  <p className="mb-3 text-base font-bold tracking-tight text-ink">다른 선택</p>
+                  <p className="mb-3 text-h2 font-bold text-ink">다른 선택</p>
                   <div className="flex flex-col gap-4">
                     {alternatives.map(({ axis, match }) => {
                       const meta = generateAlternativeMeta(axis, match);
@@ -254,7 +254,7 @@ export default async function ResultsPage({
                             topBand={{ text: meta.title, tone: "neutral" }}
                           />
                           {/* 좋은 점만 말하지 않는다 — 1순위 대비 뭘 포기하게 되는지도 같이 알려준다 */}
-                          <p className="mt-2 px-1 text-xs text-ink-faint">{meta.caveat}</p>
+                          <p className="mt-2 px-1 text-caption text-ink-soft">{meta.caveat}</p>
                         </div>
                       );
                     })}
@@ -293,7 +293,7 @@ export default async function ResultsPage({
           {isTruncated && (
             <Link
               href={showAllHref}
-              className="self-center rounded-full border border-line px-4 py-2.5 text-sm font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
+              className="self-center rounded-full border border-line px-4 py-2.5 text-label font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
             >
               전체 {matches.length}곳 보기
             </Link>
@@ -305,7 +305,7 @@ export default async function ResultsPage({
           {isNarrow && nearMisses.length > 0 && (
             <div>
               <div className="-mx-6 mb-6 h-2 bg-line-strong" />
-              <p className="mb-3 text-base font-bold tracking-tight text-ink">
+              <p className="mb-3 text-h2 font-bold text-ink">
                 조건엔 안 맞지만 이런 곳은 어때요?
               </p>
               <div className="flex flex-col gap-5">

@@ -32,7 +32,7 @@ export function MapLinks({
         onClick={() =>
           track("map_clicked", { place_id: placeId, rank, score, map_type: "naver", page })
         }
-        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-cream-soft py-3.5 text-[13px] font-bold text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-cream-soft py-3.5 text-caption font-bold text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
       >
         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] bg-[#03C75A]">
           <MapPin className="h-3 w-3 text-white" strokeWidth={2.5} fill="white" />
@@ -46,7 +46,7 @@ export function MapLinks({
         onClick={() =>
           track("map_clicked", { place_id: placeId, rank, score, map_type: "kakao", page })
         }
-        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-cream-soft py-3.5 text-[13px] font-bold text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-cream-soft py-3.5 text-caption font-bold text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
       >
         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] bg-[#FEE500]">
           <MapPin className="h-3 w-3 text-ink" strokeWidth={2.5} fill="#3C1E1E" />

@@ -154,14 +154,14 @@ export default function MapPage() {
 
       {/* 상단 플로팅 필터: 지도 위에 뜨는 독립된 칩들이라 각자 배경·그림자를 갖는다 */}
       <div className="absolute inset-x-0 top-0 z-10 flex gap-2 overflow-x-auto p-4">
-        <span className="shrink-0 whitespace-nowrap rounded-full bg-cream-soft px-3.5 py-2 text-xs font-semibold text-ink-soft shadow-card">
+        <span className="shrink-0 whitespace-nowrap rounded-full bg-cream-soft px-3.5 py-2 text-micro font-semibold text-ink-soft shadow-card">
           용산권 {places.length}곳
         </span>
         <button
           type="button"
           onClick={() => setCuisineFilter(null)}
           className={clsx(
-            "shrink-0 whitespace-nowrap rounded-full border border-transparent px-3.5 py-2 text-xs font-semibold shadow-card transition-all",
+            "shrink-0 whitespace-nowrap rounded-full border border-transparent px-3.5 py-2 text-micro font-semibold shadow-card transition-all",
             cuisineFilter === null
               ? "bg-accent-soft font-semibold text-accent-strong"
               : "bg-cream-soft text-ink-soft hover:bg-cream-strong active:bg-cream-strong",
@@ -178,7 +178,7 @@ export default function MapPage() {
               type="button"
               onClick={() => setCuisineFilter(active ? null : key)}
               className={clsx(
-                "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-transparent px-3.5 py-2 text-xs font-semibold shadow-card transition-all",
+                "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-transparent px-3.5 py-2 text-micro font-semibold shadow-card transition-all",
                 active
                   ? "bg-accent-soft text-accent-strong"
                   : "bg-cream-soft text-ink-soft hover:bg-cream-strong active:bg-cream-strong",
@@ -194,13 +194,13 @@ export default function MapPage() {
       {/* 필터 줄(위쪽 p-4 + 칩 한 줄) 높이가 대략 68px라 top-16(64px)에 두면 토스트가 칩과 겹친다.
           넉넉하게 그 아래로 내려서 배치한다 */}
       {notice && (
-        <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-4 py-2 text-xs font-medium text-white shadow-card">
+        <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-4 py-2 text-caption font-medium text-white shadow-card">
           {notice}
         </div>
       )}
 
       {places.length === 0 && (
-        <div className="absolute inset-x-4 top-20 z-10 rounded-lg bg-cream-soft p-4 text-center text-sm text-ink-faint shadow-card">
+        <div className="absolute inset-x-4 top-20 z-10 rounded-lg bg-cream-soft p-4 text-center text-body-sm text-ink-faint shadow-card">
           이 조건에 맞는 식당이 없어요. 필터를 바꿔보세요.
         </div>
       )}
@@ -241,8 +241,8 @@ export default function MapPage() {
               >
                 <PlaceThumbnail place={place} className="h-16 w-16 shrink-0 rounded-md" iconClassName="h-6 w-6" />
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-bold leading-snug text-ink">{place.name}</h3>
-                  <p className="mt-0.5 text-xs text-ink-faint">
+                  <h3 className="text-title-sm font-bold text-ink">{place.name}</h3>
+                  <p className="mt-0.5 text-caption text-ink-faint">
                     {AREA_LABEL[place.area]} · {formatPrice(place.priceMin, place.priceMax)}
                   </p>
                   <div className="mt-1.5 flex flex-wrap gap-1">

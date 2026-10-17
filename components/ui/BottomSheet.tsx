@@ -98,7 +98,7 @@ export function BottomSheet({
         </div>
         {title && (
           <div className="flex shrink-0 items-center justify-between border-b border-line px-5 pb-3 pt-2">
-            <p id={titleId} className="text-lg font-bold text-ink">
+            <p id={titleId} className="text-h2 font-bold text-ink">
               {title}
             </p>
             <button

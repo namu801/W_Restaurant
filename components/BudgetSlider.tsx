@@ -84,7 +84,7 @@ export function BudgetSlider({
       {/* 레퍼런스(구독 서비스 필터)처럼 박스로 감싸지 않고, 가격을 포인트 컬러로 크고
           굵게 바로 보여준다 — 시트 안 다른 강조 요소(선택된 칩 텍스트 등)와 같은
           accent 컬러를 써서 위계가 따로 놀지 않게 한다 */}
-      <p className="text-2xl font-bold text-accent">
+      <p className="text-stat font-bold text-accent">
         {isAny ? "예산은 크게 상관없어요" : valueToLabel(raw)}
       </p>
 
@@ -104,14 +104,14 @@ export function BudgetSlider({
           style={{ "--fill": `${((raw - MIN) / (MAX - MIN)) * 100}%` } as React.CSSProperties}
           aria-label="1인당 예산"
         />
-        <div className="flex justify-between text-xs text-ink-faint">
+        <div className="flex justify-between text-caption text-ink-faint">
           <span>2만원</span>
           <span>10만원 이상</span>
         </div>
       </div>
 
       {/* 흰 카드로 감싸지 않고, 체크박스 + 텍스트만 가볍게 둔다 */}
-      <label className="flex items-center gap-2 text-sm font-medium text-ink">
+      <label className="flex items-center gap-2 text-label font-medium text-ink">
         <input
           type="checkbox"
           checked={isAny}

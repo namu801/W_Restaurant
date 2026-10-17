@@ -105,7 +105,7 @@ function LoadingScreen() {
         </span>
       </span>
 
-      <p key={`text-${messageIndex}`} className="animate-fade-in-up text-lg font-bold leading-snug text-ink">
+      <p key={`text-${messageIndex}`} className="animate-fade-in-up text-h2 font-bold text-ink">
         {messages[messageIndex]}
       </p>
 

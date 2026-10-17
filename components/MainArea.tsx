@@ -27,7 +27,8 @@ export function MainArea({ children }: { children: React.ReactNode }) {
           ? "relative overflow-hidden"
           : clsx(
               "scrollbar-hide overflow-y-auto px-6",
-              isSearchWizard ? "pt-[120px]" : "pt-8",
+              // 상단바(진행바 아래 끝 76px) 아래로 32px 띄운다 — 44px이던 간격을 70%로 줄였다
+              isSearchWizard ? "pt-[108px]" : "pt-8",
               isResults ? "pb-8" : "pb-32",
             ),
       )}

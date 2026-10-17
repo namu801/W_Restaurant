@@ -106,7 +106,7 @@ export function ConditionEditSheet({
           ref={triggerRef}
           type="button"
           onClick={handleOpen}
-          className="rounded-full border border-line px-4 py-2.5 text-sm font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
+          className="rounded-full border border-line px-4 py-2.5 text-label font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
         >
           조건 수정하기
         </button>
@@ -115,7 +115,7 @@ export function ConditionEditSheet({
           ref={triggerRef}
           type="button"
           onClick={handleOpen}
-          className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-ink transition-colors hover:text-accent"
+          className="inline-flex shrink-0 items-center gap-1 text-label font-medium text-ink transition-colors hover:text-accent"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           필터
@@ -135,7 +135,7 @@ export function ConditionEditSheet({
             <button
               type="button"
               onClick={handleReset}
-              className="shrink-0 rounded-lg border border-line px-5 py-3.5 text-[15px] font-bold text-ink-soft transition-colors hover:bg-cream-strong"
+              className="shrink-0 rounded-lg border border-line px-5 py-3.5 text-button font-bold text-ink-soft transition-colors hover:bg-cream-strong"
             >
               초기화
             </button>
@@ -143,7 +143,7 @@ export function ConditionEditSheet({
               type="button"
               onClick={handleApply}
               disabled={!canApply}
-              className="flex-1 rounded-lg bg-accent py-3.5 text-[15px] font-bold text-white transition-all hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex-1 rounded-lg bg-accent py-3.5 text-button font-bold text-white transition-all hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
             >
               적용하기
             </button>
@@ -161,7 +161,7 @@ export function ConditionEditSheet({
         <div className="flex flex-col divide-y divide-line">
           {SHEET_QUESTIONS.map((question) => (
             <div key={question.key} className="flex flex-col gap-3 py-5 first:pt-4">
-              <p className="text-lg font-bold text-ink">{SHEET_LABEL[question.key]}</p>
+              <p className="text-h2 font-bold text-ink">{SHEET_LABEL[question.key]}</p>
               {question.key === "budget" ? (
                 <BudgetSlider
                   value={draft.budget}
@@ -200,7 +200,7 @@ export function ConditionEditSheet({
                         )}
                         <span
                           className={clsx(
-                            "whitespace-nowrap text-sm font-semibold leading-snug",
+                            "whitespace-nowrap text-label font-semibold",
                             selected ? "text-accent-strong" : "text-ink-soft",
                           )}
                         >

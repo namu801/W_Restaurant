@@ -53,6 +53,25 @@ const config: Config = {
         sans: ["var(--font-body)"],
         serif: ["var(--font-body)"],
       },
+      // 타입 스케일. 서체는 Pretendard 하나, 역할 → 크기·줄 간격·자간을 고정한다(굵기는 쓰는 자리에서
+      // font-*로 정한다). Pretendard를 대체 서체로 명시한 토스의 타입 램프에 맞췄다 — 본문 15/1.5,
+      // 섹션 제목 18, 카드 제목 17, 보조 13. 12·12.5·13처럼 거의 같은 크기가 섞이지 않게 여기 있는
+      // 단계만 쓴다. 자간 좁힘은 18px 이상 제목에만 둔다
+      fontSize: {
+        display: ["26px", { lineHeight: "1.35", letterSpacing: "-0.025em" }], // 홈 히어로
+        stat: ["24px", { lineHeight: "1.25", letterSpacing: "-0.02em" }], // 큰 숫자(예산 금액)
+        h1: ["22px", { lineHeight: "1.35", letterSpacing: "-0.02em" }], // 화면 제목(질문·식당 이름)
+        h2: ["18px", { lineHeight: "1.4", letterSpacing: "-0.02em" }], // 섹션 제목
+        title: ["17px", { lineHeight: "1.4", letterSpacing: "-0.01em" }], // 카드 제목
+        "title-sm": ["16px", { lineHeight: "1.4" }], // 목록 제목
+        button: ["16px", { lineHeight: "1.25" }], // 주요 버튼
+        body: ["15px", { lineHeight: "1.5" }], // 본문
+        "body-sm": ["14px", { lineHeight: "1.5" }], // 카드 안 본문
+        label: ["14px", { lineHeight: "1.4" }], // 라벨·칩·정보 줄
+        caption: ["13px", { lineHeight: "1.4" }], // 보조·메타
+        micro: ["12px", { lineHeight: "1.35" }], // 태그·작은 칩
+        tab: ["11px", { lineHeight: "1" }], // 하단 탭
+      },
       borderRadius: {
         // 원티드 radius 사다리(2/4/8/12/16/20/24/32/full)에서 우리가 실제로 쓰는 4단만 추렸다.
         // "대부분의 컴포넌트는 radius-8 또는 radius-12를 쓴다"는 원칙 그대로 sm/md에 배치.

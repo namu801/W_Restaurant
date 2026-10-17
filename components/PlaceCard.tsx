@@ -71,7 +71,7 @@ export function PlaceCard({
       {topBand && (
         <p
           className={clsx(
-            "flex items-center gap-1.5 border-b px-4 py-2.5 text-sm font-bold",
+            "flex items-center gap-1.5 border-b px-4 py-2.5 text-label font-bold",
             topBand.tone === "accent"
               ? "border-accent/20 bg-accent-soft text-accent-strong"
               : "border-line bg-cream-strong text-ink-soft",
@@ -90,14 +90,14 @@ export function PlaceCard({
         className="block p-4"
       >
         <div className="flex items-start justify-between gap-2 pr-10">
-          <h3 className="min-w-0 text-lg font-bold leading-snug tracking-tight text-ink">
+          <h3 className="min-w-0 text-title font-bold text-ink">
             {place.name}
           </h3>
           {curationRank <= MAX_RANK_BADGE && (
             <Tag variant={FIT_TAG_VARIANT[fitLabel]}>청모픽 {curationRank}순위</Tag>
           )}
         </div>
-        <p className="mt-1 text-xs font-medium text-ink-soft">
+        <p className="mt-1 text-caption font-medium text-ink-soft">
           {AREA_LABEL[place.area]} · {place.category}
         </p>
 
@@ -126,7 +126,7 @@ export function PlaceCard({
             위 큐레이션 배지·1위 topBand의 코랄과 겹쳐서 화면 전체가 온통 분홍으로 보였다 —
             이 박스는 중성 회색(cream-strong)으로 낮추고, 강조는 Sparkles 아이콘 하나에만
             남겨서 "코랄 = 정말 특별한 자리(큐레이션 배지·1위 띠)"라는 위계를 지킨다 */}
-        <p className="mt-3 flex items-start gap-1.5 rounded-sm bg-cream-strong px-3 py-2 text-xs font-medium leading-relaxed text-ink">
+        <p className="mt-3 flex items-start gap-1.5 rounded-sm bg-cream-strong px-3 py-2 text-body-sm font-normal text-ink">
           <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-accent" strokeWidth={2} fill="currentColor" aria-hidden />
           {generateCardSentence(condition, match, { withOpener: curationRank === 1 })}
         </p>
@@ -136,7 +136,7 @@ export function PlaceCard({
             "오늘" 요일에 해당하는 구간 하나만 골라 보여준다 — 매일이면 "11:00-22:00",
             평일 전체/주말 전체면 "평일 16:30-24:00" 식으로 (상세 페이지엔 원문 그대로
             보여준다) */}
-        <p className="mt-2.5 flex items-center gap-3 text-sm font-medium text-ink">
+        <p className="mt-2.5 flex items-center gap-3 text-label font-medium text-ink">
           {/* lucide는 스트로크 전용이라 fill="currentColor"를 억지로 주면 시계 바늘 같은
               내부 디테일이 뭉개졌다 — 실제로 solid로 그려진 Heroicons로 바꿨다
               (BottomNav 아이콘과 같은 이유·같은 세트) */}

@@ -27,7 +27,7 @@ export default function BookmarksPage() {
   }
 
   if (places === null) {
-    return <p className="py-14 text-center text-sm text-ink-faint">불러오는 중이에요…</p>;
+    return <p className="py-14 text-center text-body-sm text-ink-faint">불러오는 중이에요…</p>;
   }
 
   if (places.length === 0) {
@@ -38,7 +38,7 @@ export default function BookmarksPage() {
         action={
           <Link
             href="/search"
-            className="mt-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
+            className="mt-2 rounded-full bg-accent px-4 py-2.5 text-label font-medium text-white transition-all hover:bg-accent-strong"
           >
             청모 장소 찾아보기
           </Link>
@@ -49,7 +49,7 @@ export default function BookmarksPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold tracking-tight text-ink">저장한 장소 {places.length}곳</h1>
+      <h1 className="text-h1 font-bold text-ink">저장한 장소 {places.length}곳</h1>
 
       {places.map((place) => (
         <article
@@ -59,23 +59,23 @@ export default function BookmarksPage() {
           <div className="flex gap-3.5 p-4">
             <PlaceThumbnail place={place} className="h-24 w-24 rounded-md" />
             <div className="min-w-0 flex-1">
-              <h3 className="text-base font-bold leading-snug text-ink">{place.name}</h3>
-              <p className="mt-1 text-xs text-ink-faint">
+              <h3 className="text-title font-bold text-ink">{place.name}</h3>
+              <p className="mt-1 text-caption text-ink-faint">
                 {place.category} · {AREA_LABEL[place.area]}
               </p>
-              <p className="mt-1 text-[15px] font-semibold text-accent">
+              <p className="mt-1 text-label font-bold text-ink">
                 1인 {formatPrice(place.priceMin, place.priceMax)}
               </p>
             </div>
           </div>
 
           <div className="px-4 pb-4">
-            <p className="text-sm text-ink-soft">{place.curatedReason}</p>
+            <p className="text-body-sm text-ink-soft">{place.curatedReason}</p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link
                 href={`/places/${place.id}`}
-                className="inline-flex items-center justify-center rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-strong"
+                className="inline-flex items-center justify-center rounded-full bg-accent px-4 py-2.5 text-label font-medium text-white transition-all hover:bg-accent-strong"
               >
                 상세 보기
               </Link>
@@ -86,7 +86,7 @@ export default function BookmarksPage() {
                 onClick={() =>
                   track("map_clicked", { place_id: place.id, map_type: "naver", page: "bookmarks" })
                 }
-                className="inline-flex items-center gap-1 rounded-full border border-line px-4 py-2.5 text-sm text-ink-soft transition-all hover:bg-cream-strong active:bg-cream-strong"
+                className="inline-flex items-center gap-1 rounded-full border border-line px-4 py-2.5 text-label text-ink-soft transition-all hover:bg-cream-strong active:bg-cream-strong"
               >
                 <MapPin className="h-3.5 w-3.5" />
                 지도 보기
@@ -95,7 +95,7 @@ export default function BookmarksPage() {
               <button
                 type="button"
                 onClick={() => handleRemove(place.id)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent-soft px-3.5 py-2 text-sm font-medium text-accent-strong transition-all hover:bg-accent/20 active:bg-accent/20"
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent-soft px-3.5 py-2 text-label font-medium text-accent-strong transition-all hover:bg-accent/20 active:bg-accent/20"
               >
                 <Bookmark className="h-4 w-4" fill="currentColor" />
                 저장 해제

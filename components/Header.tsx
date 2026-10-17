@@ -36,13 +36,13 @@ export function Header() {
             {/* 로고가 텍스트보다 살짝 커 보이도록: 텍스트는 text-lg(18px)인데
                 로고 높이는 28px로 잡아 자연스럽게 도드라지게 한다 */}
             <LogoMark className="h-7 w-7 shrink-0" />
-            <span className="text-lg font-bold tracking-tight text-ink">청모픽</span>
+            <span className="text-title font-bold text-ink">청모픽</span>
           </Link>
         )}
         {/* 의견 보내기는 로고와 대비되면 안 되는 부차 동작이지만, 너무 옅으면 있는지도
             모르고 지나친다 — 결과 페이지의 "추천순"과 같은 톤(ink-soft)으로 맞췄다 */}
         {!isPlaceDetail && (
-          <Link href="/feedback" className="text-xs font-medium text-ink-soft hover:text-ink">
+          <Link href="/feedback" className="text-caption font-medium text-ink-soft hover:text-ink">
             의견 보내기
           </Link>
         )}

@@ -8,7 +8,7 @@ type Variant = "primary" | "secondary" | "ghost";
 // 뿐이고 spring·bounce·scale은 잡카드의 hover lift 정도를 빼면 시스템 전반에 등장하지 않는다.
 // 그래서 여긴 순수 색 트랜지션만 남긴다(100~150ms가 표준이라 Tailwind 기본 150ms와 맞아떨어진다).
 const base =
-  "inline-flex items-center justify-center gap-1.5 rounded-md px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex items-center justify-center gap-1.5 rounded-md px-5 py-3 text-label font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40";
 
 // solid(primary) → outlined(secondary) → assistive(ghost, 중성 필) 3단 위계.
 // "화면당 단일 강조색" 원칙대로 브랜드 블루는 primary에만 배경으로 쓰고, 나머지는
