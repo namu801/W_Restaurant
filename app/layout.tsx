@@ -21,8 +21,8 @@ const pretendard = localFont({
 // 이 필드들이 없으니 og:description은 카카오톡 자체 기본 문구("여기를 눌러...")로,
 // og:image는 페이지에서 발견한 첫 <img>(예전 로고 logo.png)를 임의로 집어써서 지금 세션
 // 리브랜딩과 안 맞는 이미지가 계속 떴다 — openGraph 필드를 명시해서 히어로 배너 일러스트를
-// 확실한 공유 썸네일로 고정한다. metadataBase가 있어야 상대 경로(/hero-banner.png)가
-// 절대 URL로 정확히 변환된다
+// 확실한 공유 썸네일로 고정한다(홈 배너와 같은 오렌지 봉투 일러스트). metadataBase가 있어야
+// 상대 경로(/hero-banner_orange_2-web.png)가 절대 URL로 정확히 변환된다
 export const metadata: Metadata = {
   metadataBase: new URL("https://w-restaurant.vercel.app"),
   title: "청모픽 — 청첩장 모임 장소 추천",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "청모픽 — 청첩장 모임 장소 추천",
     description: "분위기부터 예산까지, 청모에 맞게 픽",
-    images: [{ url: "/hero-banner.png", width: 708, height: 517, alt: "청첩장이 담긴 봉투 일러스트" }],
+    images: [{ url: "/hero-banner_orange_2-web.png", width: 1469, height: 1071, alt: "청첩장이 담긴 봉투 일러스트" }],
     locale: "ko_KR",
     type: "website",
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "청모픽 — 청첩장 모임 장소 추천",
     description: "분위기부터 예산까지, 청모에 맞게 픽",
-    images: ["/hero-banner.png"],
+    images: ["/hero-banner_orange_2-web.png"],
   },
 };
 

@@ -43,8 +43,8 @@ export default function LandingPage() {
           alt="청첩장이 담긴 봉투 일러스트"
           width={1469}
           height={1071}
-          // 원본(hero-banner_orange_2.png)은 배경이 완전한 흰색이 아니라(#FDFDFD) 흰 카드 위에 옅은
-          // 사각형이 비쳐 보였다 — 거의 흰색인 배경만 순백으로 바꾼 -web 버전을 쓴다
+          // 원본 일러스트는 배경이 완전한 흰색이 아니라(#FDFDFD) 흰 카드 위에 옅은 사각형이 비쳐
+          // 보였다 — 거의 흰색인 배경만 순백으로 바꾼 -web 버전을 쓴다
           className="mx-auto my-4 h-40 w-auto"
           priority
         />
