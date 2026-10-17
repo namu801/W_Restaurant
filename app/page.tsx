@@ -39,18 +39,21 @@ export default function LandingPage() {
         </p>
 
         <Image
-          src="/hero-banner.png"
+          src="/hero-banner_orange_2-web.png"
           alt="청첩장이 담긴 봉투 일러스트"
-          width={708}
-          height={517}
+          width={1469}
+          height={1071}
+          // 원본(hero-banner_orange_2.png)은 배경이 완전한 흰색이 아니라(#FDFDFD) 흰 카드 위에 옅은
+          // 사각형이 비쳐 보였다 — 거의 흰색인 배경만 순백으로 바꾼 -web 버전을 쓴다
           className="mx-auto my-4 h-40 w-auto"
           priority
         />
 
-        {/* 이 홈 화면에서 타이틀 다음으로 중요한 요소라 본문(text-sm)보다 한 단계 키웠다 */}
+        {/* 이 홈 화면에서 타이틀 다음으로 중요한 요소라 본문(text-sm)보다 한 단계 키웠다.
+            단색 오렌지가 화면에서 가장 쨍하게 보여서, 같은 색에서 왼쪽 위만 살짝 밝힌 그라디언트를 쓴다 */}
         <SearchCta
           source="landing"
-          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-accent px-5 py-3.5 text-base font-semibold text-white transition-all hover:brightness-95 active:brightness-90"
+          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-gradient-to-br from-accent-glow to-accent px-5 py-3.5 text-base font-semibold text-white transition-all hover:brightness-95 active:brightness-90"
         >
           내 조건으로 추천받기
           <ArrowRight className="h-4 w-4" />

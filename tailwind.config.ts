@@ -40,6 +40,7 @@ const config: Config = {
           strong: themeColor("accent-strong"), // pressed, 옅은 틴트 위 텍스트
           light: themeColor("accent-light"), // 그라디언트 전용 짝
           "light-soft": themeColor("accent-light-soft"), // 선택 상태 채움
+          glow: themeColor("accent-glow"), // 홈 대표 버튼 그라디언트의 밝은 쪽
         },
         sage: { DEFAULT: themeColor("sage"), soft: themeColor("sage-soft") }, // 긍정/성공
         clay: { DEFAULT: themeColor("clay"), soft: themeColor("clay-soft") }, // 주의/경고

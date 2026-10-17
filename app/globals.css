@@ -35,6 +35,8 @@
   --color-accent-strong: #ba2f0c; /* oklch(0.52 0.18 34) — accent-soft 위 텍스트 4.66:1 (AA) */
   --color-accent-light: #ff977f; /* oklch(0.78 0.13 34) — 그라디언트 짝 */
   --color-accent-light-soft: #ffefea; /* oklch(0.965 0.022 34) */
+  /* 홈 대표 버튼 그라디언트의 밝은 쪽. 단색 #ff3d00이 쨍해서 왼쪽 위만 살짝 밝힌다 */
+  --color-accent-glow: #ff6a3d;
 
   /* 시맨틱 */
   --color-sage: #117f20;
