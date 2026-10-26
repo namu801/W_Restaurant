@@ -29,10 +29,10 @@ export type NoiseKey = "quiet" | "lively-but-talkable" | "lively-important" | "a
 
 export type MoodFormalityKey = "casual" | "balanced" | "hospitable" | "formal" | "any";
 
-/** 조건 입력의 "분위기" 사진 카드. [조용함 ↔ 활기] × [격식 ↔ 캐주얼] 두 축에서 겹치지 않게
- *  나눈 4가지다. 점수 계산은 그대로 noise·moodFormality를 쓰고, 이 값에서 자동으로 채운다
- *  (lib/labels.ts VIBE_CONDITION) */
-export type VibeKey = "quiet-dining" | "wine-bar" | "casual-dining" | "lively-pub" | "any";
+/** 조건 입력의 "분위기" 사진 카드. 사람들이 리뷰·검색에서 실제로 쓰는 말(차분한·깔끔한·
+ *  트렌디한·활기찬)로 나눈 4가지다. 점수 계산용 noise·moodFormality는 이 값에서 자동으로
+ *  채우고(lib/labels.ts VIBE_CONDITION), "트렌디"만 격식 대신 식당의 trendScore로 맞춘다 */
+export type VibeKey = "calm-formal" | "neat-comfy" | "trendy" | "lively-casual" | "any";
 
 /** PRD 8.6 기타 조건: "꼭 챙길 것" 다중선택 칩 (선택 입력).
  *  예약·웨이팅은 원래 별도 질문이었으나 선택지가 복잡해 "예약 가능한 곳" 한 칩으로 단순화해 여기로 합쳤다.
@@ -97,6 +97,9 @@ export interface Place {
   formalityTags: Exclude<MoodFormalityKey, "any">[];
   conversationScore: number; // 0~10
   hospitalityScore: number; // 0~10
+  /** 요즘 감성(인테리어·플레이팅·콘셉트)이 얼마나 뚜렷한지. 사진 분석과 웹 후기로 매겼다
+   *  (data/vibe/style-2026-10-26.json, 1~5점 × 2) */
+  trendScore: number; // 0~10
   serviceScore: number; // 0~10
   accessScore: number; // 0~10
   noiseLevel: NoiseLevel;

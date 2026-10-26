@@ -1,0 +1,26 @@
+{
+  "method": "Claude 비전으로 등록 사진 99장을 직접 보고 trendiness(1~5)를 매긴 뒤, labels-sources.csv의 웹 후기 근거로 확인 (API 자동화 전 수동 실행)",
+  "date": "2026-10-26",
+  "applied_as": "lib/places.ts trendScore = trendiness × 2 (0~10)",
+  "places": [
+    {"name":"TAA","trendiness":5,"confidence":"high","evidence":"2·3번 빈티지 소파·레트로 패브릭, 내추럴 와인 연출. 후기도 빈티지 라운지"},
+    {"name":"버누드","trendiness":5,"confidence":"high","evidence":"1번 곡선 바와 원형 조명 천장, 5번 간접조명 코너석"},
+    {"name":"쇼니노","trendiness":5,"confidence":"high","evidence":"2번 넝쿨·조명 장식 테라스, 5번 파란 차양 입구. 셰프 화제성"},
+    {"name":"쿠촐로서울","trendiness":4,"confidence":"high","evidence":"1번 와인 셀러 복도, 4·5번 컬러 카펫과 곡선 소파. 감성 있지만 격식 쪽에 가깝다"},
+    {"name":"고메드용산","trendiness":4,"confidence":"medium","evidence":"어두운 배경의 연출된 플레이팅, 후기의 동굴형 지하 바"},
+    {"name":"마제스키야키","trendiness":4,"confidence":"medium","evidence":"1~4번 돌 오브제·무드 조명 연출, 5번 아치형 입구"},
+    {"name":"먼치 용산","trendiness":4,"confidence":"medium","evidence":"2·5번 라탄 의자와 창가 자연광, 컬러 소스 플레이팅"},
+    {"name":"미미옥 신용산점","trendiness":4,"confidence":"medium","evidence":"3번 한옥을 고친 외관, 5번 우드 톤 룸"},
+    {"name":"심퍼티쿠시 용산점","trendiness":4,"confidence":"medium","evidence":"2번 미니멀 우드 홀과 테이블 조명, 4번 모던한 외관"},
+    {"name":"포이키친","trendiness":4,"confidence":"medium","evidence":"5번 블랙 톤 바 좌석, 1~4번 퓨전 플레이팅"},
+    {"name":"우나 용산본점","trendiness":3,"confidence":"medium","evidence":"5번 식물을 둔 밝은 홀. 깔끔하지만 콘셉트가 강하진 않다"},
+    {"name":"용산봉숭아","trendiness":3,"confidence":"medium","evidence":"5번 핑크 톤 연출, 4번 벽돌 외관. 후기의 루프탑·야장"},
+    {"name":"한량주가","trendiness":3,"confidence":"low","evidence":"5장 모두 음식. 토기 그릇과 어두운 톤 연출만 보임"},
+    {"name":"호우섬 용산아이파크몰점","trendiness":3,"confidence":"low","evidence":"홍콩 신문지 소품 연출. 실내 사진 없음, 쇼핑몰 매장"},
+    {"name":"아그라 용산아이파크몰점","trendiness":2,"confidence":"medium","evidence":"2번 밝은 쇼핑몰 오픈 홀"},
+    {"name":"양복점 용산점","trendiness":2,"confidence":"medium","evidence":"4번 덕트가 내려온 홀, 무늬 벽지"},
+    {"name":"크리스탈제이드 용산아이파크몰점","trendiness":2,"confidence":"low","evidence":"정통 중식 체인 플레이팅. 실내 사진 없음"},
+    {"name":"오목집 삼각지점","trendiness":1,"confidence":"medium","evidence":"4번 2005년부터 운영한 족발집 간판, 흰 배경 음식 사진"},
+    {"name":"일일향 용산점","trendiness":1,"confidence":"medium","evidence":"1번 상가 건물 외관, 4·5번 전형적인 중식당 룸·홀"}
+  ]
+}

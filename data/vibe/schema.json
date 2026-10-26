@@ -1,18 +1,19 @@
 {
-  "version": 1,
-  "note": "분위기 카드(조용한 다이닝 등)는 이 속성들의 목표 조합일 뿐이다. 카드 이름이 바뀌어도 식당 데이터는 이 속성으로 유지한다.",
+  "version": 2,
+  "note": "분위기 카드는 이 속성들의 목표 조합일 뿐이다. 카드 이름이 바뀌어도 식당 데이터는 이 속성으로 유지한다. v2(2026-10-26): 카드를 사용자 말(차분·깔끔·트렌디·활기)로 바꾸고 trendiness 속성을 추가했다.",
   "scale": "1~5, 판단할 수 없으면 null",
   "attributes": {
     "formality":    { "label": "격식",        "low": "편하게 먹는 캐주얼 식당", "high": "격식 있는 다이닝" },
     "seat_spacing": { "label": "좌석 간격",    "low": "테이블이 붙어 있음",       "high": "테이블 사이가 넓음" },
     "separation":   { "label": "공간 분리감",  "low": "한 공간에 오픈된 홀",      "high": "문·벽으로 나뉜 룸" },
-    "liveliness":   { "label": "활기",        "low": "차분함",                   "high": "북적이고 시끌벅적함", "caution": "사진은 한 순간이라 참고용. 소음은 판단하지 않는다" }
+    "liveliness":   { "label": "활기",        "low": "차분함",                   "high": "북적이고 시끌벅적함", "caution": "사진은 한 순간이라 참고용. 소음은 판단하지 않는다" },
+    "trendiness":   { "label": "트렌디·감성",  "low": "노포·체인처럼 평범한 공간", "high": "콘셉트가 뚜렷한 요즘 감성 공간", "caution": "인테리어·조명·플레이팅·외관을 함께 본다. 실내 사진이 없어도 플레이팅과 외관으로 판단할 수 있다" }
   },
   "confidence": ["high", "medium", "low", "none"],
   "presets": {
-    "quiet-dining":  { "label": "조용한 다이닝",  "target": { "formality": 4, "separation": 4, "liveliness": 2 } },
-    "wine-bar":      { "label": "와인바·라운지",  "target": { "formality": 3, "liveliness": 3 } },
-    "casual-dining": { "label": "캐주얼 다이닝",  "target": { "formality": 2, "liveliness": 3 } },
-    "lively-pub":    { "label": "활기찬 주점",    "target": { "formality": 1, "liveliness": 4 } }
+    "calm-formal":   { "label": "차분하고 격식 있는", "target": { "formality": 4, "separation": 4, "liveliness": 2 } },
+    "neat-comfy":    { "label": "깔끔하고 편안한",   "target": { "formality": 3, "liveliness": 3 } },
+    "trendy":        { "label": "트렌디하고 감성적인", "target": { "trendiness": 4 } },
+    "lively-casual": { "label": "활기차고 캐주얼한",  "target": { "formality": 1, "liveliness": 4 } }
   }
 }

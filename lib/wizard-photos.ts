@@ -11,14 +11,18 @@ import type { CuisineKey, VibeKey } from "./types";
  * - 분위기: 그 분위기를 실제로 가진 식당의 공간 사진(카테고리·소음·격식 데이터가 카드와 맞는 곳)
  * - 음식: 그 메뉴 태그(cuisineTags)를 실제로 가진 식당의 음식 사진
  * 사진을 바꿀 땐 이 표만 고치면 된다.
+ *
+ * 카드 아래쪽 35%쯤은 이름·설명 글씨에 가려서, 핵심 장면(테이블·손님)이 사진 아래에 있으면
+ * 천장만 보인다. 그런 사진은 장면이 위쪽에 오도록 잘라 public/wizard/에 따로 두고 경로로
+ * 가리킨다(파일명이 영문이라 NFC/NFD 문제가 없다). 원본은 public/places 그대로다.
  */
-type PhotoRef = readonly [placeName: string, index: number];
+type PhotoRef = readonly [placeName: string, index: number] | `/wizard/${string}`;
 
 const VIBE_PHOTO_REF: Record<Exclude<VibeKey, "any">, PhotoRef> = {
-  "quiet-dining": ["쿠촐로서울", 4], // 이탈리안 레스토랑 · 조용 · 격식
-  "wine-bar": ["버누드", 0], // 다이닝바 · 은은한 조명
-  "casual-dining": ["심퍼티쿠시 용산점", 1], // 유러피언 캐주얼 다이닝
-  "lively-pub": ["양복점 용산점", 3], // 양꼬치 · 활기
+  "calm-formal": ["쿠촐로서울", 1], // 커튼으로 나뉜 단독 룸 · 조용 · 격식
+  "neat-comfy": ["미미옥 신용산점", 4], // 우드 톤으로 정돈된 단체석 · 무난한 격식
+  trendy: "/wizard/vibe-trendy.jpg", // 버누드 1번 사진에서 곡선 바·테이블 쪽을 잘라냄 · 감성 점수 5
+  "lively-casual": "/wizard/vibe-lively.jpg", // 양복점 4번 사진에서 손님이 먹고 마시는 쪽을 잘라냄
 };
 
 const CUISINE_PHOTO_REF: Partial<Record<CuisineKey, PhotoRef>> = {
@@ -33,6 +37,7 @@ const CUISINE_PHOTO_REF: Partial<Record<CuisineKey, PhotoRef>> = {
 
 function resolve(ref: PhotoRef | undefined): string | undefined {
   if (!ref) return undefined;
+  if (typeof ref === "string") return ref;
   return PLACE_PHOTOS[ref[0]]?.[ref[1]];
 }
 

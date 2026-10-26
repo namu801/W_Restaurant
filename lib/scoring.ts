@@ -3,6 +3,7 @@ import type {
   BudgetKey,
   Condition,
   MatchResult,
+  MoodFormalityKey,
   NoiseKey,
   NoiseLevel,
   Place,
@@ -42,6 +43,10 @@ const PEOPLE_BOOST_TIERS = new Set<PeopleKey>(["5-6", "7-8", "9+"]);
 
 const BOOST_MULTIPLIER = 1.15;
 
+/** 분위기 카드를 직접 골랐을 때 분위기 배점을 키우는 배수. 배점 10에 응대 점수까지 섞여 있어
+ *  분위기 몫이 전체의 5%쯤이었고, 어떤 카드를 골라도 상위 식당이 거의 같았다 */
+const VIBE_PICKED_MULTIPLIER = 2;
+
 const PEOPLE_RANGE: Record<PeopleKey, [number, number]> = {
   "2": [2, 2],
   "3-4": [3, 4],
@@ -71,6 +76,7 @@ function computeWeights(condition: Condition): Record<ScoreCategory, number> {
   if (PEOPLE_BOOST_TIERS.has(condition.people)) {
     for (const cat of PEOPLE_BOOST_CATEGORIES) weights[cat] *= BOOST_MULTIPLIER;
   }
+  if (condition.vibe !== "any") weights.mood *= VIBE_PICKED_MULTIPLIER;
 
   return weights;
 }
@@ -134,15 +140,21 @@ function fitConversation(condition: Condition, place: Place): number {
   return (base + noiseRatio) / 2;
 }
 
+/** 격식 태그 일치. 정성스러운 자리를 원하면 격식 있는 곳도 맞는 것으로 본다(더 높은 쪽은 괜찮다) */
+function formalityMatch(want: MoodFormalityKey, place: Place): number {
+  if (want === "any") return 0.7;
+  if (place.formalityTags.includes(want)) return 1;
+  if (want === "hospitable" && place.formalityTags.includes("formal")) return 1;
+  return 0.3;
+}
+
 function fitMood(condition: Condition, place: Place): number {
-  const formality =
-    condition.moodFormality === "any"
-      ? 0.7
-      : place.formalityTags.includes(condition.moodFormality)
-        ? 1
-        : 0.3;
+  // 트렌디 카드는 격식이 아니라 공간·콘셉트의 감성을 본다 — 격식 자리에 trendScore를 쓴다
+  const vibeFit =
+    condition.vibe === "trendy" ? place.trendScore / 10 : formalityMatch(condition.moodFormality, place);
   const service = (place.hospitalityScore + place.serviceScore) / 20;
-  return (formality + service) / 2;
+  // 카드를 직접 골랐으면 그 분위기가 맞는지를 응대보다 크게 본다
+  return condition.vibe === "any" ? (vibeFit + service) / 2 : vibeFit * 0.75 + service * 0.25;
 }
 
 /** 좌석 여유는 항상 spaceScore를 반영한다. "꼭 필요한" 좌석 형태는 기타 조건 칩에서 제외 필터로 처리한다 */

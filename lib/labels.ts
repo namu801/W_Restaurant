@@ -86,21 +86,48 @@ export const NOISE_LABEL: Record<NoiseKey, string> = {
   any: "소음은 크게 상관없어요",
 };
 
+/** 분위기 카드 이름. 소음·격식 두 값에 억지로 이름을 붙이면("은은하고 아늑하게") 어느 축인지
+ *  모호해서, 사람들이 리뷰·검색에서 실제로 쓰는 말로 바꿨다. 업종(다이닝·주점)은 넣지 않는다 */
 export const VIBE_LABEL: Record<VibeKey, string> = {
-  "quiet-dining": "조용한 다이닝",
-  "wine-bar": "와인바·라운지",
-  "casual-dining": "캐주얼 다이닝",
-  "lively-pub": "활기찬 주점",
+  "calm-formal": "차분하고 격식 있는",
+  "neat-comfy": "깔끔하고 편안한",
+  trendy: "트렌디하고 감성적인",
+  "lively-casual": "활기차고 캐주얼한",
   any: "분위기는 상관없어요",
 };
 
-/** 분위기 카드 → 점수 계산용 조건값. 카드 한 장이 소음·격식 두 값을 함께 정한다 */
+/** 카드 아래 한 줄. 형용사만으로는 고르기 어려워서 "어떤 자리인지"로 풀어준다 */
+export const VIBE_HINT: Record<Exclude<VibeKey, "any">, string> = {
+  "calm-formal": "윗분을 모셔도 실례가 없는 곳",
+  "neat-comfy": "누구와 가도 무난한 곳",
+  trendy: "요즘 뜨는, 사진 남기고 싶은 곳",
+  "lively-casual": "편하게 떠들며 먹고 마시는 곳",
+};
+
+/** 문장 안에 넣을 때 쓰는 명사형 ("…분위기를 먼저 살펴봤어요", "…분위기까지 담았어요") */
+export const VIBE_MOOD: Record<Exclude<VibeKey, "any">, string> = {
+  "calm-formal": "차분하고 격식 있는 분위기",
+  "neat-comfy": "깔끔하고 편안한 분위기",
+  trendy: "트렌디하고 감성적인 분위기",
+  "lively-casual": "활기차고 캐주얼한 분위기",
+};
+
+/** 분위기 카드 → 점수 계산용 조건값. 카드 한 장이 소음·격식 두 값을 함께 정한다.
+ *  트렌디는 격식과 상관이 없어서 moodFormality를 any로 두고, 점수는 trendScore로 매긴다(lib/scoring.ts) */
 export const VIBE_CONDITION: Record<VibeKey, { noise: NoiseKey; moodFormality: MoodFormalityKey }> = {
-  "quiet-dining": { noise: "quiet", moodFormality: "hospitable" },
-  "wine-bar": { noise: "lively-but-talkable", moodFormality: "balanced" },
-  "casual-dining": { noise: "lively-but-talkable", moodFormality: "casual" },
-  "lively-pub": { noise: "lively-important", moodFormality: "casual" },
+  "calm-formal": { noise: "quiet", moodFormality: "hospitable" },
+  "neat-comfy": { noise: "lively-but-talkable", moodFormality: "balanced" },
+  trendy: { noise: "lively-but-talkable", moodFormality: "any" },
+  "lively-casual": { noise: "lively-important", moodFormality: "casual" },
   any: { noise: "any", moodFormality: "any" },
+};
+
+/** 2026-10-26 이전 링크의 카드 이름 → 지금 카드. 공유된 결과 링크가 깨지지 않게 둔다 */
+export const LEGACY_VIBE: Record<string, VibeKey> = {
+  "quiet-dining": "calm-formal",
+  "wine-bar": "trendy",
+  "casual-dining": "neat-comfy",
+  "lively-pub": "lively-casual",
 };
 
 export const MOOD_FORMALITY_LABEL: Record<MoodFormalityKey, string> = {

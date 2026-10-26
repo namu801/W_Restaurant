@@ -1,4 +1,4 @@
-import { AREA_LABEL, PEOPLE_LABEL, RELATIONSHIP_LABEL, formatPrice } from "./labels";
+import { AREA_LABEL, PEOPLE_LABEL, RELATIONSHIP_LABEL, VIBE_MOOD, formatPrice } from "./labels";
 import type {
   Condition,
   ExtraConditionKey,
@@ -8,7 +8,6 @@ import type {
   Place,
   ReservationMethod,
   ScoreCategory,
-  VibeKey,
 } from "./types";
 import type { ReasonIconKey } from "./icon-keys";
 
@@ -159,6 +158,7 @@ function cardTagLabel(key: ScoreCategory, place: Place, condition: Condition): s
     case "conversation":
       return NOISE_TAG[place.noiseLevel];
     case "mood":
+      if (condition.vibe === "trendy" && place.trendScore >= 8) return "감성 있는 공간";
       return place.formalityTags[0] ? MOOD_TAG[place.formalityTags[0]] : "분위기 좋음";
     case "seat":
       return `최대 ${place.capacityMax}인 좌석`;
@@ -220,12 +220,6 @@ const EXTRA_SIGNAL: Record<ExtraConditionKey, string> = {
   "with-drinks": "술 한잔 곁들일 자리",
 };
 
-const VIBE_SIGNAL: Record<Exclude<VibeKey, "any">, string> = {
-  "quiet-dining": "조용한 다이닝 분위기",
-  "wine-bar": "와인바 같은 분위기",
-  "casual-dining": "캐주얼한 분위기",
-  "lively-pub": "활기찬 분위기",
-};
 
 /** 실제로 "우선한 조건"이라고 부를 만한 신호를 우선순위대로 모은다 — 사용자가 명시적으로
  *  "꼭 필요하다"고 고른 기타 조건이 가장 강한 신호이고, 그다음 소음·분위기, 마지막으로
@@ -238,7 +232,7 @@ function prioritySignals(condition: Condition): string[] {
     if (extra !== "with-drinks") signals.push(EXTRA_SIGNAL[extra]);
   }
   // 분위기는 사진 카드 한 장으로 고른다 — 사용자가 실제로 고른 그 말(카드 이름)로 받아준다
-  if (condition.vibe !== "any") signals.push(VIBE_SIGNAL[condition.vibe]);
+  if (condition.vibe !== "any") signals.push(VIBE_MOOD[condition.vibe]);
   if (condition.extraConditions.includes("with-drinks")) signals.push(EXTRA_SIGNAL["with-drinks"]);
   if (condition.budget === "under-20k" || condition.budget === "20-30k") signals.push("1인 예산");
   return signals;
@@ -327,6 +321,7 @@ type EvidenceKey =
   | "quiet"
   | "lively"
   | "formal"
+  | "trendy"
   | "hospitality"
   | "wide"
   | "capacity"
@@ -364,6 +359,9 @@ function evidenceFor(key: EvidenceKey, scene: Scene, condition: Condition, place
     case "formal":
       if (!place.formalityTags.includes("formal")) return null;
       return { and: "차분하고 격식 있는 분위기라 윗분 모시기 좋고", end: "차분하고 격식 있는 분위기라 윗분 모시기 좋아요" };
+    case "trendy":
+      if (place.trendScore < 8) return null;
+      return { and: "요즘 감성의 공간이라 사진 남기기 좋고", end: "요즘 감성의 공간이라 사진 남기기 좋아요" };
     case "hospitality":
       if (place.hospitalityScore < 8) return null;
       if (scene === "family")
@@ -436,6 +434,7 @@ function explicitEvidence(condition: Condition): EvidenceKey[] {
   }
   if (condition.noise === "quiet") keys.push("quiet", "room", "semiPrivate");
   if (condition.noise === "lively-important") keys.push("lively");
+  if (condition.vibe === "trendy") keys.push("trendy");
   if (condition.moodFormality === "formal") keys.push("formal");
   if (condition.moodFormality === "hospitable") keys.push("hospitality");
   return keys;

@@ -12,6 +12,7 @@ import {
   RELATIONSHIP_CHIP_LABEL,
   RELATIONSHIP_OPTIONS,
   VIBE_CONDITION,
+  VIBE_HINT,
   VIBE_LABEL,
   VIBE_OPTIONS,
   WIZARD_CUISINE_OPTIONS,
@@ -104,7 +105,7 @@ export const QUESTIONS = {
     kind: "single",
     key: "vibe",
     title: "어떤 분위기의 자리가 좋으세요?",
-    options: toOptions(VIBE_OPTIONS, VIBE_LABEL),
+    options: toOptions(VIBE_OPTIONS, VIBE_LABEL, VIBE_HINT),
   },
   extraConditions: {
     kind: "multi",

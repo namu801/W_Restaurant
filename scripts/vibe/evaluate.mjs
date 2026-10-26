@@ -63,7 +63,7 @@ try {
   const labeled = body.filter((r) => r.slice(1).some((v) => v.trim()));
   if (labeled.length) {
     accuracy = {};
-    for (const key of ["formality", "seat_spacing", "separation", "liveliness"]) {
+    for (const key of ["formality", "seat_spacing", "separation", "liveliness", "trendiness"]) {
       const col = head.indexOf(key);
       for (const r of labeled) {
         const truth = Number(r[col]); const p = result.places.find((x) => x.name === r[0]);

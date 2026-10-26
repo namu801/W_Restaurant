@@ -10,7 +10,7 @@ import { track } from "@/lib/analytics";
 import { StickyBottomBar } from "@/components/StickyBottomBar";
 import { TypingText } from "@/components/TypingText";
 import { BudgetSlider } from "@/components/BudgetSlider";
-import { AREA_LABEL, BUDGET_LABEL, PEOPLE_LABEL, VIBE_LABEL } from "@/lib/labels";
+import { AREA_LABEL, BUDGET_LABEL, PEOPLE_LABEL, VIBE_LABEL, VIBE_MOOD } from "@/lib/labels";
 import {
   QUESTIONS,
   conditionFromDraft,
@@ -84,7 +84,7 @@ function echoFor(step: number, d: DraftCondition): string | null {
       return `${labels.join("·")} 쪽으로 추려둘게요`;
     }
     case 5:
-      return d.vibe && d.vibe !== "any" ? `${VIBE_LABEL[d.vibe]}까지 담았어요. 이제 마지막이에요` : null;
+      return d.vibe && d.vibe !== "any" ? `${VIBE_MOOD[d.vibe]}까지 담았어요. 이제 마지막이에요` : null;
     default:
       return null;
   }
@@ -338,6 +338,7 @@ function SearchWizard() {
                   <PhotoTile
                     key={o.value}
                     label={o.label}
+                    hint={o.hint}
                     photo={vibePhoto(o.value as VibeKey)!}
                     alt={`${o.label} 예시 공간 사진`}
                     selected={draft.vibe === o.value}
@@ -421,12 +422,14 @@ function Chip({
 /** 사진 카드: 모두 같은 크기(정사각형). 선택하면 브랜드색 테두리 + 체크 */
 function PhotoTile({
   label,
+  hint,
   photo,
   alt,
   selected,
   onClick,
 }: {
   label: string;
+  hint?: string;
   photo: string;
   alt: string;
   selected: boolean;
@@ -440,8 +443,11 @@ function PhotoTile({
       className="relative isolate aspect-square overflow-hidden rounded-md bg-cream-strong text-left"
     >
       <Image src={photo} alt={alt} fill sizes="(max-width: 430px) 50vw, 200px" className="object-cover" />
-      <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" aria-hidden />
-      <span className="absolute bottom-2.5 left-3 right-3 text-label font-bold text-white">{label}</span>
+      <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/0" aria-hidden />
+      <span className="absolute bottom-2.5 left-3 right-3 flex flex-col gap-0.5 text-white">
+        <span className="text-label font-bold">{label}</span>
+        {hint && <span className="text-micro text-white/85">{hint}</span>}
+      </span>
       <span
         aria-hidden
         className={clsx(

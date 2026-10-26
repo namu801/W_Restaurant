@@ -7,6 +7,7 @@ import {
   NOISE_OPTIONS,
   PEOPLE_OPTIONS,
   RELATIONSHIP_OPTIONS,
+  LEGACY_VIBE,
   VIBE_CONDITION,
   VIBE_OPTIONS,
 } from "./labels";
@@ -22,10 +23,14 @@ const SINGLE_OPTIONS: Record<(typeof SINGLE_KEYS)[number], readonly string[]> = 
 };
 
 /** 분위기 카드(vibe)를 고르기 전에 만들어진 예전 링크는 noise·moodFormality만 갖고 있다.
- *  그 두 값이 어느 카드와 정확히 같으면 그 카드로, 아니면 "상관없음"으로 본다 */
+ *  그 두 값이 어느 카드와 정확히 같으면 그 카드로, 아니면 "상관없음"으로 본다. 트렌디는 격식이
+ *  any라 예전 링크의 "격식 상관없음"과 겹쳐서 추정 대상에서 뺀다 */
 function inferVibe(noise: NoiseKey, moodFormality: MoodFormalityKey): VibeKey {
   const hit = VIBE_OPTIONS.find(
-    (v) => VIBE_CONDITION[v].noise === noise && VIBE_CONDITION[v].moodFormality === moodFormality,
+    (v) =>
+      v !== "trendy" &&
+      VIBE_CONDITION[v].noise === noise &&
+      VIBE_CONDITION[v].moodFormality === moodFormality,
   );
   return hit ?? "any";
 }
@@ -74,7 +79,8 @@ export function searchParamsToCondition(searchParams: SearchParamsLike): Conditi
 
   // 분위기: vibe가 있으면 그걸로 noise·moodFormality를 정하고, 없으면(예전 링크) noise·
   // moodFormality를 그대로 읽어서 가장 가까운 카드를 추정한다
-  const vibeRaw = getParam(searchParams, "vibe");
+  const vibeParam = getParam(searchParams, "vibe");
+  const vibeRaw = vibeParam ? (LEGACY_VIBE[vibeParam] ?? vibeParam) : vibeParam;
   let vibe: VibeKey;
   let noise: NoiseKey;
   let moodFormality: MoodFormalityKey;

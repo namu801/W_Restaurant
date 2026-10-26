@@ -44,13 +44,13 @@ const PROMPT = `청첩장 모임 장소를 추천하는 서비스의 식당 등�
 ${attrLines}
 
 규칙:
-- 음식만 클로즈업한 사진, 로고, 외관 사진은 공간 판단 근거로 쓰지 않아요.
-- 실내가 보이는 사진이 없으면 모든 속성을 null로 두고 confidence는 "none"이에요.
+- 음식만 클로즈업한 사진, 로고, 외관 사진은 공간 판단 근거로 쓰지 않아요. 단 trendiness는 플레이팅·외관도 근거로 써요.
+- 실내가 보이는 사진이 없으면 trendiness를 뺀 모든 속성을 null로 둬요. trendiness도 판단할 수 없으면 confidence는 "none"이에요.
 - 소리는 사진에 담기지 않으니 조용함·소음은 추정하지 않아요.
 - evidence에는 근거가 된 사진 번호(1부터)와 보이는 것을 짧게 적어요.
 
 JSON 하나로만 답해 주세요:
-{"interior_photos": 정수, "formality": n|null, "seat_spacing": n|null, "separation": n|null, "liveliness": n|null, "confidence": "high"|"medium"|"low"|"none", "evidence": "문장"}`;
+{"interior_photos": 정수, "formality": n|null, "seat_spacing": n|null, "separation": n|null, "liveliness": n|null, "trendiness": n|null, "confidence": "high"|"medium"|"low"|"none", "evidence": "문장"}`;
 
 async function analyze(place) {
   const content = [];
