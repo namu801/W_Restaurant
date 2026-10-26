@@ -1,0 +1,417 @@
+{
+  "date": "2026-10-26",
+  "rule": "사진·웹이 1단계 이내면 평균(활기는 저녁 피크 기준인 웹 값), 한쪽만 있으면 그 값, 2단계 이상 차이는 웹 값 + 검수 표시",
+  "places": [
+    {
+      "name": "호우섬 용산아이파크몰점",
+      "web_confidence": "중",
+      "photo_confidence": "none",
+      "formality": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "seat_spacing": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 1,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "마제스키야키",
+      "web_confidence": "중",
+      "photo_confidence": "low",
+      "formality": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 3,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "오목집 삼각지점",
+      "web_confidence": "중하",
+      "photo_confidence": "low",
+      "formality": {
+        "value": 2,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 1,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 5,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "쿠촐로서울",
+      "web_confidence": "중상",
+      "photo_confidence": "high",
+      "formality": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      },
+      "separation": {
+        "value": 5,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "충돌 — 웹 값 임시 사용, 검수 필요",
+        "photo": 2,
+        "web": 4
+      }
+    },
+    {
+      "name": "용산봉숭아",
+      "web_confidence": "중",
+      "photo_confidence": "none",
+      "formality": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "seat_spacing": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 1,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 5,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "아그라 용산아이파크몰점",
+      "web_confidence": "중",
+      "photo_confidence": "medium",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      },
+      "separation": {
+        "value": 2,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      }
+    },
+    {
+      "name": "한량주가",
+      "web_confidence": "중",
+      "photo_confidence": "none",
+      "formality": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "일일향 용산점",
+      "web_confidence": "중상",
+      "photo_confidence": "medium",
+      "formality": {
+        "value": 4,
+        "basis": "충돌 — 웹 값 임시 사용, 검수 필요",
+        "photo": 2,
+        "web": 4
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "separation": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      }
+    },
+    {
+      "name": "미미옥 신용산점",
+      "web_confidence": "상",
+      "photo_confidence": "low",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "separation": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 3,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "고메드용산",
+      "web_confidence": "상",
+      "photo_confidence": "none",
+      "formality": {
+        "value": 3,
+        "basis": "웹만"
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 4,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "심퍼티쿠시 용산점",
+      "web_confidence": "중상",
+      "photo_confidence": "medium",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 2,
+        "basis": "충돌 — 웹 값 임시 사용, 검수 필요",
+        "photo": 4,
+        "web": 2
+      },
+      "separation": {
+        "value": 1,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "충돌 — 웹 값 임시 사용, 검수 필요",
+        "photo": 2,
+        "web": 4
+      }
+    },
+    {
+      "name": "포이키친",
+      "web_confidence": "중",
+      "photo_confidence": "low",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 4,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 3,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "쇼니노",
+      "web_confidence": "중",
+      "photo_confidence": "low",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 2,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "먼치 용산",
+      "web_confidence": "중상",
+      "photo_confidence": "low",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 2,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "크리스탈제이드 용산아이파크몰점",
+      "web_confidence": "중상",
+      "photo_confidence": "none",
+      "formality": {
+        "value": 4,
+        "basis": "웹만"
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 4,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 3,
+        "basis": "웹만"
+      }
+    },
+    {
+      "name": "버누드",
+      "web_confidence": "중하",
+      "photo_confidence": "medium",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "separation": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      }
+    },
+    {
+      "name": "양복점 용산점",
+      "web_confidence": "중",
+      "photo_confidence": "medium",
+      "formality": {
+        "value": 2,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 2,
+        "basis": "사진+웹 일치"
+      },
+      "separation": {
+        "value": 1,
+        "basis": "사진+웹 일치"
+      },
+      "liveliness": {
+        "value": 5,
+        "basis": "사진+웹 일치"
+      }
+    },
+    {
+      "name": "우나 용산본점",
+      "web_confidence": "중상",
+      "photo_confidence": "medium",
+      "formality": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 4,
+        "basis": "충돌 — 웹 값 임시 사용, 검수 필요",
+        "photo": 2,
+        "web": 4
+      },
+      "separation": {
+        "value": 4,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 2,
+        "basis": "충돌 — 웹 값 임시 사용, 검수 필요",
+        "photo": 4,
+        "web": 2
+      }
+    },
+    {
+      "name": "TAA",
+      "web_confidence": "중",
+      "photo_confidence": "low",
+      "formality": {
+        "value": 3,
+        "basis": "사진+웹 일치"
+      },
+      "seat_spacing": {
+        "value": 3,
+        "basis": "웹만"
+      },
+      "separation": {
+        "value": 2,
+        "basis": "웹만"
+      },
+      "liveliness": {
+        "value": 4,
+        "basis": "사진+웹 일치"
+      }
+    }
+  ]
+}

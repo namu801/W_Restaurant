@@ -1,0 +1,26 @@
+{
+  "method": "Claude 비전으로 등록 사진을 직접 보고 schema.json 기준으로 태깅 (API 자동화 전 수동 실행)",
+  "date": "2026-10-26",
+  "photos_total": 99,
+  "places": [
+    {"name":"쿠촐로서울","interior_photos":5,"formality":4,"seat_spacing":4,"separation":5,"liveliness":2,"confidence":"high","evidence":"2·3번 커튼으로 나뉜 룸, 4·5번 테이블 간격이 넓은 홀"},
+    {"name":"우나 용산본점","interior_photos":2,"formality":3,"seat_spacing":2,"separation":null,"liveliness":4,"confidence":"medium","evidence":"3번 손님으로 붐비는 홀, 테이블 간격이 좁음. 룸 사진 없음"},
+    {"name":"일일향 용산점","interior_photos":2,"formality":2,"seat_spacing":3,"separation":4,"liveliness":3,"confidence":"medium","evidence":"4번 접이식 칸막이 단체룸, 5번 나무 테이블 홀"},
+    {"name":"버누드","interior_photos":2,"formality":3,"seat_spacing":3,"separation":3,"liveliness":3,"confidence":"medium","evidence":"1번 바 카운터 중심, 5번 어둡고 아늑한 코너 좌석"},
+    {"name":"양복점 용산점","interior_photos":1,"formality":1,"seat_spacing":2,"separation":1,"liveliness":4,"confidence":"medium","evidence":"4번 덕트가 내려온 좁은 홀, 테이블이 붙어 있음"},
+    {"name":"심퍼티쿠시 용산점","interior_photos":1,"formality":3,"seat_spacing":4,"separation":1,"liveliness":2,"confidence":"medium","evidence":"2번 긴 홀, 테이블 간격이 넓고 조명이 차분함"},
+    {"name":"아그라 용산아이파크몰점","interior_photos":1,"formality":2,"seat_spacing":3,"separation":1,"liveliness":3,"confidence":"medium","evidence":"2번 밝은 쇼핑몰 오픈 홀"},
+    {"name":"미미옥 신용산점","interior_photos":1,"formality":3,"seat_spacing":3,"separation":4,"liveliness":null,"confidence":"low","evidence":"5번 유리로 나뉜 단체석, 3번 한옥 외관"},
+    {"name":"쇼니노","interior_photos":1,"formality":2,"seat_spacing":null,"separation":2,"liveliness":null,"confidence":"low","evidence":"2번 장식이 많은 소형 테이블 1개만 보임"},
+    {"name":"TAA","interior_photos":2,"formality":2,"seat_spacing":null,"separation":null,"liveliness":3,"confidence":"low","evidence":"2·3번 테이블 근접 사진(레트로 소파석)"},
+    {"name":"포이키친","interior_photos":1,"formality":3,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"low","evidence":"5번 테이블 근접 사진"},
+    {"name":"마제스키야키","interior_photos":0,"formality":3,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"low","evidence":"테이블 위 음식 연출 사진과 외관만 있음"},
+    {"name":"먼치 용산","interior_photos":0,"formality":2,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"low","evidence":"로고와 음식 사진만 있음"},
+    {"name":"오목집 삼각지점","interior_photos":0,"formality":1,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"low","evidence":"음식 사진과 외관만 있음"},
+    {"name":"한량주가","interior_photos":0,"formality":null,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"none","evidence":"5장 모두 음식 사진"},
+    {"name":"고메드용산","interior_photos":0,"formality":null,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"none","evidence":"5장 모두 음식 사진"},
+    {"name":"용산봉숭아","interior_photos":0,"formality":null,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"none","evidence":"음식 사진과 외관만 있음"},
+    {"name":"크리스탈제이드 용산아이파크몰점","interior_photos":0,"formality":null,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"none","evidence":"음식 사진만 있음"},
+    {"name":"호우섬 용산아이파크몰점","interior_photos":0,"formality":null,"seat_spacing":null,"separation":null,"liveliness":null,"confidence":"none","evidence":"4장 모두 음식 사진"}
+  ]
+}

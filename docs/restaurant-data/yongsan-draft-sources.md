@@ -37,3 +37,13 @@
 17. 양복점 용산점 — [다이닝코드](https://www.diningcode.com/profile.php?rid=VpkNftwmSmuN), [캐치테이블](https://app.catchtable.co.kr/ct/shop/mabong_yongsan), [블루리본](https://bluer.co.kr/restaurants/40048)
 18. 우나 용산본점 — [다이닝코드](https://www.diningcode.com/profile.php?rid=jvOs7FKL9nsj), [캐치테이블](https://app.catchtable.co.kr/ct/shop/unayoungsan)
 19. TAA — [다이닝코드](https://www.diningcode.com/profile.php?rid=vrX56ZVHlIUp), [캐치테이블](https://app.catchtable.co.kr/ct/shop/taa), [인스타그램](https://www.instagram.com/taa_seoul/)
+
+## 분위기 데이터 교차 검증 (2026-10-26)
+
+등록 사진 비전 분석(`data/vibe/manual-2026-10-26.json`)과 공개 후기 기반 웹 라벨(`data/vibe/labels.csv`)이
+같은 방향으로 기존 값과 어긋난 3건만 반영했습니다. 한쪽 근거만 있는 항목은 바꾸지 않았습니다.
+
+- **미미옥 신용산점**: 좌석 형태 오픈 → **룸**, 룸 있음 N → **Y (4인 이상)**. 본관 홀 외 별관에 4~14인 독립 룸 운영 (다이닝코드·테이블링, 사진 5번 유리로 나뉜 단체석).
+- **양복점 용산점**: 좌석 형태 반분리 → **오픈**. 1층은 테이블이 붙은 개방형 홀. 2층 입식 룸은 그대로 "룸 있음"으로 둠.
+- **아그라 용산아이파크몰점**: 격식 태그 정성스럽게 → **무난하게**. 밝은 쇼핑몰 오픈 홀의 대형 인도 음식점.
+- 확인 필요로 남김: 용산봉숭아 좌석 형태(기존 룸 vs 웹 개방형), 오목집 소음(기존 보통 vs 웹 매우 활기, 근거 약함).
