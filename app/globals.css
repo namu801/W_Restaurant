@@ -32,7 +32,9 @@
   /* 브랜드: oklch(0.654 0.235 34). 나머지는 같은 hue 34°에서 명도만 바꿨다 */
   --color-accent: #ff3d00;
   --color-accent-soft: #ffdbd1; /* oklch(0.92 0.045 34) — 옅은 틴트 배경(1위 박스·선택 옵션) */
-  --color-accent-strong: #ba2f0c; /* oklch(0.52 0.18 34) — accent-soft 위 텍스트 4.66:1 (AA) */
+  /* 글자·pressed용 오렌지. 예전 #ba2f0c는 대비를 맞추려 누른 색이라 채도(0.18)가 빠져 갈색처럼 탁해 보였다 —
+     브랜드 채도를 살린 #d93808(흰 바탕 4.65:1)로 바꿨다 */
+  --color-accent-strong: #d93808;
   --color-accent-light: #ff977f; /* oklch(0.78 0.13 34) — 그라디언트 짝 */
   --color-accent-light-soft: #ffefea; /* oklch(0.965 0.022 34) */
   /* 홈 대표 버튼 그라디언트의 밝은 쪽. 단색 #ff3d00이 쨍해서 왼쪽 위만 살짝 밝힌다 */

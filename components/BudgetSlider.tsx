@@ -104,7 +104,7 @@ export function BudgetSlider({
           style={{ "--fill": `${((raw - MIN) / (MAX - MIN)) * 100}%` } as React.CSSProperties}
           aria-label="1인당 예산"
         />
-        <div className="flex justify-between text-caption text-ink-faint">
+        <div className="flex justify-between text-caption text-ink-soft">
           <span>2만원</span>
           <span>10만원 이상</span>
         </div>

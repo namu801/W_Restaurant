@@ -64,7 +64,7 @@ const config: Config = {
         h2: ["18px", { lineHeight: "1.4", letterSpacing: "-0.02em" }], // 섹션 제목
         title: ["17px", { lineHeight: "1.4", letterSpacing: "-0.01em" }], // 카드 제목
         "title-sm": ["16px", { lineHeight: "1.4" }], // 목록 제목
-        button: ["16px", { lineHeight: "1.25" }], // 주요 버튼
+        button: ["16px", { lineHeight: "1.5" }], // 주요 버튼 — 줄 높이 24px라야 py-3.5와 합쳐 52px 높이가 된다
         body: ["15px", { lineHeight: "1.5" }], // 본문
         "body-sm": ["14px", { lineHeight: "1.5" }], // 카드 안 본문
         label: ["14px", { lineHeight: "1.4" }], // 라벨·칩·정보 줄

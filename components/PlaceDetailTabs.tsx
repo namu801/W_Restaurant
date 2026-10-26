@@ -213,7 +213,7 @@ export function PlaceDetailTabs({
             ))}
           </ul>
         ) : (
-          <p className="text-label text-ink-faint">메뉴 정보를 아직 확인하지 못했어요. 지도 서비스에서 최신 메뉴를 확인해주세요.</p>
+          <p className="text-label text-ink-soft">메뉴 정보를 아직 확인하지 못했어요. 지도 서비스에서 최신 메뉴를 확인해주세요.</p>
         )}
       </section>
 

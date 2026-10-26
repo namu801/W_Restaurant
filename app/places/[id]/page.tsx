@@ -119,7 +119,7 @@ export default async function PlaceDetailPage({
       {/* 탭 콘텐츠와는 성격이 다른 블록(정보 출처 안내, 피드백 위젯)이라 구분선으로 한 번 끊어준다 */}
       <hr className="border-line" />
 
-      <p className="text-caption text-ink-faint">
+      <p className="text-caption text-ink-soft">
         리뷰, 예약 가능 여부는 지도 서비스에서 최신 정보를 확인해주세요.
         메뉴·가격은 변동될 수 있어요. (정보 확인일 {place.lastVerifiedAt})
       </p>

@@ -27,7 +27,7 @@ export default function BookmarksPage() {
   }
 
   if (places === null) {
-    return <p className="py-14 text-center text-body-sm text-ink-faint">불러오는 중이에요…</p>;
+    return <p className="py-14 text-center text-body-sm text-ink-soft">불러오는 중이에요…</p>;
   }
 
   if (places.length === 0) {
@@ -60,7 +60,7 @@ export default function BookmarksPage() {
             <PlaceThumbnail place={place} className="h-24 w-24 rounded-md" />
             <div className="min-w-0 flex-1">
               <h3 className="text-title font-bold text-ink">{place.name}</h3>
-              <p className="mt-1 text-caption text-ink-faint">
+              <p className="mt-1 text-caption text-ink-soft">
                 {place.category} · {AREA_LABEL[place.area]}
               </p>
               <p className="mt-1 text-label font-bold text-ink">

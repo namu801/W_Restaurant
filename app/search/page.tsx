@@ -211,7 +211,7 @@ function SearchWizard() {
             <ArrowLeft className="h-5 w-5" strokeWidth={2} />
           </button>
           {showSkip && (
-            <button type="button" onClick={handleSkip} className="text-label font-medium text-ink-faint hover:text-ink-soft">
+            <button type="button" onClick={handleSkip} className="text-label font-medium text-ink-soft hover:text-ink">
               건너뛰기
             </button>
           )}
@@ -249,7 +249,7 @@ function SearchWizard() {
             </p>
           )}
           <h1 className="text-h1 font-bold text-ink text-balance">{STEPS[step].title}</h1>
-          {STEPS[step].help && <p className="mt-1.5 text-caption text-ink-faint">{STEPS[step].help}</p>}
+          {STEPS[step].help && <p className="mt-1.5 text-caption text-ink-soft">{STEPS[step].help}</p>}
         </div>
 
         {step === 0 && (
@@ -294,7 +294,7 @@ function SearchWizard() {
                       )}
                     >
                       <span className={clsx("text-body font-bold", selected ? "text-accent-strong" : "text-ink")}>{o.label}</span>
-                      {o.hint && <span className="text-micro text-ink-faint">{o.hint}</span>}
+                      {o.hint && <span className="text-micro text-ink-soft">{o.hint}</span>}
                     </button>
                   );
                 })}
@@ -461,7 +461,7 @@ function PhotoTile({
 function AnyOption({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
     <div className="flex flex-col gap-3 border-t border-line-strong pt-4">
-      <p className="text-caption text-ink-faint">딱히 정한 게 없다면</p>
+      <p className="text-caption text-ink-soft">딱히 정한 게 없다면</p>
       <button
         type="button"
         aria-pressed={selected}

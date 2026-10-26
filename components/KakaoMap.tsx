@@ -258,7 +258,7 @@ export const KakaoMap = forwardRef<
 
   if (status === "error") {
     return (
-      <div className="flex h-full items-center justify-center bg-cream-soft px-6 text-center text-body-sm text-ink-faint">
+      <div className="flex h-full items-center justify-center bg-cream-soft px-6 text-center text-body-sm text-ink-soft">
         지도를 불러오지 못했어요. 카카오 개발자 콘솔에서 이 도메인이 플랫폼으로 등록되어 있는지 확인해주세요.
       </div>
     );
@@ -300,7 +300,7 @@ export const KakaoMap = forwardRef<
       </svg>
 
       {status === "loading" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-cream-soft text-body-sm text-ink-faint">
+        <div className="absolute inset-0 flex items-center justify-center bg-cream-soft text-body-sm text-ink-soft">
           지도를 불러오는 중이에요…
         </div>
       )}

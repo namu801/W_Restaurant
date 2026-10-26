@@ -200,7 +200,7 @@ export default function MapPage() {
       )}
 
       {places.length === 0 && (
-        <div className="absolute inset-x-4 top-20 z-10 rounded-lg bg-cream-soft p-4 text-center text-body-sm text-ink-faint shadow-card">
+        <div className="absolute inset-x-4 top-20 z-10 rounded-lg bg-cream-soft p-4 text-center text-body-sm text-ink-soft shadow-card">
           이 조건에 맞는 식당이 없어요. 필터를 바꿔보세요.
         </div>
       )}
@@ -242,7 +242,7 @@ export default function MapPage() {
                 <PlaceThumbnail place={place} className="h-16 w-16 shrink-0 rounded-md" iconClassName="h-6 w-6" />
                 <div className="min-w-0 flex-1">
                   <h3 className="text-title-sm font-bold text-ink">{place.name}</h3>
-                  <p className="mt-0.5 text-caption text-ink-faint">
+                  <p className="mt-0.5 text-caption text-ink-soft">
                     {AREA_LABEL[place.area]} · {formatPrice(place.priceMin, place.priceMax)}
                   </p>
                   <div className="mt-1.5 flex flex-wrap gap-1">
