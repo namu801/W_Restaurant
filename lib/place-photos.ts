@@ -21,7 +21,7 @@ export const PLACE_PHOTOS: Record<string, string[]> = {
   "오목집 삼각지점": ["/places/오목집 삼각지점_1.jpeg", "/places/오목집 삼각지점_2.jpeg", "/places/오목집 삼각지점_3.jpeg", "/places/오목집 삼각지점_4.jpeg", "/places/오목집 삼각지점_5.jpeg"],
   "용산봉숭아": ["/places/용산봉숭아_1.jpeg", "/places/용산봉숭아_2.jpeg", "/places/용산봉숭아_3.jpeg", "/places/용산봉숭아_4.jpeg", "/places/용산봉숭아_5.png"],
   "우나 용산본점": ["/places/우나 용산본점_1.jpeg", "/places/우나 용산본점_2.jpeg", "/places/우나 용산본점_3.png", "/places/우나 용산본점_4.jpeg", "/places/우나 용산본점_5.jpeg"],
-  "일일향 용산점": ["/places/일일향 용산점_1.jpeg", "/places/일일향 용산점_2.jpeg", "/places/일일향 용산점_3.jpeg", "/places/일일향 용산점_4.jpeg", "/places/일일향 용산점_5.jpeg"],
+  "일일향 용산점": ["/places/일일향 용산점_4.jpeg", "/places/일일향 용산점_2.jpeg", "/places/일일향 용산점_5.jpeg", "/places/일일향 용산점_3.jpeg", "/places/일일향 용산점_1.jpeg"],
   "쿠촐로서울": ["/places/쿠촐로서울_1.jpeg", "/places/쿠촐로서울_2.jpeg", "/places/쿠촐로서울_3.jpeg", "/places/쿠촐로서울_4.jpeg", "/places/쿠촐로서울_5.jpeg"],
   "크리스탈제이드 용산아이파크몰점": ["/places/크리스탈제이드 용산아이파크몰점_1.jpeg", "/places/크리스탈제이드 용산아이파크몰점_2.jpeg", "/places/크리스탈제이드 용산아이파크몰점_3.jpeg", "/places/크리스탈제이드 용산아이파크몰점_4.jpeg", "/places/크리스탈제이드 용산아이파크몰점_5.jpeg"],
   "포이키친": ["/places/포이키친_1.jpeg", "/places/포이키친_2.jpeg", "/places/포이키친_3.jpeg", "/places/포이키친_4.jpeg", "/places/포이키친_5.jpeg"],

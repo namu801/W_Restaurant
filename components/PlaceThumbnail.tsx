@@ -22,6 +22,7 @@ export function PlaceThumbnail({
   className,
   iconClassName = "h-7 w-7",
   paletteOffset = 0,
+  sizes = "200px",
 }: {
   place: Place;
   className?: string;
@@ -31,6 +32,8 @@ export function PlaceThumbnail({
   /** 사진 여러 장 스트립에서 같은 장소의 다른 사진(1번째, 2번째...)을 나란히 보여줄 때 쓴다.
    *  사진이 없으면 대신 플레이스홀더 배경색을 바꾸는 용도로 쓰인다 */
   paletteOffset?: number;
+  /** next/image에 넘길 표시 폭. 큰 칸에 200px 기본값을 쓰면 사진이 흐려진다 */
+  sizes?: string;
 }) {
   if (place.photos.length > 0) {
     const photo = place.photos[paletteOffset % place.photos.length];
@@ -42,7 +45,7 @@ export function PlaceThumbnail({
           src={photo}
           alt={place.name}
           fill
-          sizes="200px"
+          sizes={sizes}
           className="object-cover"
         />
       </div>

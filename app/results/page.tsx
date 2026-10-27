@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
@@ -13,13 +14,14 @@ import {
   RESULT_TRUNCATE_THRESHOLD,
   RESULT_DISPLAY_LIMIT,
 } from "@/lib/scoring";
-import { PlaceCard } from "@/components/PlaceCard";
+import { PlaceListItem } from "@/components/PlaceListItem";
+import { CurationAgentCard } from "@/components/CurationAgentCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TrackOnMount } from "@/components/TrackOnMount";
 import { ConditionEditSheet } from "@/components/ConditionEditSheet";
 import { SortDropdown, type SortValue } from "@/components/SortDropdown";
-import { buildCurationSummary, generateAlternativeMeta, generateVerdict, type AlternativeAxis } from "@/lib/reason";
-import type { MatchResult } from "@/lib/types";
+import { buildAgentHeadline, generateAlternativeMeta, generateRowReason, generateVerdict, type AlternativeAxis } from "@/lib/reason";
+import type { Condition, MatchResult } from "@/lib/types";
 
 function pickBy(pool: MatchResult[], scoreFn: (m: MatchResult) => number): MatchResult | undefined {
   if (pool.length === 0) return undefined;
@@ -63,7 +65,6 @@ export default async function ResultsPage({
   // "청모픽 N순위" 배지는 항상 매칭 점수 기준(matches 원래 순서)이어야 한다 — 정렬을
   // "가격 낮은순"으로 바꿔서 카드 노출 순서(index)가 달라져도, 배지에 찍히는 순위는
   // 그대로 추천 점수 기준을 유지해야 가장 싼 곳이 "1순위"로 잘못 보이지 않는다
-  const curationRank = new Map(matches.map((m, i) => [m.place.id, i + 1]));
 
   // 6곳이 점수순으로 줄만 서 있으면, 결국 사용자가 직접 하나하나 다시 비교해야 한다 —
   // 1순위 옆에 "분위기를 더 챙긴 선택/예산이 편한 선택/룸을 우선한 선택"처럼 다른 가치
@@ -105,15 +106,91 @@ export default async function ResultsPage({
     : null;
   // 결과가 0곳이거나 너무 적을 때(isNarrow) 빈 화면·달랑 1~2장만 보여주면 아쉽다 —
   // 제외 조건을 무시하고 그나마 점수가 가장 높은 후보들을 더 보여준다. describeViolations는
-  // 실제 매칭(위반 0개)은 자동으로 걸러내므로 매칭된 곳과 중복될 일이 없다. "청모픽 N순위"
-  // 배지는 진짜 매칭에만 붙는 신호라 여기서는 절대 뜨면 안 되므로, curationRank에 항상
-  // 배지 기준을 넘는 큰 값을 넘겨 배지를 강제로 숨긴다
+  // 실제 매칭(위반 0개)은 자동으로 걸러내므로 매칭된 곳과 중복될 일이 없다
   const nearMisses = matches.length <= NARROW_RESULT_THRESHOLD ? findNearMissMatches(condition, 4) : [];
-  const [nearMissPrimary, ...nearMissSecondary] = matches.length === 0 ? nearMisses : [];
-  const NEAR_MISS_RANK = 999;
+
+  // 모든 항목이 같은 뼈대(PlaceListItem)를 쓰고, 윗줄 문구만 자리에 따라 달라진다.
+  // 번호는 추천순일 때 화면에 놓인 순서 그대로 붙인다. 점수 순위로 붙였더니 "예산이 편한 선택"처럼
+  // 점수는 낮아도 앞에 놓인 곳(6위)만 번호가 빠져 순서가 끊겨 보였다. 가격순은 추천 순서가 아니라 번호를 뺀다
+  type Item = { match: MatchResult; label?: { rank?: number; text?: string }; tone?: "accent" | "default" | "muted" };
+  const curatedOrder: Item[] =
+    showCuratedLayout && hero
+      ? [
+          { match: hero, label: { text: heroVerdict?.headline }, tone: "accent" },
+          ...alternatives.map(({ axis, match }) => ({
+            match,
+            label: { text: generateAlternativeMeta(axis, match).title },
+          })),
+          ...remaining.map((match) => ({ match })),
+        ]
+      : visibleMatches.map((match) => ({ match }));
+  const listItems: Item[] = showCuratedLayout
+    ? curatedOrder.map((item, i) => ({ ...item, label: { ...item.label, rank: i + 1 } }))
+    : curatedOrder;
+  // 조건엔 안 맞는 대안도 같은 뼈대를 쓰되, 번호를 위 목록에 이어 붙이고 회색으로 낮춰 "추천"과 구분한다
+  const nearMissItems: Item[] = nearMisses.map(({ match, violations }, i) => ({
+    match,
+    label: {
+      rank: listItems.length + i + 1,
+      text: matches.length === 0 && i === 0 ? "조건에 가장 가까운 곳" : violations.join(" · "),
+    },
+    tone: "muted",
+  }));
+
+  // 근거 한 줄은 화면 순서대로 고르면서 위에서 이미 쓴 근거를 피한다 — 같은 조건이면 여러 곳이
+  // 똑같이 "조용한 편이라…"로 시작해 차이가 안 보였다
+  const usedReasons = new Set<string>();
+  const reasonOf = new Map(
+    [...listItems, ...nearMissItems].map(({ match }) => {
+      const r = generateRowReason(condition, match, usedReasons);
+      if (r.key) usedReasons.add(r.key);
+      return [match.place.id, { reason: r.reason, caveat: r.caveat }] as const;
+    }),
+  );
+
+  // 추천 카드의 다음 요청 칩: 실제로 결과가 달라지는 조건 변경만, 바뀐 뒤 곳 수와 함께 보여준다
+  const BUDGET_STEPS: Condition["budget"][] = ["under-20k", "20-30k", "30-50k", "over-50k"];
+  const budgetIndex = BUDGET_STEPS.indexOf(condition.budget);
+  const suggestionCandidates: { text: string; next: Condition }[] = [
+    ...(!condition.extraConditions.includes("room-required")
+      ? [{ text: "룸 있는 곳만 보여줘", next: { ...condition, extraConditions: [...condition.extraConditions, "room-required" as const] } }]
+      : []),
+    ...(condition.noise !== "quiet" ? [{ text: "더 조용한 곳만 보여줘", next: { ...condition, noise: "quiet" as const } }] : []),
+    ...(budgetIndex > 0
+      ? [{ text: "예산을 한 단계 낮춰줘", next: { ...condition, budget: BUDGET_STEPS[budgetIndex - 1] } }]
+      : []),
+    ...(condition.area !== "all" ? [{ text: "용산권 전체에서 찾아줘", next: { ...condition, area: "all" as const } }] : []),
+  ];
+  const suggestions = suggestionCandidates
+    .map(({ text, next }) => ({
+      text,
+      href: `/results?${conditionToSearchParams(next).toString()}`,
+      count: matchPlaces(next).length,
+    }))
+    .filter((s) => s.count > 0 && s.count !== matches.length)
+    .slice(0, 2);
+
+  // 식당 내용은 큐레이터 카드보다 양옆을 한 단계 더 들인다(PlaceListItem의 px-2). 구분선은 들이지 않는다
+  const renderList = (items: Item[], startIndex = 0) => (
+    <div className="divide-y divide-line">
+      {items.map((item, i) => (
+        <div key={item.match.place.id} className="animate-list-in" style={{ "--i": i } as CSSProperties}>
+          <PlaceListItem
+            match={item.match}
+            condition={condition}
+            rank={startIndex + i + 1}
+            label={item.label}
+            tone={item.tone}
+            {...reasonOf.get(item.match.place.id)!}
+          />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="flex flex-col gap-5">
+    // 목록은 레퍼런스(쿠팡이츠·캐치테이블)처럼 카드 상자 없이 흰 바닥 위에 구분선으로만 나눈다
+    <div className="-mx-6 -mt-8 flex min-h-full flex-col bg-cream-soft px-6 pt-6">
       <TrackOnMount
         event="result_viewed"
         props={{ result_count: matches.length, top_score: topScore }}
@@ -125,15 +202,8 @@ export default async function ResultsPage({
         />
       )}
 
-      {/* 레퍼런스(마켓컬리 검색 결과)처럼 조건 요약을 박스로 묶지 않고, 좌측 총 개수 +
-          우측 정렬·필터 한 줄로 바꿨다. 상세 조건은 "필터" 시트를 열어야 보이지만,
-          그건 어차피 지금 즉시 알아야 할 정보라기보단 "고치고 싶을 때" 찾는 정보라
-          평소엔 숨겨두는 편이 화면을 덜 무겁게 한다.
-          이 숫자는 matches.length(조건에 맞는 전체 개수, 예: 19)가 아니라
-          visibleMatches.length(실제로 지금 화면에 카드로 그려지는 개수, 예: 6)를 써야 한다 —
-          "총 19개"라고 띄워놓고 카드가 6장만 보이면, 바로 아래 "19곳 중 6곳을 골라드렸어요"
-          배지와 숫자가 겹쳐 보여서 마치 개수가 안 맞는 오류처럼 읽혔다. "전체 보기"를 눌러
-          showAll이 되면 visibleMatches === matches라 그때는 그대로 전체 개수가 뜬다 */}
+      {/* 좌측 총 개수 + 우측 정렬·필터 한 줄. 숫자는 지금 화면에 그려지는 개수(visibleMatches)를
+          쓴다 — 전체 개수를 띄우고 6곳만 보이면 개수가 안 맞는 오류처럼 읽혔다 */}
       <div className="flex items-center justify-between">
         <p className="text-label font-semibold text-ink">총 {visibleMatches.length}개</p>
         <div className="flex items-center gap-3">
@@ -143,184 +213,66 @@ export default async function ResultsPage({
       </div>
 
       {matches.length === 0 ? (
-        <div className="flex flex-col gap-6">
-          <EmptyState
-            title="조건에 딱 맞는 장소를 찾지 못했어요."
-            description={
-              relaxation
-                ? relaxation.message
-                : "지역을 넓히거나 조건을 조정해보세요."
-            }
-            action={
-              <div className="mt-2 flex flex-wrap gap-2">
-                <ConditionEditSheet condition={condition} trigger="emptyState" />
-                {relaxationHref ? (
+        <>
+          <div className="mt-5">
+            <EmptyState
+              title="조건에 딱 맞는 장소를 찾지 못했어요."
+              description={relaxation ? relaxation.message : "지역을 넓히거나 조건을 조정해보세요."}
+              action={
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <ConditionEditSheet condition={condition} trigger="emptyState" />
                   <Link
-                    href={relaxationHref}
+                    href={relaxationHref ?? allAreaHref}
                     className="rounded-full bg-accent px-4 py-2.5 text-label font-medium text-white transition-all hover:bg-accent-strong"
                   >
-                    조건 넓혀서 보기
+                    {relaxationHref ? "조건 넓혀서 보기" : "용산권 전체로 보기"}
                   </Link>
-                ) : (
-                  <Link
-                    href={allAreaHref}
-                    className="rounded-full bg-accent px-4 py-2.5 text-label font-medium text-white transition-all hover:bg-accent-strong"
-                  >
-                    용산권 전체로 보기
-                  </Link>
-                )}
-              </div>
-            }
-          />
-
-          {nearMissPrimary && (
-            <div>
-              <p className="mb-3 text-h2 font-bold text-ink">그래도 가장 가까운 후보</p>
-              <PlaceCard
-                match={nearMissPrimary.match}
-                condition={condition}
-                rank={1}
-                curationRank={NEAR_MISS_RANK}
-                topBand={{ text: "조건에 가장 가까운 곳", tone: "neutral" }}
-              />
-            </div>
+                </div>
+              }
+            />
+          </div>
+          {nearMissItems.length > 0 && (
+            <section className="mt-8">
+              <h2 className="flex items-center gap-1.5 px-2 text-h2 font-bold text-ink">
+                {/* 위 큐레이터 카드와 같은 아이콘을 회색으로 — 같은 큐레이터의 "덤" 제안이라는 신호 */}
+                <Sparkles className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} fill="currentColor" aria-hidden />
+                그래도 가장 가까운 후보
+              </h2>
+              {renderList(nearMissItems)}
+            </section>
           )}
-
-          {nearMissSecondary.length > 0 && (
-            <div>
-              <div className="-mx-6 mb-6 h-2 bg-line-strong" />
-              <p className="mb-3 text-h2 font-bold text-ink">
-                조건엔 안 맞지만 이런 곳은 어때요?
-              </p>
-              <div className="flex flex-col gap-5">
-                {nearMissSecondary.map(({ match, violations }, i) => (
-                  <PlaceCard
-                    key={match.place.id}
-                    match={match}
-                    condition={condition}
-                    rank={i + 2}
-                    curationRank={NEAR_MISS_RANK}
-                    topBand={{ text: violations.join(" · "), tone: "neutral" }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        </>
       ) : (
         <>
-          {/* "N곳 중 M곳을 골라드렸어요"는 필터링 결과를 요약할 뿐, 큐레이터가 이 조건을
-              이해하고 무엇을 먼저 봤는지는 안 드러났다 — [누구와 만나는지] + [우선한 조건]
-              구조의 문장으로 바꿔서, 같은 개수라도 조건이 다르면 다른 문장이 나오게 한다
-              (lib/reason.ts buildCurationSummary 참고).
-              옅은 틴트 채움만으로는 강조가 부족해서, 채움은 그대로 두고 그라디언트 테두리를
-              다시 얹었다 — 대신 옆의 "필터" 버튼에서 테두리·채움을 걷어내 이 배지가 화면에서
-              유일하게 "테두리+채움"을 다 쓰는 자리가 되게 했다. radius도 식당 카드와
-              맞춰 rounded-sm으로 낮췄다(더는 pill이 아니다) */}
-          <div className="w-full rounded-sm bg-gradient-to-r from-accent to-accent-light p-[2px]">
-            <div className="flex w-full items-center gap-1.5 rounded-sm bg-gradient-to-r from-accent-soft to-accent-light-soft px-3.5 py-2.5 text-label font-semibold text-accent-strong">
-              <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.5} fill="currentColor" aria-hidden />
-              {buildCurationSummary(condition)}
-            </div>
+          <div className="mt-4 mb-2">
+            <CurationAgentCard
+              {...buildAgentHeadline(condition)}
+              suggestions={suggestions}
+            />
           </div>
 
-          {showCuratedLayout && hero ? (
-            <div className="flex flex-col gap-6">
-              {/* 1순위: 헤드라인을 카드 바깥 별도 박스에 얹었더니 카드가 그 박스의 padding
-                  만큼 좁아져 다른 카드들과 폭이 달라 보였다 — PlaceCard 자체의 topBand로
-                  옮겨서 카드 테두리 안쪽 맨 위에 붙는 띠로 그린다. 카드 크기는 그대로,
-                  테두리 색만 이어진다 */}
-              <PlaceCard
-                match={hero}
-                condition={condition}
-                rank={1}
-                curationRank={curationRank.get(hero.place.id)!}
-                topBand={heroVerdict ? { text: heroVerdict.headline, tone: "accent" } : undefined}
-              />
-
-              {alternatives.length > 0 && (
-                <div>
-                  <p className="mb-3 text-h2 font-bold text-ink">다른 선택</p>
-                  <div className="flex flex-col gap-4">
-                    {alternatives.map(({ axis, match }) => {
-                      const meta = generateAlternativeMeta(axis, match);
-                      return (
-                        <div key={axis}>
-                          <PlaceCard
-                            match={match}
-                            condition={condition}
-                            rank={visibleMatches.indexOf(match) + 1}
-                            curationRank={curationRank.get(match.place.id)!}
-                            topBand={{ text: meta.title, tone: "neutral" }}
-                          />
-                          {/* 좋은 점만 말하지 않는다 — 1순위 대비 뭘 포기하게 되는지도 같이 알려준다 */}
-                          <p className="mt-2 px-1 text-caption text-ink-soft">{meta.caveat}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {remaining.length > 0 && (
-                <div className="flex flex-col gap-5">
-                  {remaining.map((match) => (
-                    <PlaceCard
-                      key={match.place.id}
-                      match={match}
-                      condition={condition}
-                      rank={visibleMatches.indexOf(match) + 1}
-                      curationRank={curationRank.get(match.place.id)!}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-5">
-              {visibleMatches.map((match, index) => (
-                <PlaceCard
-                  key={match.place.id}
-                  match={match}
-                  condition={condition}
-                  rank={index + 1}
-                  curationRank={curationRank.get(match.place.id)!}
-                />
-              ))}
-            </div>
-          )}
+          {renderList(listItems)}
 
           {isTruncated && (
             <Link
               href={showAllHref}
-              className="self-center rounded-full border border-line px-4 py-2.5 text-label font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
+              className="mb-2 self-center rounded-full border border-line px-4 py-2.5 text-label font-medium text-ink transition-all hover:bg-cream-strong active:bg-cream-strong"
             >
               전체 {matches.length}곳 보기
             </Link>
           )}
 
-          {/* 실제 매칭이 1~2곳뿐이면 "조건 넓혀서 보기"를 눌러도 결과가 거의 그대로라
-              허탈하다 — 위의 진짜 매칭 아래에 조건엔 안 맞지만 점수가 높은 후보를
-              몇 곳 더 채워, 조건을 넓힐수록 더 볼 곳이 늘어난다는 기대를 지킨다 */}
-          {isNarrow && nearMisses.length > 0 && (
-            <div>
-              <div className="-mx-6 mb-6 h-2 bg-line-strong" />
-              <p className="mb-3 text-h2 font-bold text-ink">
+          {/* 실제 매칭이 1~2곳뿐이면 조건엔 안 맞지만 점수가 높은 후보를 몇 곳 더 채운다 */}
+          {isNarrow && nearMissItems.length > 0 && (
+            <section className="-mx-6 mt-4 border-t-8 border-cream px-6 pt-6">
+              {/* 굵은 구분 띠는 화면 양끝까지 가로지른다 */}
+              <h2 className="flex items-center gap-1.5 px-2 text-h2 font-bold text-ink">
+                {/* 위 큐레이터 카드와 같은 아이콘을 회색으로 — 같은 큐레이터의 "덤" 제안이라는 신호 */}
+                <Sparkles className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} fill="currentColor" aria-hidden />
                 조건엔 안 맞지만 이런 곳은 어때요?
-              </p>
-              <div className="flex flex-col gap-5">
-                {nearMisses.map(({ match, violations }, i) => (
-                  <PlaceCard
-                    key={match.place.id}
-                    match={match}
-                    condition={condition}
-                    rank={visibleMatches.length + i + 1}
-                    curationRank={NEAR_MISS_RANK}
-                    topBand={{ text: violations.join(" · "), tone: "neutral" }}
-                  />
-                ))}
-              </div>
-            </div>
+              </h2>
+              {renderList(nearMissItems, listItems.length)}
+            </section>
           )}
         </>
       )}

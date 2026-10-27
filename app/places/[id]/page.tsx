@@ -1,24 +1,22 @@
 import { notFound } from "next/navigation";
+import { clsx } from "clsx";
+import { ChevronDown, Clock, MapPin, Wallet } from "lucide-react";
 import { getPlaceById } from "@/lib/places";
 import { searchParamsToCondition } from "@/lib/condition-query";
-import { matchPlaces, scorePlace } from "@/lib/scoring";
-import {
-  generateBookingFacts,
-  generateDetailReason,
-  generateReservationAsk,
-  genericReason,
-} from "@/lib/reason";
+import { scorePlace } from "@/lib/scoring";
+import { generateBookingFacts, generateDetailSummary, generateReservationAsk } from "@/lib/reason";
 import { buildCheckpoints } from "@/lib/checkpoints";
-import { AREA_LABEL, FIT_TAG_VARIANT, formatPrice, splitBusinessHoursLines } from "@/lib/labels";
+import { AREA_LABEL, formatPrice, splitBusinessHoursLines, todayBusinessHours } from "@/lib/labels";
 import { MapLinks } from "@/components/MapLinks";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { TrackOnMount } from "@/components/TrackOnMount";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { StickyBottomBar } from "@/components/StickyBottomBar";
 import { PlacePhotoCarousel } from "@/components/PlacePhotoCarousel";
 import { PlaceDetailTabs } from "@/components/PlaceDetailTabs";
-import { Tag } from "@/components/ui/Tag";
-import { ClockIcon, MapPinIcon, WalletIcon } from "@heroicons/react/24/solid";
+
+/** "룸은 4인 이상부터 가능해요." 와 "룸은 4인 이상부터 가능해요" 를 같은 문장으로 본다 */
+const normalize = (text: string) => text.replace(/[.\s]/g, "");
 
 export default async function PlaceDetailPage({
   params,
@@ -34,109 +32,149 @@ export default async function PlaceDetailPage({
   const sp = await searchParams;
   const condition = searchParamsToCondition(sp);
   const match = condition ? scorePlace(condition, place) : null;
-  const reasonCards = match
-    ? generateDetailReason(condition!, match)
-    : genericReason(place.curatedReason);
+
+  // 목록에서 넘겨받은 윗줄(번호·문구). 목록과 같은 모양으로 보여줘서 "방금 누른 그 식당"임을 잇는다
+  const rank = typeof sp.r === "string" ? Number(sp.r) || undefined : undefined;
+  const labelText = typeof sp.l === "string" ? sp.l : undefined;
+  const tone = sp.t === "m" ? "muted" : rank === 1 ? "accent" : "default";
+
+  const summary = generateDetailSummary(condition, match, place);
   const checkpoints = buildCheckpoints(place, condition);
-  // 결과 목록의 "청모픽 N순위" 배지와 같은 기준(매칭 점수 순)으로 상세 페이지에서도
-  // 몇 순위인지 다시 계산한다 — URL에 순위를 실어 나르지 않고, 같은 조건으로
-  // matchPlaces를 다시 돌려 이 장소의 위치를 찾는 쪽이 라우팅 변경 없이 더 간단하다
-  const rank = condition ? matchPlaces(condition).findIndex((m) => m.place.id === place.id) + 1 : null;
-  const bookingFacts = generateBookingFacts(place, condition);
-  const reservationAsk = generateReservationAsk(condition);
+  // 예약 전 확인: 조건과 맞는 점(✓)과 확인할 점(!)만 남긴다. 위 추천 이유가 이미 말한 주제
+  // (룸·응대·조용함·역 접근)는 문장이 달라도 같은 말이라 ✓에서 뺀다
+  const summaryText = summary.bullets.join(" ");
+  const TOPICS = [/룸/, /응대|대접/, /조용|대화/, /역에서/, /칸막이/, /주차/];
+  const coveredTopics = TOPICS.filter((re) => re.test(summaryText));
+  const matchedPoints = checkpoints
+    .filter((c) => c.tone === "positive")
+    .map((c) => c.text)
+    .filter((t) => !coveredTopics.some((re) => re.test(t)));
+  const seen = new Set<string>();
+  // 출처마다 마침표가 있다 없다 해서 목록 안에서 들쭉날쭉했다 — 짧은 목록 문장은 마침표 없이 맞춘다
+  const pointsToCheck = [
+    ...generateBookingFacts(place, condition),
+    ...checkpoints
+      .filter((c) => c.tone === "warning" || (c.tone === "neutral" && c.group === "운영 조건"))
+      .map((c) => c.text),
+  ].filter((t) => {
+    const key = normalize(t);
+    if (!t || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).map((t) => t.replace(/\.$/, ""));
+
+  // 편의 태그는 데이터로 확인된 것만 둔다
+  const amenities = [
+    place.privateRoomAvailable && "룸 있음",
+    place.reservationMethod === "available" && "예약 가능",
+    place.reservationMethod === "phone" && "전화 예약",
+    place.parkingAvailable && "주차 가능",
+  ].filter((v): v is string => Boolean(v));
 
   return (
-    <div className="flex flex-col gap-6">
-      <TrackOnMount
-        event="place_detail_viewed"
-        props={{ place_id: place.id, score: match?.score }}
-      />
+    // 결과 목록과 같은 흰 바닥. 섹션 사이는 회색 띠로만 나눈다.
+    // 하단 고정바 밑까지 흰 바닥이 이어지도록 MainArea의 아래 여백(pb-32)을 덮는다
+    <div className="-mx-6 -mb-32 -mt-8 flex min-h-full flex-col bg-cream-soft px-6 pb-36 pt-4">
+      <TrackOnMount event="place_detail_viewed" props={{ place_id: place.id, score: match?.score }} />
 
       <PlacePhotoCarousel place={place} />
 
-      <div>
-        <div className="flex items-start justify-between gap-2">
-          <h1 className="text-h1 font-bold text-ink text-balance">{place.name}</h1>
-          {match && rank && rank <= 5 && (
-            <Tag variant={FIT_TAG_VARIANT[match.fitLabel]}>청모픽 {rank}순위</Tag>
-          )}
-        </div>
-        {/* text-ink-faint(#A4A5A7)는 페이지 배경(#F5F5F7)과 명도差가 작아 거의 안 읽혔다
-            — PlaceCard의 동일한 지역·카테고리 메타 줄과 같은 톤(ink-soft)으로 맞춘다 */}
+      <div className="mt-5">
+        {(rank || labelText) && (
+          <p className="mb-1 flex items-center gap-1.5 text-caption font-semibold">
+            {rank && (
+              <span
+                className={clsx(
+                  "flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-micro font-bold text-white",
+                  tone === "accent" ? "bg-accent" : tone === "muted" ? "bg-ink-faintest" : "bg-ink",
+                )}
+              >
+                {rank}
+              </span>
+            )}
+            {labelText && (
+              <span className={tone === "accent" ? "font-bold text-accent" : "text-ink-soft"}>{labelText}</span>
+            )}
+          </p>
+        )}
+        <h1 className="text-h1 font-bold text-ink">{place.name}</h1>
         <p className="mt-1 text-label text-ink-soft">
-          {place.category} · {AREA_LABEL[place.area]}
+          {AREA_LABEL[place.area]} · {place.category}
         </p>
 
-        {/* 메타 줄(카테고리·지역)과 아래 위치·영업시간·가격 블록 사이는 같은 "정보 묶음"
-            안에서 살짝만 끊어주는 자리라, 대분류를 가르는 다른 구분 밴드(h-2)와 달리
-            이 선만 유일하게 얇은 헤어라인(1px)으로 둔다 — bg-cream은 페이지 배경과
-            완전히 같은 색이라 실제로는 안 보이는 선이었어서 line-strong으로 바꿨다.
-            프레임 끝까지 번지지 않고, 아래 "추천 이유" 카드와 같은 좌우 여백(px-6) 안에 머문다 */}
-        <div className="mt-3 h-px bg-line-strong" />
+        <div className="mt-4 h-px bg-line" />
 
-        {/* 카드로 감싸지 않는다 — 보더+패딩이 있으면 이 줄들이 식당명보다 안쪽(우측)에서
-            시작해 좌측 정렬이 안 맞았다. 주소·영업시간·가격 세 줄 다 같은 크기·굵기로 두고,
-            가격만 색(accent)으로만 구분한다 — 크기를 키우면 "예산"이 다른 정보보다
-            중요하다는 착시를 준다. 아이콘은 lucide 라인 스타일 대신 Heroicons solid로
-            채워서 시각적으로도 더 또렷하게 읽히게 했다 */}
-        <div className="mt-3 flex flex-col gap-3">
-          <p className="flex items-center gap-1.5 text-label font-medium text-ink">
-            <MapPinIcon className="h-4 w-4 shrink-0 text-ink-faint" />
-            {place.address}
+        {/* 정보 줄: 목록 카드와 같은 선 아이콘. 영업시간은 오늘 구간만 먼저 보여주고 눌러서 전체를 편다 */}
+        <div className="mt-4 flex flex-col gap-3 text-label text-ink">
+          <p className="flex items-start gap-2">
+            <MapPin className="mt-px h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} aria-hidden />
+            <span className="min-w-0 flex-1">{place.address}</span>
           </p>
-          {/* text-sm 기본 line-height(1.25rem = 1.429)는 원티드 타이포 스케일의 label1
-              (단일 줄 UI 라벨용) 값이다. 여기는 요일 그룹이 여러 줄로 나열되는 산문형 텍스트라
-              원티드 스펙이 구분해둔 label1-read(1.571)를 대신 쓴다 */}
-          <p className="flex items-start gap-1.5 text-body-sm font-medium text-ink">
-            <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" />
-            <span className="flex flex-col">
+          <p className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} aria-hidden />
+            <span className="font-semibold">1인 {formatPrice(place.priceMin, place.priceMax)}</span>
+          </p>
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+              <Clock className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} aria-hidden />
+              오늘 {todayBusinessHours(place.businessHours)}
+              <ChevronDown
+                className="h-4 w-4 text-ink-faint transition-transform group-open:rotate-180"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+            </summary>
+            <ul className="mt-2 flex flex-col gap-1 pl-6 text-caption text-ink-soft">
               {splitBusinessHoursLines(place.businessHours).map((line) => (
-                <span key={line}>{line}</span>
+                <li key={line}>{line}</li>
               ))}
-            </span>
-          </p>
-          {/* 가격은 다른 화면(홈·북마크)과 같이 브랜드색 대신 잉크로, 숫자만 굵게 */}
-          <p className="flex items-center gap-1.5 text-label font-bold text-ink">
-            <WalletIcon className="h-4 w-4 shrink-0 text-ink-faint" />
-            1인 {formatPrice(place.priceMin, place.priceMax)}
-          </p>
+            </ul>
+          </details>
         </div>
+
+        {amenities.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {amenities.map((a) => (
+              <span key={a} className="rounded-sm bg-cream-strong px-2 py-1 text-caption font-medium text-ink-soft">
+                {a}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 탭 영역(추천 이유·체크포인트·주의사항)이 위 정보 블록과 같은 흰 배경에 바로
-          이어붙어 있어 어디서 끊기는지 안 보였다 — 다른 대분류 사이에 쓴 것과 같은
-          구분 밴드를 여기도 넣어서 "상단 정보 vs 탭 콘텐츠"를 뚜렷하게 가른다 */}
-      <div className="-mx-6 h-2 bg-line-strong" />
+      <div className="-mx-6 mt-6 h-2 bg-cream" />
 
       <PlaceDetailTabs
         menu={place.menu}
-        checkpoints={checkpoints}
-        reasonCards={reasonCards}
-        bookingFacts={bookingFacts}
-        reservationAsk={reservationAsk}
+        summaryTitle={summary.title}
+        summaryBullets={summary.bullets}
+        matchedPoints={matchedPoints}
+        pointsToCheck={pointsToCheck}
+        reservationAsk={generateReservationAsk(condition)}
       />
 
-      {/* 탭 콘텐츠와는 성격이 다른 블록(정보 출처 안내, 피드백 위젯)이라 구분선으로 한 번 끊어준다 */}
-      <hr className="border-line" />
-
-      <p className="text-caption text-ink-soft">
-        리뷰, 예약 가능 여부는 지도 서비스에서 최신 정보를 확인해주세요.
-        메뉴·가격은 변동될 수 있어요. (정보 확인일 {place.lastVerifiedAt})
+      <p className="mt-8 border-t border-line pt-5 pb-4 text-caption text-ink-faint">
+        리뷰, 예약 가능 여부는 지도 서비스에서 최신 정보를 확인해주세요. 메뉴·가격은 변동될 수 있어요.
+        (정보 확인일 {place.lastVerifiedAt})
       </p>
 
-      <FeedbackWidget placeId={place.id} />
+      {/* 추천 만족도 설문. 페이지를 다 읽은 뒤 답하도록 맨 아래에 둔다 */}
+      <div className="mt-2">
+        <FeedbackWidget placeId={place.id} />
+      </div>
 
-      {/* 지도 이동은 이 서비스의 핵심 전환이라, 스크롤 위치와 무관하게 항상 엄지 반경 안에 둔다.
-          저장하기는 별도 전체 폭 버튼 대신, 이 고정바 왼쪽에 아이콘으로 붙여 액션을 한데 모은다 */}
+      {/* 지도 이동은 핵심 전환이라 항상 엄지 반경 안에 둔다. 저장은 아이콘으로 붙여 액션을 한데 모은다 */}
       <StickyBottomBar>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-stretch gap-2">
           <BookmarkButton
             placeId={place.id}
             page="detail"
             score={match?.score}
-            className="h-[52px] w-[52px] shrink-0 justify-center px-0"
+            iconClassName="h-[22px] w-[22px]"
+            className="!h-[52px] !w-[52px] shrink-0 !justify-center !rounded-lg !px-0"
           />
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <MapLinks
               placeId={place.id}
               mapUrlNaver={place.mapUrlNaver}

@@ -250,6 +250,19 @@ export function buildCurationSummary(condition: Condition): string {
   return `${withConjunctionParticle(audience)}의 자리인 만큼, ${withObjectParticle(joinedSignal)} 먼저 살펴봤어요.`;
 }
 
+/** 결과 상단 추천 카드의 제목. 앞부분(누구와 몇 명)은 강조색으로, 뒷부분은 무엇을 먼저
+ *  챙겨 골랐는지를 말한다. 예: [선배·상사 3~4명] 모임이라 차분하고 격식 있는 분위기를 먼저 챙겼어요 */
+export function buildAgentHeadline(condition: Condition): { subject: string; rest: string } {
+  const people = PEOPLE_LABEL[condition.people];
+  const subject =
+    condition.relationship === "other" ? `${people} 모임` : `${AUDIENCE_NOUN[condition.relationship]} ${people}`;
+  const signals = prioritySignals(condition).slice(0, 2);
+  const tail = condition.relationship === "other" ? "이라" : " 모임이라";
+  if (signals.length === 0) return { subject, rest: `${tail} 다 같이 편하게 어울릴 곳을 골랐어요` };
+  const joined = signals.length === 2 ? `${withConjunctionParticle(signals[0])} ${signals[1]}` : signals[0];
+  return { subject, rest: `${tail} ${withObjectParticle(joined)} 먼저 챙겼어요` };
+}
+
 /* ───────────────────────── 상황 언어 ─────────────────────────
  * 예전 카드 문구는 점수가 가장 높은 카테고리에 고정 문장을 붙이는 방식이라("원하시는 분위기와
  * 잘 맞아요", "찾으시던 음식과 잘 맞아요") 어느 식당에 붙여도 똑같았고, 사용자가 고른 조건을
@@ -467,8 +480,9 @@ function situationCaveat(scene: Scene, condition: Condition, place: Place): stri
     return "다만 예약을 받지 않아 웨이팅이 생길 수 있어요";
   if (place.reservationMethod === "difficult" && formal)
     return "다만 예약이 치열한 편이라 미리 잡아두는 게 좋아요";
-  if (condition.budget !== "any" && place.priceMax > BUDGET_UPPER[condition.budget])
-    return "다만 메뉴에 따라 예산을 조금 넘을 수 있어요";
+  // 상한이 예산을 조금 넘는 건 흔해서 매번 말하면 소음이 된다. 가장 싼 메뉴부터 예산을 넘을 때만 알린다
+  if (condition.budget !== "any" && place.priceMin > BUDGET_UPPER[condition.budget])
+    return "다만 가장 저렴한 메뉴도 예산을 넘어요";
   if (scene === "family" && !place.parkingAvailable) return "다만 주차는 어려워요";
   return null;
 }
@@ -494,6 +508,77 @@ export function generateCardSentence(
   const caveat = situationCaveat(sceneOf(condition), condition, place);
   const main = situationSentence(condition, place, withOpener);
   return caveat ? `${main} ${caveat}.` : main;
+}
+
+/** 행 근거로 더 볼 수 있는 키. 자리별 순서에 없는 근거도 위 행과 겹칠 땐 꺼내 쓴다 */
+const ROW_EXTRA_KEYS: EvidenceKey[] = ["room", "semiPrivate", "quiet", "formal", "hospitality", "wide", "reservation", "access", "parking", "trendy", "capacity"];
+
+/** 근거가 겹칠 때 앞에 짧게 남기는 핵심 사실 */
+const ROW_SHORT: Partial<Record<EvidenceKey, string>> = {
+  room: "룸이 있고",
+  semiPrivate: "칸막이 좌석이고",
+  quiet: "조용한 편이고",
+  formal: "격식 있는 분위기이고",
+  wide: "테이블 간격이 넉넉하고",
+};
+
+/** "양갈비예요" / "족발이에요" */
+function withCopula(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  const hasFinal = code >= 0 && code <= 11171 && code % 28 !== 0;
+  return `${word}${hasFinal ? "이에요" : "예요"}`;
+}
+
+/** 압축 목록 한 줄용: 근거는 1개만, 아쉬운 점은 따로 돌려준다.
+ *  - 가격은 행에 이미 숫자로 있어서 "1인 …원이라" 근거는 쓰지 않는다
+ *  - 위 행들이 이미 쓴 근거(used)는 피한다. 같은 조건이면 여러 곳이 똑같이 "조용한 편이라…"로
+ *    시작해 차이가 안 보였다. 쓸 근거가 다 겹치면 대표 메뉴로 이 집만의 정보를 준다 */
+export function generateRowReason(
+  condition: Condition,
+  match: MatchResult,
+  used: Set<string> = new Set(),
+): { reason: string; caveat: string | null; key: string | null } {
+  const { place } = match;
+  const scene = sceneOf(condition);
+  const order = [...explicitEvidence(condition), ...SCENE_PRIORITY[scene], ...ROW_EXTRA_KEYS];
+  let pick: (Evidence & { key: EvidenceKey }) | null = null;
+  for (const key of new Set(order)) {
+    if (key === "budget" || used.has(key)) continue;
+    const ev = evidenceFor(key, scene, condition, place);
+    if (ev) {
+      pick = { ...ev, key };
+      break;
+    }
+  }
+  const caveatRaw = situationCaveat(scene, condition, place);
+  const caveat = caveatRaw ? `${caveatRaw.replace(/^다만 /, "")}.` : null;
+  if (pick) return { reason: `${pick.end}.`, caveat, key: pick.key };
+  // 근거가 모두 위 행과 겹쳐도 핵심 사실(룸 등)은 짧게 남기고, 뒤에 대표 메뉴를 붙여 차이를 준다
+  const signature = place.menu[0]?.name.replace(/\(.*?\)|\[.*?\]/g, "").trim();
+  const shortKey = order.find((k) => k in ROW_SHORT && evidenceFor(k, scene, condition, place));
+  const lead = shortKey ? `${ROW_SHORT[shortKey]}, ` : "";
+  return {
+    reason: signature ? `${lead}대표 메뉴는 ${withCopula(signature)}.` : place.curatedReason,
+    caveat,
+    key: null,
+  };
+}
+
+/** 상세 페이지 추천 이유 카드: 제목 한 줄 + 식당 데이터에서 고른 근거 최대 3개.
+ *  예전 카드 3장(관계에 잘 맞는 분위기예요 / 인원수에 넉넉한 좌석이에요 / 긴 소개 문장)은
+ *  체크포인트와 같은 말을 반복했다 — 목록 카드와 같은 근거 문장으로 맞추고, 근거가 모자랄 때만
+ *  식당 소개(curatedReason)를 덧붙인다 */
+export function generateDetailSummary(
+  condition: Condition | null,
+  match: MatchResult | null,
+  place: Place,
+): { title: string; bullets: string[] } {
+  if (!condition || !match) return { title: "이 식당을 고른 이유", bullets: [place.curatedReason] };
+  const { subject } = buildAgentHeadline(condition);
+  const title = condition.relationship === "other" ? `${subject}에 추천하는 이유` : `${subject} 모임에 추천하는 이유`;
+  const bullets = pickEvidence(sceneOf(condition), condition, place, 3).map((e) => `${e.end}.`);
+  if (bullets.length < 2) bullets.push(place.curatedReason);
+  return { title, bullets };
 }
 
 export interface Verdict {

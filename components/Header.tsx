@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { clsx } from "clsx";
 import { ArrowLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { LogoMark } from "@/components/LogoMark";
@@ -20,7 +21,8 @@ export function Header() {
   return (
     // border-line/70(옅게 깎은 미색)이 헤더·본문이 같은 cream 계열이라 사실상 안 보였다.
     // 헤어라인 자체 톤(line)은 그대로 두고 불투명도만 걷어서 영역 구분이 되게 한다
-    <header className="shrink-0 border-b border-line bg-cream">
+    // 결과 목록·장소 상세는 흰 바닥이라 헤더도 흰색으로 맞춰 경계 없이 이어 보이게 한다
+    <header className={clsx("shrink-0 border-b border-line", pathname.startsWith("/results") || isPlaceDetail ? "bg-cream-soft" : "bg-cream")}>
       <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-4">
         {isPlaceDetail ? (
           <button

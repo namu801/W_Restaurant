@@ -1,4 +1,4 @@
-import { formatPrice, PEOPLE_LABEL } from "./labels";
+import { BUDGET_LABEL, formatPrice, PEOPLE_LABEL } from "./labels";
 import type { BudgetKey, Condition, PeopleKey, Place } from "./types";
 import type { ReasonIconKey } from "./icon-keys";
 
@@ -84,14 +84,20 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
 
   if (condition && condition.budget !== "any") {
     const need = BUDGET_RANGE[condition.budget];
+    // 범위가 조금만 겹쳐도 "예산 범위 안"이라고 했더니, 3만~8만 원인 곳이 3만~5만 원 예산에 "범위 안"으로
+    // 나왔다. 가격 범위 전체가 예산 안일 때만 "안"이라고 하고, 일부만 겹치면 그대로 말한다
+    const price = `1인 ${formatPrice(place.priceMin, place.priceMax)}`;
+    const within = need[0] <= place.priceMin && place.priceMax <= need[1];
     const overlap = need[0] <= place.priceMax && place.priceMin <= need[1];
     checkpoints.push({
       group: "식사 조건",
       icon: "wallet",
-      text: overlap
-        ? `1인 ${formatPrice(place.priceMin, place.priceMax)}, 예산 범위 안이에요`
-        : `1인 ${formatPrice(place.priceMin, place.priceMax)}, 예산보다 다소 높을 수 있어요`,
-      tone: overlap ? "positive" : "warning",
+      text: within
+        ? `${price}, 예산 범위 안이에요`
+        : overlap
+          ? `${price}으로, 고른 예산(${BUDGET_LABEL[condition.budget]})과 일부만 겹쳐요`
+          : `${price}, 예산보다 다소 높을 수 있어요`,
+      tone: within ? "positive" : "warning",
     });
   } else {
     checkpoints.push({

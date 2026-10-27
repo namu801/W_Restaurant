@@ -13,6 +13,7 @@ export function BookmarkButton({
   page,
   className,
   labeled = false,
+  iconClassName = "h-4 w-4",
 }: {
   placeId: string;
   rank?: number;
@@ -20,6 +21,8 @@ export function BookmarkButton({
   page: "results" | "detail" | "bookmarks";
   className?: string;
   labeled?: boolean;
+  /** 아이콘만 있는 버튼은 옆 글자 크기에 맞춰 키운다(기본 16px은 라벨 붙은 버튼 기준) */
+  iconClassName?: string;
 }) {
   const [saved, setSaved] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -51,7 +54,7 @@ export function BookmarkButton({
         className,
       )}
     >
-      <Bookmark className="h-4 w-4" fill={saved ? "currentColor" : "none"} />
+      <Bookmark className={iconClassName} strokeWidth={1.75} fill={saved ? "currentColor" : "none"} />
       {labeled && (saved ? "저장됨" : "저장하기")}
     </button>
   );
