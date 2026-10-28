@@ -96,12 +96,15 @@ export const VIBE_LABEL: Record<VibeKey, string> = {
   any: "분위기는 상관없어요",
 };
 
-/** 카드 아래 한 줄. 형용사만으로는 고르기 어려워서 "어떤 자리인지"로 풀어준다 */
+/** 카드 아래 한 줄. 형용사만으로는 고르기 어려워서 "어떤 자리인지"로 풀어준다.
+ *  카드 한 장이 소음 조건까지 정하므로(VIBE_CONDITION) 얼마나 조용한지도 함께 말한다 —
+ *  사진만 보고는 소음을 알 수 없어서(홍보 사진은 실제보다 조용해 보인다) 글로 짚어준다 */
 export const VIBE_HINT: Record<Exclude<VibeKey, "any">, string> = {
-  "calm-formal": "윗분을 모셔도 실례가 없는 곳",
-  "neat-comfy": "누구와 가도 무난한 곳",
-  trendy: "요즘 뜨는, 사진 남기고 싶은 곳",
-  "lively-casual": "편하게 떠들며 먹고 마시는 곳",
+  "calm-formal": "조용히 윗분 모시기 좋은 곳",
+  "neat-comfy": "북적여도 대화는 편한 곳",
+  // 깔끔과 소음 조건이 같아서, 둘 다 "대화 편한"으로 끝나면 차이가 안 보인다 — 트렌디는 공간의 성격으로 구분한다
+  trendy: "사진 남기기 좋은 요즘 핫플",
+  "lively-casual": "왁자지껄 편하게 먹는 곳",
 };
 
 /** 문장 안에 넣을 때 쓰는 명사형 ("…분위기를 먼저 살펴봤어요", "…분위기까지 담았어요") */
@@ -155,6 +158,7 @@ export const EXTRA_CONDITION_LABEL: Record<ExtraConditionKey, string> = {
   "wide-seating": "넉넉한 좌석",
   "reservation-possible": "예약 가능",
   "with-drinks": "술도 곁들여요",
+  "corkage-free": "콜키지 프리",
 };
 
 export const RELATIONSHIP_OPTIONS = Object.keys(RELATIONSHIP_LABEL) as RelationshipKey[];

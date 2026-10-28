@@ -1,6 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
+import { AnyCheckbox } from "@/components/AnyCheckbox";
 import { useEffect, useState } from "react";
 import { formatWon } from "@/lib/labels";
 import type { BudgetKey } from "@/lib/types";
@@ -110,16 +111,12 @@ export function BudgetSlider({
         </div>
       </div>
 
-      {/* 흰 카드로 감싸지 않고, 체크박스 + 텍스트만 가볍게 둔다 */}
-      <label className="flex items-center gap-2 text-label font-medium text-ink">
-        <input
-          type="checkbox"
-          checked={isAny}
-          onChange={(e) => onChange(e.target.checked ? "any" : valueToBudgetKey(raw))}
-          className="h-4 w-4 accent-accent-strong"
-        />
-        가격 상관없음
-      </label>
+      {/* 흰 카드로 감싸지 않고, 체크박스 + 텍스트만 가볍게 둔다(메뉴·분위기 화면과 같은 모양) */}
+      <AnyCheckbox
+        label="가격 상관없음"
+        checked={isAny}
+        onChange={(checked) => onChange(checked ? "any" : valueToBudgetKey(raw))}
+      />
     </div>
   );
 }

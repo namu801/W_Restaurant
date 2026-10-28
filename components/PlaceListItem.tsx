@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { Clock, Info, Sparkles, Wallet } from "lucide-react";
 import { AREA_LABEL, formatPrice, todayBusinessHours } from "@/lib/labels";
 import { conditionToSearchParams } from "@/lib/condition-query";
+import { splitReasonLead } from "@/lib/reason";
 import type { Condition, MatchResult } from "@/lib/types";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { PlaceThumbnail } from "@/components/PlaceThumbnail";
@@ -114,7 +115,17 @@ export function PlaceListItem({
             fill="currentColor"
             aria-hidden
           />
-          {reason}
+          <span>
+            {(() => {
+              const { lead, rest } = splitReasonLead(reason);
+              return (
+                <>
+                  {lead && <b className="font-bold">{lead}</b>}
+                  {rest}
+                </>
+              );
+            })()}
+          </span>
         </p>
 
         <div className="mt-3 flex flex-col gap-1.5 text-label text-ink">

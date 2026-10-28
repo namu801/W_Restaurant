@@ -214,5 +214,21 @@ export function buildCheckpoints(place: Place, condition: Condition | null): Che
     tone: place.parkingAvailable ? "positive" : "neutral",
   });
 
+  if (condition?.extraConditions.includes("corkage-free")) {
+    checkpoints.push({
+      group: "운영 조건",
+      icon: "utensils-crossed",
+      text:
+        place.corkage === "free"
+          ? "콜키지 프리예요"
+          : place.corkage === "paid"
+            ? "콜키지는 유료예요. 예약할 때 금액을 확인하세요"
+            : place.corkage === "unavailable"
+              ? "외부 주류 반입이 어려워요"
+              : "콜키지 가능 여부는 예약할 때 확인하세요",
+      tone: place.corkage === "free" ? "positive" : "warning",
+    });
+  }
+
   return checkpoints;
 }

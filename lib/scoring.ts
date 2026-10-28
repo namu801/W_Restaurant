@@ -127,6 +127,18 @@ function fitFood(condition: Condition, place: Place): number {
   return cuisine * (1 - DRINKS_SHARE) + drinks * DRINKS_SHARE;
 }
 
+/** "콜키지 프리"도 가점이다. 콜키지 정책은 확인된 매장이 적어서, 제외 필터로 걸면 확인 안 된
+ *  곳이 전부 빠진다. 확인된 프리는 채워주고, 모르는 곳은 절반, 유료·불가는 0으로 본다 */
+const CORKAGE_SHARE = 0.15;
+const CORKAGE_FIT = { free: 1, paid: 0.3, unavailable: 0 } as const;
+
+function fitFoodWithCorkage(condition: Condition, place: Place): number {
+  const food = fitFood(condition, place);
+  if (!condition.extraConditions.includes("corkage-free")) return food;
+  const corkage = place.corkage ? CORKAGE_FIT[place.corkage] : 0.5;
+  return food * (1 - CORKAGE_SHARE) + corkage * CORKAGE_SHARE;
+}
+
 const NOISE_MATCH: Record<Exclude<NoiseKey, "any">, Record<NoiseLevel, number>> = {
   quiet: { quiet: 1, moderate: 0.5, lively: 0.1 },
   "lively-but-talkable": { quiet: 0.8, moderate: 1, lively: 0.4 },
@@ -229,7 +241,7 @@ function computeMatch(condition: Condition, place: Place): MatchResult {
     people: fitPeople(condition, place) ?? 0,
     budget: fitBudget(condition, place).ratio,
     access: place.accessScore / 10,
-    food: fitFood(condition, place),
+    food: fitFoodWithCorkage(condition, place),
     conversation: fitConversation(condition, place),
     mood: fitMood(condition, place),
     seat: fitSeat(place),
@@ -327,9 +339,10 @@ export function findRelaxationSuggestion(
     "wide-seating": "'좌석 간격' 조건을 해제하면",
     "reservation-possible": "'예약 가능' 조건을 해제하면",
     "with-drinks": "",
+    "corkage-free": "",
   };
   for (const extra of condition.extraConditions) {
-    if (extra === "with-drinks") continue; // 가점이라 결과를 줄이지 않는다 — 완화할 이유가 없다
+    if (extra === "with-drinks" || extra === "corkage-free") continue; // 가점이라 결과를 줄이지 않는다 — 완화할 이유가 없다
     candidates.push({
       label: EXTRA_RELAX_LABEL[extra],
       next: { ...condition, extraConditions: condition.extraConditions.filter((e) => e !== extra) },

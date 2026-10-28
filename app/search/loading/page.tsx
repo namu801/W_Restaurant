@@ -44,7 +44,8 @@ function buildMessages(condition: Condition): string[] {
       : "예산 부담 없는 곳을 고르고 있어요";
 
   return [
-    `${RELATIONSHIP_LABEL[condition.relationship]} 모임에 맞는지 보고 있어요`,
+    // "친구·지인 모임"처럼 이름 끝에 이미 "모임"이 붙은 관계는 "모임 모임"이 되지 않게 한 번만 붙인다
+    `${RELATIONSHIP_LABEL[condition.relationship].replace(/\s*모임$/, "")} 모임에 맞는지 보고 있어요`,
     budgetText,
     cuisineText,
     condition.vibe !== "any"
@@ -94,14 +95,26 @@ function LoadingScreen() {
           보여 "진짜 뭔가 진행되고 있다"는 느낌을 못 줬다 — 단계마다 아이콘도 같이 바뀌고
           (관계→예산→음식→분위기→완료), 뒤에 은은히 숨쉬는 원을 깔아 화면이 계속
           살아있게 했다 */}
-      <span className="relative flex h-20 w-20 items-center justify-center">
-        <span className="absolute inset-0 animate-pulse rounded-full bg-accent-soft" aria-hidden />
+      {/* 결과 화면 큐레이터 카드와 같은 그라디언트 테두리(accent-light→accent)와 안쪽 옅은 틴트를 써서,
+          로딩이 끝나고 큐레이터 카드가 나타날 때 같은 손길이 이어진다는 인상을 준다.
+          뒤에는 같은 색의 번짐이 천천히 숨쉬듯 커졌다 줄어든다 */}
+      <span className="relative flex h-28 w-28 items-center justify-center">
         <span
-          key={messageIndex}
-          className="animate-fade-in-up relative flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft"
+          className="absolute inset-0 animate-pulse rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in srgb, var(--color-accent-light) 45%, transparent) 0%, color-mix(in srgb, var(--color-accent-soft) 35%, transparent) 45%, transparent 70%)",
+          }}
           aria-hidden
-        >
-          <StageIcon className="h-7 w-7 text-accent" />
+        />
+        <span className="relative rounded-full bg-gradient-to-br from-accent-light/70 via-accent/40 to-accent/75 p-px shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--color-accent)_45%,transparent)]">
+          <span
+            key={messageIndex}
+            className="animate-fade-in-up flex h-[72px] w-[72px] items-center justify-center rounded-full bg-cream-soft bg-gradient-to-br from-transparent from-30% to-accent-soft/80"
+            aria-hidden
+          >
+            <StageIcon className="h-8 w-8 text-accent" />
+          </span>
         </span>
       </span>
 
@@ -109,12 +122,11 @@ function LoadingScreen() {
         {messages[messageIndex]}
       </p>
 
-      {/* results 페이지 큐레이션 배지와 같은 accent→accent-light 그라디언트를 그대로 써서,
-          로딩이 끝나면 이 색이 그 배지로 그대로 이어진다는 인상을 준다. 다른 색(예전엔 gold)
-          으로 넘어가지 않고 같은 브랜드 hue 안에서 밝기만 오간다. */}
-      <div className="h-1 w-40 overflow-hidden rounded-full bg-line-strong" aria-hidden>
+      {/* 진행바도 같은 그라디언트. 바탕 트랙은 회색 대신 옅은 브랜드 틴트로 두고, 채워진 부분 위로
+          빛이 한 번씩 지나가 멈춰 있지 않다는 걸 보여준다 */}
+      <div className="h-1.5 w-44 overflow-hidden rounded-full bg-accent-soft/70" aria-hidden>
         <div
-          className="h-full rounded-full bg-gradient-to-r from-accent to-accent-light transition-[width] duration-500 ease-out"
+          className="loading-shine relative h-full overflow-hidden rounded-full bg-gradient-to-r from-accent-light via-accent to-accent-strong transition-[width] duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>

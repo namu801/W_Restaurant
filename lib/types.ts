@@ -43,7 +43,8 @@ export type ExtraConditionKey =
   | "parking-required"
   | "wide-seating"
   | "reservation-possible"
-  | "with-drinks";
+  | "with-drinks"
+  | "corkage-free";
 
 /** 조건 입력 단계에서 수집하는 청첩장 모임 조건 */
 export interface Condition {
@@ -113,6 +114,8 @@ export interface Place {
   waitingRisk: number; // 0~10
   parkingAvailable: boolean;
   parkingType: ParkingType;
+  /** 콜키지 정책. 매장에 확인된 곳만 채운다 — 비어 있으면 "확인 필요"로 본다 */
+  corkage?: "free" | "paid" | "unavailable";
   curatedReason: string;
   cautionNote: string;
   menu: MenuItem[];

@@ -10,6 +10,7 @@ import { track } from "@/lib/analytics";
 import { StickyBottomBar } from "@/components/StickyBottomBar";
 import { TypingText } from "@/components/TypingText";
 import { BudgetSlider } from "@/components/BudgetSlider";
+import { AnyCheckbox } from "@/components/AnyCheckbox";
 import { AREA_LABEL, BUDGET_LABEL, PEOPLE_LABEL, VIBE_LABEL, VIBE_MOOD } from "@/lib/labels";
 import {
   QUESTIONS,
@@ -126,6 +127,9 @@ function SearchWizard() {
 
   useEffect(() => {
     track("filter_step_viewed", { step_number: step + 1, step_name: STEPS[step].name });
+    // 단계마다 같은 <main>을 다시 쓰기 때문에, 앞 화면에서 아래까지 내렸던 스크롤이 다음 화면에 그대로
+    // 남았다. 새 질문은 항상 맨 위(머리말·제목)부터 보이게 한다
+    document.querySelector("main")?.scrollTo({ top: 0 });
   }, [step]);
 
   const isLast = step === STEPS.length - 1;
@@ -192,9 +196,9 @@ function SearchWizard() {
     goToResults(condition);
   }
 
-  // 예산은 슬라이더가 늘 값을 보여주고 있어 건너뛸 이유가 없고, 마지막 화면은 그 자체가
-  // 선택 입력이라 "건너뛰기"를 두지 않는다
-  const showSkip = step !== 2 && !isLast;
+  // 마지막 화면은 그 자체가 선택 입력이라 "건너뛰기"를 두지 않는다. 예산도 다른 단계처럼
+  // 건너뛸 수 있어야 한다(한 단계에서만 사라지면 위치가 흔들려 보인다)
+  const showSkip = !isLast;
 
   return (
     <>
@@ -307,7 +311,12 @@ function SearchWizard() {
 
         {step === 3 && (
           <>
-            <div className="grid grid-cols-2 gap-2">
+            <AnyCheckbox
+              label="메뉴는 상관없어요"
+              checked={draft.cuisines.includes("any")}
+              onChange={() => toggleMulti(QUESTIONS.cuisines, "any")}
+            />
+            <div className="-mt-2 grid grid-cols-2 gap-2">
               {QUESTIONS.cuisines.options
                 .filter((o) => o.value !== "any")
                 .map((o) => (
@@ -318,20 +327,17 @@ function SearchWizard() {
                     alt={`${o.label} 음식 사진`}
                     selected={draft.cuisines.includes(o.value)}
                     onClick={() => toggleMulti(QUESTIONS.cuisines, o.value)}
+                    short
                   />
                 ))}
             </div>
-            <AnyOption
-              label="메뉴는 상관없어요"
-              selected={draft.cuisines.includes("any")}
-              onClick={() => toggleMulti(QUESTIONS.cuisines, "any")}
-            />
           </>
         )}
 
         {step === 4 && (
           <>
-            <div className="grid grid-cols-2 gap-2">
+            <AnyCheckbox label={VIBE_LABEL.any} checked={draft.vibe === "any"} onChange={() => selectSingle("vibe", "any")} />
+            <div className="-mt-2 grid grid-cols-2 gap-2">
               {QUESTIONS.vibe.options
                 .filter((o) => o.value !== "any")
                 .map((o) => (
@@ -346,7 +352,6 @@ function SearchWizard() {
                   />
                 ))}
             </div>
-            <AnyOption label={VIBE_LABEL.any} selected={draft.vibe === "any"} onClick={() => selectSingle("vibe", "any")} />
           </>
         )}
 
@@ -365,12 +370,12 @@ function SearchWizard() {
         )}
       </div>
 
-      <StickyBottomBar>
+      <StickyBottomBar tone="page">
         <button
           type="button"
           onClick={handleNext}
           disabled={!canProceed(step, draft)}
-          className="flex w-full items-center justify-center rounded-lg bg-accent py-3.5 text-button font-bold text-white transition-all hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-cream-strong disabled:text-ink-faintest disabled:hover:brightness-100"
+          className="flex w-full items-center justify-center rounded-lg bg-accent py-3.5 text-button font-bold text-white transition-all hover:brightness-95 active:brightness-90 disabled:cursor-not-allowed disabled:bg-line-strong/60 disabled:text-ink-faint disabled:hover:brightness-100"
         >
           {isLast ? "내 조건에 맞는 곳 보기" : "다음"}
         </button>
@@ -427,6 +432,7 @@ function PhotoTile({
   alt,
   selected,
   onClick,
+  short = false,
 }: {
   label: string;
   hint?: string;
@@ -434,13 +440,18 @@ function PhotoTile({
   alt: string;
   selected: boolean;
   onClick: () => void;
+  /** 음식은 접시만 보이면 돼서 세로를 줄여(4:3) 한 화면에 더 많이 보이게 한다. 분위기는 공간이 보여야 해서 정사각형 */
+  short?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className="relative isolate aspect-square overflow-hidden rounded-md bg-cream-strong text-left"
+      className={clsx(
+        "relative isolate overflow-hidden rounded-md bg-cream-strong text-left",
+        short ? "aspect-[4/3]" : "aspect-square",
+      )}
     >
       <Image src={photo} alt={alt} fill sizes="(max-width: 430px) 50vw, 200px" className="object-cover" />
       <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/0" aria-hidden />
@@ -459,36 +470,6 @@ function PhotoTile({
       </span>
       {selected && <span aria-hidden className="pointer-events-none absolute inset-0 rounded-md border-[3px] border-accent" />}
     </button>
-  );
-}
-
-/** "상관없어요"는 사진 카드 중 하나가 아니라 "고르지 않는" 선택이라, 그리드 밖 아래에 구분선과
- *  함께 전체 폭 한 줄로 따로 둔다 — 사진 카드와 같은 모양이면 또 하나의 메뉴·분위기처럼 읽힌다 */
-function AnyOption({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
-  return (
-    <div className="flex flex-col gap-3 border-t border-line-strong pt-4">
-      <p className="text-caption text-ink-soft">딱히 정한 게 없다면</p>
-      <button
-        type="button"
-        aria-pressed={selected}
-        onClick={onClick}
-        className={clsx(
-          "flex items-center justify-between rounded-md border px-4 py-3.5 text-left text-body transition",
-          selected ? "border-accent bg-accent-soft font-bold text-accent-strong" : "border-line bg-cream-soft font-medium text-ink hover:border-line-strong",
-        )}
-      >
-        {label}
-        <span
-          aria-hidden
-          className={clsx(
-            "flex h-5 w-5 items-center justify-center rounded-full border-2",
-            selected ? "border-accent bg-accent text-white" : "border-line-strong",
-          )}
-        >
-          {selected && <Check className="h-3 w-3" strokeWidth={3} />}
-        </span>
-      </button>
-    </div>
   );
 }
 

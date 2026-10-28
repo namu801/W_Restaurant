@@ -249,7 +249,44 @@ body {
   display: none;
 }
 
+/* 형광펜(components/HighlightText). 글자 아래쪽 60%만 칠해 진짜 펜으로 그은 것처럼 보이게 하고,
+   목록이 화면에 들어오면 왼쪽에서 오른쪽으로 그어진다. 여러 개면 위에서부터 차례로 */
+.hl {
+  background-image: linear-gradient(transparent 42%, color-mix(in srgb, var(--color-accent) 22%, transparent) 42%, color-mix(in srgb, var(--color-accent) 22%, transparent) 92%, transparent 92%);
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: background-size 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+  transition-delay: calc(var(--hl-i, 0) * 180ms);
+}
+
+.hl-on .hl {
+  background-size: 100% 100%;
+}
+
+/* 로딩 진행바 위를 지나가는 빛 */
+@keyframes loading-shine {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+.loading-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: loading-shine 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .loading-shine::after {
+    animation: none;
+  }
+  .hl {
+    transition: none;
+  }
   .animate-fade-in-up,
   .animate-list-in,
   .animate-caret,

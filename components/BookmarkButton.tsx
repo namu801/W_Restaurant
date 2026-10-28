@@ -54,7 +54,13 @@ export function BookmarkButton({
         className,
       )}
     >
-      <Bookmark className={iconClassName} strokeWidth={1.75} fill={saved ? "currentColor" : "none"} />
+      {/* 저장된 상태는 버튼 글자색과 상관없이 아이콘을 포인트 컬러로 채운다
+          (목록처럼 바깥에서 글자색을 검정으로 덮어써도 저장 표시는 주황으로 보이게) */}
+      <Bookmark
+        className={clsx(iconClassName, saved && "text-accent")}
+        strokeWidth={1.75}
+        fill={saved ? "currentColor" : "none"}
+      />
       {labeled && (saved ? "저장됨" : "저장하기")}
     </button>
   );

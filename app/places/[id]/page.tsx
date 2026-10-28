@@ -50,18 +50,27 @@ export default async function PlaceDetailPage({
     .map((c) => c.text)
     .filter((t) => !coveredTopics.some((re) => re.test(t)));
   const seen = new Set<string>();
+  // 같은 주제(웨이팅·주차·전화 예약)는 출처가 달라도 한 번만 말한다. 먼저 나온(더 구체적인) 문장을 남긴다
+  const ONCE_TOPICS = [/웨이팅|대기/, /주차/, /전화.*예약/];
+  const seenTopics = new Set<number>();
+  // 매장 메모는 여러 사실을 한 문단에 이어 써서 한 항목이 네 줄씩 됐다 — 문장 단위로 나눠 한 줄에 한 사실만 둔다.
   // 출처마다 마침표가 있다 없다 해서 목록 안에서 들쭉날쭉했다 — 짧은 목록 문장은 마침표 없이 맞춘다
   const pointsToCheck = [
-    ...generateBookingFacts(place, condition),
+    ...generateBookingFacts(place, condition).flatMap((t) => t.split(/(?<=요)\.\s+/)),
     ...checkpoints
       .filter((c) => c.tone === "warning" || (c.tone === "neutral" && c.group === "운영 조건"))
       .map((c) => c.text),
-  ].filter((t) => {
-    const key = normalize(t);
-    if (!t || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).map((t) => t.replace(/\.$/, ""));
+  ]
+    .map((t) => t.trim().replace(/\.$/, ""))
+    .filter((t) => {
+      const key = normalize(t);
+      if (!t || seen.has(key)) return false;
+      seen.add(key);
+      const topics = ONCE_TOPICS.map((re, i) => (re.test(t) ? i : -1)).filter((i) => i >= 0);
+      if (topics.length > 0 && topics.every((i) => seenTopics.has(i))) return false;
+      topics.forEach((i) => seenTopics.add(i));
+      return true;
+    });
 
   // 편의 태그는 데이터로 확인된 것만 둔다
   const amenities = [

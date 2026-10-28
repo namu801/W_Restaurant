@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { LocateFixed } from "lucide-react";
+import { ChevronLeft, ChevronRight, LocateFixed } from "lucide-react";
 import { clsx } from "clsx";
 import { PLACES } from "@/lib/places";
 import { KakaoMap, type KakaoMapHandle } from "@/components/KakaoMap";
@@ -31,6 +31,9 @@ export default function MapPage() {
 
   const mapHandleRef = useRef<KakaoMapHandle>(null);
   const cardRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const stripRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+
   // 핀 클릭으로 카드를 자동 스크롤시키는 동안, 그 스크롤 자체를 "사용자가 스와이프했다"고
   // 옵저버가 오해해서 selectedId를 다시 덮어써버리는 루프를 막기 위한 잠금장치
   const suppressScrollSyncRef = useRef(false);
@@ -40,6 +43,18 @@ export default function MapPage() {
   const places = useMemo(() => {
     return PLACES.filter((p) => !cuisineFilter || p.cuisineTags.includes(cuisineFilter));
   }, [cuisineFilter]);
+
+  const filterEdges = useScrollEdges(filterRef);
+  const stripEdges = useScrollEdges(stripRef, places.length);
+
+  /** 화살표로 카드를 한 장씩 넘긴다. 선택 상태는 스크롤이 멈추면 handleStripScroll이 맞춘다 */
+  function stepCard(dir: 1 | -1) {
+    const idx = places.findIndex((p) => p.id === selectedId);
+    const next = places[Math.min(Math.max((idx < 0 ? 0 : idx) + dir, 0), places.length - 1)];
+    if (!next) return;
+    setSelectedId(next.id);
+    cardRefs.current[next.id]?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+  }
 
   useEffect(() => {
     if (selectedId && !places.some((p) => p.id === selectedId)) {
@@ -60,13 +75,13 @@ export default function MapPage() {
     suppressScrollSyncRef.current = true;
     setSelectedId(id);
     track("map_marker_clicked", { place_id: id });
-    cardRefs.current[id]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    cardRefs.current[id]?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
     window.setTimeout(() => {
       suppressScrollSyncRef.current = false;
     }, 500);
   }
 
-  // 카드를 가로로 스와이프하면, 목록 가운데에 가장 가깝게 걸린 카드를 선택 상태로 보고 지도가 그 위치로 따라간다.
+  // 카드를 가로로 스와이프하면, 왼쪽 시작선에 가장 가깝게 걸린 카드를 선택 상태로 보고 지도가 그 위치로 따라간다.
   // 스크롤 이벤트마다 바로 지도를 옮기면 스와이프 도중 지도가 계속 흔들리므로, 스크롤이
   // 잠깐 멈췄을 때(디바운스) 한 번만 계산해서 반영한다
   function handleStripScroll(e: React.UIEvent<HTMLDivElement>) {
@@ -74,13 +89,14 @@ export default function MapPage() {
     const strip = e.currentTarget;
     if (scrollSyncTimeoutRef.current) window.clearTimeout(scrollSyncTimeoutRef.current);
     scrollSyncTimeoutRef.current = window.setTimeout(() => {
-      const stripCenter = strip.getBoundingClientRect().left + strip.getBoundingClientRect().width / 2;
+      // 카드는 왼쪽 정렬로 멈추므로, 왼쪽 시작선(안쪽 여백 16px)에 가장 가까운 카드를 선택으로 본다
+      const stripStart = strip.getBoundingClientRect().left + 16;
       let closestId: string | null = null;
       let closestDistance = Infinity;
       for (const [id, el] of Object.entries(cardRefs.current)) {
         if (!el) continue;
         const rect = el.getBoundingClientRect();
-        const distance = Math.abs(rect.left + rect.width / 2 - stripCenter);
+        const distance = Math.abs(rect.left - stripStart);
         if (distance < closestDistance) {
           closestDistance = distance;
           closestId = id;
@@ -153,7 +169,8 @@ export default function MapPage() {
       )}
 
       {/* 상단 플로팅 필터: 지도 위에 뜨는 독립된 칩들이라 각자 배경·그림자를 갖는다 */}
-      <div className="absolute inset-x-0 top-0 z-10 flex gap-2 overflow-x-auto p-4">
+      <div className="absolute inset-x-0 top-0 z-10">
+      <div ref={filterRef} className="scrollbar-hide flex gap-2 overflow-x-auto p-4">
         <span className="shrink-0 whitespace-nowrap rounded-full bg-cream-soft px-3.5 py-2 text-micro font-semibold text-ink-soft shadow-card">
           용산권 {places.length}곳
         </span>
@@ -190,6 +207,14 @@ export default function MapPage() {
           );
         })}
       </div>
+        {/* 칩이 화면 밖으로 이어진다는 걸 화살표로 알려주고, 눌러서 넘길 수도 있게 한다 */}
+        {filterEdges.canLeft && (
+          <ArrowButton dir="left" className="left-2 top-1/2 h-8 w-8" onClick={() => scrollByPage(filterRef, -1)} />
+        )}
+        {filterEdges.canRight && (
+          <ArrowButton dir="right" className="right-2 top-1/2 h-8 w-8" onClick={() => scrollByPage(filterRef, 1)} />
+        )}
+      </div>
 
       {/* 필터 줄(위쪽 p-4 + 칩 한 줄) 높이가 대략 68px라 top-16(64px)에 두면 토스트가 칩과 겹친다.
           넉넉하게 그 아래로 내려서 배치한다 */}
@@ -208,7 +233,8 @@ export default function MapPage() {
       {/* 현위치 버튼과 카드 스트립을 같은 flex 컬럼에 담아서, 카드 높이가 몇 px이든 버튼이
           항상 카드 바로 위에 자동으로 붙게 한다. 각각 절대좌표를 따로 추측해서 맞추면
           카드 내용(이름 줄바꿈 등)에 따라 버튼과 카드가 겹칠 수 있다 */}
-      <div className="absolute inset-x-0 bottom-24 z-10 flex flex-col items-end gap-3">
+      {/* 하단 탭바(약 64px) 바로 위에 붙인다. 카드와 탭바 사이 여백은 예전(약 40px)의 절반으로 줄였다 */}
+      <div className="absolute inset-x-0 bottom-[94px] z-10 flex flex-col items-end gap-3">
         {appKey && (
           <button
             type="button"
@@ -222,9 +248,11 @@ export default function MapPage() {
         )}
 
         {places.length > 0 && (
+          <div className="relative w-full">
           <div
+            ref={stripRef}
             onScroll={handleStripScroll}
-            className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1"
+            className="scrollbar-hide flex w-full scroll-px-4 snap-x snap-mandatory gap-3 overflow-x-auto px-4"
           >
             {places.map((place) => (
               <Link
@@ -235,25 +263,83 @@ export default function MapPage() {
                 }}
                 onClick={() => track("place_card_clicked", { place_id: place.id, page: "map" })}
                 className={clsx(
-                  "flex w-[220px] shrink-0 snap-center gap-3 rounded-lg border bg-cream-soft p-3 shadow-card transition-colors hover:bg-cream-strong active:bg-cream-strong",
+                  // 왼쪽 정렬로 한 장을 두고 다음 카드가 절반쯤 보이게 한다(넘겨볼 게 있다는 신호).
+                  // 이름이 길면 줄을 넘기지 않고 말줄임 — 220px 고정폭일 땐 두세 줄로 접혀 카드 밖으로 넘쳤다
+                  "flex w-[66%] shrink-0 snap-start items-center gap-3 rounded-lg border bg-cream-soft p-3 shadow-card transition-colors hover:bg-cream-strong active:bg-cream-strong",
                   selectedId === place.id ? "border-accent-strong" : "border-transparent",
                 )}
               >
                 <PlaceThumbnail place={place} className="h-16 w-16 shrink-0 rounded-md" iconClassName="h-6 w-6" />
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-title-sm font-bold text-ink">{place.name}</h3>
-                  <p className="mt-0.5 text-caption text-ink-soft">
-                    {AREA_LABEL[place.area]} · {formatPrice(place.priceMin, place.priceMax)}
+                  <h3 className="truncate text-title-sm font-bold text-ink">{place.name}</h3>
+                  {/* 좁아진 카드에서 "지역 · 가격"을 한 줄에 두면 가격이 잘려서, 가격은 따로 한 줄을 주고
+                      지역은 좌석 태그와 같은 줄로 내렸다 */}
+                  <p className="mt-0.5 whitespace-nowrap text-caption font-semibold text-ink">
+                    {formatPrice(place.priceMin, place.priceMax)}
                   </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <span className="whitespace-nowrap text-caption text-ink-soft">{AREA_LABEL[place.area]}</span>
                     <Tag variant="neutral">{SEAT_TYPE_LABEL[place.seatType]}</Tag>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
+            {/* 카드 세로 가운데에 걸친 동그란 화살표로 한 장씩 넘긴다(스와이프도 그대로 된다) */}
+            {stripEdges.canLeft && (
+              <ArrowButton dir="left" className="left-1.5 top-1/2 h-9 w-9" onClick={() => stepCard(-1)} />
+            )}
+            {stripEdges.canRight && (
+              <ArrowButton dir="right" className="right-1.5 top-1/2 h-9 w-9" onClick={() => stepCard(1)} />
+            )}
+          </div>
         )}
       </div>
     </div>
+  );
+}
+
+/** 가로 스크롤 영역이 왼쪽·오른쪽으로 더 넘어갈 수 있는지. 끝에 닿은 쪽 화살표는 숨긴다 */
+function useScrollEdges(ref: React.RefObject<HTMLDivElement | null>, contentKey?: unknown) {
+  const [edges, setEdges] = useState({ canLeft: false, canRight: false });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () =>
+      setEdges({
+        canLeft: el.scrollLeft > 4,
+        canRight: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+      });
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [ref, contentKey]);
+  return edges;
+}
+
+function scrollByPage(ref: React.RefObject<HTMLDivElement | null>, dir: 1 | -1) {
+  const el = ref.current;
+  if (!el) return;
+  el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: "smooth" });
+}
+
+function ArrowButton({ dir, className, onClick }: { dir: "left" | "right"; className: string; onClick: () => void }) {
+  const Icon = dir === "left" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={dir === "left" ? "이전" : "다음"}
+      className={clsx(
+        "absolute z-10 flex -translate-y-1/2 items-center justify-center rounded-full border border-line bg-cream-soft text-ink shadow-card transition-colors hover:bg-cream-strong active:scale-95",
+        className,
+      )}
+    >
+      <Icon className="h-4 w-4" strokeWidth={2.25} />
+    </button>
   );
 }

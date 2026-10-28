@@ -218,6 +218,7 @@ const EXTRA_SIGNAL: Record<ExtraConditionKey, string> = {
   "wide-seating": "좌석 간격",
   "reservation-possible": "예약 가능 여부",
   "with-drinks": "술 한잔 곁들일 자리",
+  "corkage-free": "콜키지",
 };
 
 
@@ -229,7 +230,8 @@ function prioritySignals(condition: Condition): string[] {
   // 필수 조건(룸·주차 등) → 분위기 카드 → 술 순서. 술은 가점일 뿐이라, 사용자가 직접 고른
   // 분위기보다 앞에 나오면 "무엇을 먼저 봤는지"가 어긋나 보인다
   for (const extra of condition.extraConditions) {
-    if (extra !== "with-drinks") signals.push(EXTRA_SIGNAL[extra]);
+    // 콜키지는 확인된 매장이 적어 "먼저 본 조건"으로 내세우지 않는다
+    if (extra !== "with-drinks" && extra !== "corkage-free") signals.push(EXTRA_SIGNAL[extra]);
   }
   // 분위기는 사진 카드 한 장으로 고른다 — 사용자가 실제로 고른 그 말(카드 이름)로 받아준다
   if (condition.vibe !== "any") signals.push(VIBE_MOOD[condition.vibe]);
@@ -474,6 +476,10 @@ function situationCaveat(scene: Scene, condition: Condition, place: Place): stri
   const hasRoom = place.privateRoomAvailable || place.seatType === "room";
   if ((condition.noise === "quiet" || formal) && place.noiseLevel === "lively" && !hasRoom)
     return "다만 홀이 활기찬 편이라 조용히 대화하긴 어려울 수 있어요";
+  // '깔끔하고 편안한' 카드는 "북적여도 대화는 편한 곳"이라고 약속한다. 그 약속과 어긋나는 활기찬 홀이면 알린다.
+  // 트렌디는 소음 조건이 같지만 카드가 소음을 약속하지 않아서(사진 남기기 좋은 곳) 여기서 빼둔다
+  if (condition.vibe === "neat-comfy" && place.noiseLevel === "lively" && !hasRoom)
+    return "다만 홀이 활기찬 편이라 대화 소리가 커질 수 있어요";
   if (condition.extraConditions.includes("parking-required") && !place.parkingAvailable)
     return "다만 주차는 어려워요";
   if (place.reservationMethod === "unavailable" && (formal || bigGroup))
@@ -527,6 +533,20 @@ function withCopula(word: string): string {
   const code = word.charCodeAt(word.length - 1) - 0xac00;
   const hasFinal = code >= 0 && code <= 11171 && code % 28 !== 0;
   return `${word}${hasFinal ? "이에요" : "예요"}`;
+}
+
+/** 근거 문장 맨 앞의 "식당 데이터" 부분. 목록에서 이 부분만 굵게 보여줘, 조건을 되읽는 말이 아니라
+ *  이 식당의 데이터가 근거라는 걸 드러낸다 */
+const REASON_LEAD = [
+  /^룸이 있어/, /^룸이 있고/, /^칸막이 좌석이라/, /^칸막이 좌석이고/, /^조용한 편이라/, /^조용한 편이고/,
+  /^활기찬 분위기라/, /^차분하고 격식 있는 분위기라/, /^격식 있는 분위기이고/, /^요즘 감성의 공간이라/,
+  /^응대가 정성스러워/, /^응대가 세심해/, /^테이블 간격이 넉넉해/, /^테이블 간격이 넉넉하고/,
+  /^최대 \d+명까지 앉을 수 있어/, /^예약이 돼서/, /^주차가 돼서/, /^\S+에서 가까워/,
+];
+
+export function splitReasonLead(reason: string): { lead: string; rest: string } {
+  const m = REASON_LEAD.map((re) => reason.match(re)).find(Boolean);
+  return m ? { lead: m[0], rest: reason.slice(m[0].length) } : { lead: "", rest: reason };
 }
 
 /** 압축 목록 한 줄용: 근거는 1개만, 아쉬운 점은 따로 돌려준다.

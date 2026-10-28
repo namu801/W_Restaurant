@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { AlertCircle, Check, Sparkles } from "lucide-react";
 import { CuratorFrame } from "@/components/CurationAgentCard";
+import { HighlightText, countHighlights } from "@/components/HighlightText";
 import { formatWon } from "@/lib/labels";
 import type { MenuItem } from "@/lib/types";
 
@@ -52,6 +53,25 @@ export function PlaceDetailTabs({
   const sectionRefs = useRef<Record<TabId, HTMLElement | null>>({ reason: null, menu: null, check: null });
   const suppressObserverRef = useRef(false);
   const suppressTimeoutRef = useRef<number | null>(null);
+  const checkListRef = useRef<HTMLDivElement>(null);
+  const [highlightOn, setHighlightOn] = useState(false);
+
+  // 확인할 점 목록이 화면에 들어오면 형광펜을 한 번 긋는다(다시 지우지 않는다)
+  useEffect(() => {
+    const el = checkListRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHighlightOn(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -25% 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -199,17 +219,23 @@ export function PlaceDetailTabs({
         )}
 
         {pointsToCheck.length > 0 && (
-          <>
+          <div ref={checkListRef} className={clsx(highlightOn && "hl-on")}>
             <p className="mt-8 text-caption font-semibold text-ink-soft">미리 확인하세요</p>
             <ul className="mt-3 flex flex-col gap-4">
-              {pointsToCheck.map((text) => (
-                <li key={text} className="flex items-start gap-2.5 text-body leading-relaxed text-ink">
-                  <AlertCircle className="mt-[5px] h-4 w-4 shrink-0 text-clay" strokeWidth={2} aria-hidden />
-                  {text}
-                </li>
-              ))}
+              {pointsToCheck.map((text, i) => {
+                // 형광펜은 목록 전체에서 위에서부터 차례로 그어지도록 앞 항목들의 개수를 이어 센다
+                const startIndex = pointsToCheck.slice(0, i).reduce((n, t) => n + countHighlights(t), 0);
+                return (
+                  <li key={text} className="flex items-start gap-2.5 text-body leading-relaxed text-ink">
+                    <AlertCircle className="mt-[5px] h-4 w-4 shrink-0 text-clay" strokeWidth={2} aria-hidden />
+                    <span>
+                      <HighlightText text={text} startIndex={startIndex} />
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
-          </>
+          </div>
         )}
 
         <p className="mt-8 rounded-md bg-cream-strong px-4 py-3.5 text-body leading-relaxed text-ink">{reservationAsk}</p>
