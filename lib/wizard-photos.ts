@@ -20,7 +20,9 @@ type PhotoRef = readonly [placeName: string, index: number] | `/wizard/${string}
 
 const VIBE_PHOTO_REF: Record<Exclude<VibeKey, "any">, PhotoRef> = {
   "calm-formal": ["쿠촐로서울", 1], // 커튼으로 나뉜 단독 룸 · 조용 · 격식
-  "neat-comfy": ["미미옥 신용산점", 4], // 우드 톤으로 정돈된 단체석 · 무난한 격식
+  // 아그라 2번 사진에서 간판·광고 화면을 빼고 홀만 잘라냄 · 소음 보통 · 격식 무난 · 넓은 좌석.
+  // 예전 미미옥 사진은 후기상 활기찬 곳이라 "북적여도 대화는 편한 곳"이라는 카드 설명과 맞지 않았다
+  "neat-comfy": "/wizard/vibe-neat.jpg",
   trendy: "/wizard/vibe-trendy.jpg", // 버누드 1번 사진에서 곡선 바·테이블 쪽을 잘라냄 · 감성 점수 5
   "lively-casual": "/wizard/vibe-lively.jpg", // 양복점 4번 사진에서 손님이 먹고 마시는 쪽을 잘라냄
 };
